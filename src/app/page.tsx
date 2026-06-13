@@ -1,65 +1,237 @@
-import Image from "next/image";
+import { createClient } from "@/lib/supabase/server";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import Link from "next/link";
 
-export default function Home() {
+export default async function DashboardPage() {
+  const supabase = await createClient();
+
+  const [
+    { count: playerCount },
+    { count: sessionCount },
+    { count: matchCount },
+    { data: recentSessions },
+    { data: players },
+    { data: matchesData },
+  ] = await Promise.all([
+    supabase.from("players").select("*", { count: "exact", head: true }),
+    supabase.from("sessions").select("*", { count: "exact", head: true }),
+    supabase.from("matches").select("*", { count: "exact", head: true }),
+    supabase
+      .from("sessions")
+      .select("*")
+      .order("date", { ascending: false })
+      .limit(5),
+    supabase.from("players").select("*").order("name"),
+    supabase
+      .from("matches")
+      .select(
+        `*, games:match_games(*, pair1:pairs!match_games_pair1_id_fkey(*, player1:players!pairs_player1_id_fkey(*), player2:players!pairs_player2_id_fkey(*)), pair2:pairs!match_games_pair2_id_fkey(*, player1:players!pairs_player1_id_fkey(*), player2:players!pairs_player2_id_fkey(*)))`
+      )
+      .order("created_at", { ascending: false })
+      .limit(10),
+  ]);
+
+  const matches = (matchesData || []) as any[];
+
+  // Quick top players by win rate (calculated based on individual sets)
+  const playerStats =
+    players?.map((player) => {
+      let played = 0;
+      let won = 0;
+      for (const m of matches) {
+        for (const g of m.games || []) {
+          const inP1 = g.pair1?.player1_id === player.id || g.pair1?.player2_id === player.id;
+          const inP2 = g.pair2?.player1_id === player.id || g.pair2?.player2_id === player.id;
+          if (inP1 || inP2) {
+            played++;
+            const wonSet = g.winning_pair_id === (inP1 ? g.pair1_id : g.pair2_id);
+            if (wonSet) won++;
+          }
+        }
+      }
+      return { ...player, played, won, winRate: played > 0 ? (won / played) * 100 : 0 };
+    }) || [];
+
+  playerStats.sort((a, b) => b.winRate - a.winRate || b.won - a.won);
+
+  const statCards = [
+    {
+      label: "Total Players",
+      value: playerCount ?? 0,
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-5 text-primary">
+          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" />
+        </svg>
+      ),
+    },
+    {
+      label: "Sessions Played",
+      value: sessionCount ?? 0,
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-5 text-primary">
+          <path d="M8 2v4" /><path d="M16 2v4" /><rect width="18" height="18" x="3" y="4" rx="2" /><path d="M3 10h18" />
+        </svg>
+      ),
+    },
+    {
+      label: "Matches Recorded",
+      value: matchCount ?? 0,
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-5 text-primary">
+          <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5C7 4 6 9 6 9" /><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5C17 4 18 9 18 9" /><path d="M4 22h16" /><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" /><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" /><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
+        </svg>
+      ),
+    },
+    {
+      label: "Win Rate Leader",
+      value:
+        playerStats.length > 0
+          ? `${playerStats[0].name} (${playerStats[0].winRate.toFixed(0)}%)`
+          : "—",
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-5 text-primary">
+          <path d="m12 8-9.04 9.06a2.82 2.82 0 1 0 3.98 3.98L16 12" /><circle cx="17" cy="7" r="5" />
+        </svg>
+      ),
+    },
+  ];
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+    <div className="flex flex-col gap-8">
+      {/* Header */}
+      <div>
+        <h1 className="text-3xl font-heading font-bold tracking-tight">
+          Dashboard
+        </h1>
+        <p className="text-muted-foreground mt-1">
+          Overview of your badminton group&apos;s performance
+        </p>
+      </div>
+
+      {/* Stat Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {statCards.map((stat) => (
+          <Card key={stat.label} className="relative overflow-hidden">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                {stat.label}
+              </CardTitle>
+              {stat.icon}
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold font-mono tracking-tight">
+                {stat.value}
+              </div>
+            </CardContent>
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
+          </Card>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Leaderboard */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-5 text-primary">
+                <path d="M3 3v18h18" /><path d="m19 9-5 5-4-4-3 3" />
+              </svg>
+              Leaderboard
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col gap-3">
+              {playerStats.slice(0, 8).map((player, idx) => (
+                <Link
+                  key={player.id}
+                  href={`/players/${player.id}`}
+                  className="flex items-center gap-3 group"
+                >
+                  <span className="size-7 rounded-full bg-muted flex items-center justify-center text-xs font-bold font-mono text-muted-foreground">
+                    {idx + 1}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate group-hover:text-primary transition-colors">
+                      {player.name}
+                    </p>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
+                        <div
+                          className="h-full rounded-full bg-primary transition-all duration-500"
+                          style={{ width: `${player.winRate}%` }}
+                        />
+                      </div>
+                      <span className="text-xs font-mono text-muted-foreground tabular-nums w-10 text-right">
+                        {player.winRate.toFixed(0)}%
+                      </span>
+                    </div>
+                  </div>
+                  <Badge variant="secondary" className="text-xs">
+                    {player.played}
+                  </Badge>
+                </Link>
+              ))}
+              {playerStats.length === 0 && (
+                <p className="text-sm text-muted-foreground py-4 text-center">
+                  No match data yet.{" "}
+                  <Link href="/sessions" className="text-primary hover:underline">
+                    Record your first session
+                  </Link>
+                </p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Recent Sessions */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-5 text-primary">
+                <path d="M8 2v4" /><path d="M16 2v4" /><rect width="18" height="18" x="3" y="4" rx="2" /><path d="M3 10h18" />
+              </svg>
+              Recent Sessions
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col gap-3">
+              {recentSessions?.map((session) => (
+                <Link
+                  key={session.id}
+                  href={`/sessions/${session.id}`}
+                  className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors group"
+                >
+                  <div>
+                    <p className="text-sm font-medium group-hover:text-primary transition-colors">
+                      {session.name}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {new Date(session.date).toLocaleDateString("en-US", {
+                        weekday: "short",
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                      })}
+                    </p>
+                  </div>
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-4 text-muted-foreground group-hover:text-primary transition-colors">
+                    <path d="m9 18 6-6-6-6" />
+                  </svg>
+                </Link>
+              ))}
+              {(!recentSessions || recentSessions.length === 0) && (
+                <p className="text-sm text-muted-foreground py-4 text-center">
+                  No sessions yet.{" "}
+                  <Link href="/sessions" className="text-primary hover:underline">
+                    Create your first session
+                  </Link>
+                </p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

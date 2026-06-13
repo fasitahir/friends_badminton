@@ -66,29 +66,35 @@ CREATE INDEX idx_pairs_player2 ON pairs(player2_id);
 CREATE TABLE matches (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   session_id UUID NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
-  best_of INT NOT NULL CHECK (best_of IN (3, 5, 7, 9)),
-  winning_pair_id UUID NOT NULL REFERENCES pairs(id) ON DELETE CASCADE,
-  losing_pair_id UUID NOT NULL REFERENCES pairs(id) ON DELETE CASCADE,
+  team1_id UUID REFERENCES teams(id) ON DELETE CASCADE,
+  team2_id UUID REFERENCES teams(id) ON DELETE CASCADE,
+  best_of INT NOT NULL CHECK (best_of IN (1, 3, 5, 7, 9, 11, 13, 15)),
+  winning_team_id UUID REFERENCES teams(id) ON DELETE CASCADE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  CONSTRAINT matches_different_pairs CHECK (winning_pair_id <> losing_pair_id)
+  CONSTRAINT matches_different_teams CHECK (team1_id IS NULL OR team2_id IS NULL OR team1_id <> team2_id)
 );
 ALTER TABLE matches ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Allow all access to matches" ON matches FOR ALL USING (true) WITH CHECK (true);
 
 CREATE INDEX idx_matches_session ON matches(session_id);
-CREATE INDEX idx_matches_winning_pair ON matches(winning_pair_id);
-CREATE INDEX idx_matches_losing_pair ON matches(losing_pair_id);
+CREATE INDEX idx_matches_team1 ON matches(team1_id);
+CREATE INDEX idx_matches_team2 ON matches(team2_id);
 
--- 7. Match Games (individual game scores)
+-- 7. Match Games (individual sets played by pairs)
 CREATE TABLE match_games (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   match_id UUID NOT NULL REFERENCES matches(id) ON DELETE CASCADE,
   game_number INT NOT NULL CHECK (game_number > 0),
+  pair1_id UUID NOT NULL REFERENCES pairs(id) ON DELETE CASCADE,
+  pair2_id UUID NOT NULL REFERENCES pairs(id) ON DELETE CASCADE,
   pair1_score INT NOT NULL CHECK (pair1_score >= 0),
   pair2_score INT NOT NULL CHECK (pair2_score >= 0),
+  winning_pair_id UUID REFERENCES pairs(id) ON DELETE CASCADE,
   CONSTRAINT match_games_unique UNIQUE (match_id, game_number)
 );
 ALTER TABLE match_games ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Allow all access to match_games" ON match_games FOR ALL USING (true) WITH CHECK (true);
 
 CREATE INDEX idx_match_games_match ON match_games(match_id);
+CREATE INDEX idx_match_games_pair1 ON match_games(pair1_id);
+CREATE INDEX idx_match_games_pair2 ON match_games(pair2_id);
