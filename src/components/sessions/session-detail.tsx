@@ -52,6 +52,7 @@ interface SessionDetailProps {
   pairs: any[];
   matches: any[];
   allPlayers: Player[];
+  isAdmin?: boolean;
 }
 
 export function SessionDetail({
@@ -60,6 +61,7 @@ export function SessionDetail({
   pairs,
   matches,
   allPlayers,
+  isAdmin,
 }: SessionDetailProps) {
   return (
     <div className="flex flex-col gap-4 sm:gap-6">
@@ -98,6 +100,7 @@ export function SessionDetail({
             matches={matches}
             pairs={pairs}
             allPlayers={allPlayers}
+            isAdmin={isAdmin}
           />
         </TabsContent>
 
@@ -107,6 +110,7 @@ export function SessionDetail({
             sessionId={session.id}
             pairs={pairs}
             allPlayers={allPlayers}
+            isAdmin={isAdmin}
           />
         </TabsContent>
 
@@ -116,6 +120,7 @@ export function SessionDetail({
             sessionId={session.id}
             teams={teams}
             allPlayers={allPlayers}
+            isAdmin={isAdmin}
           />
         </TabsContent>
       </Tabs>
@@ -129,11 +134,13 @@ function MatchCard({
   sessionId,
   pairs,
   allPlayers,
+  isAdmin,
 }: {
   match: any;
   sessionId: string;
   pairs: any[];
   allPlayers: Player[];
+  isAdmin?: boolean;
 }) {
   const [editOpen, setEditOpen] = useState(false);
 
@@ -144,56 +151,58 @@ function MatchCard({
           <Badge variant="outline" className="text-[10px] sm:text-xs">
             {match.games?.length || 0} Sets • Bo{match.best_of}
           </Badge>
-          <div className="flex items-center gap-1 sm:gap-2">
-            <Dialog open={editOpen} onOpenChange={setEditOpen}>
-              <DialogTrigger render={<Button
-                variant="ghost"
-                size="sm"
-                className="text-muted-foreground h-8 px-2 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
-              />}>
-                Edit
-              </DialogTrigger>
-              <DialogContent className="max-w-lg sm:max-w-lg max-h-[95vh] sm:max-h-[85vh] overflow-hidden flex flex-col p-0 sm:p-6 gap-0">
-                <DialogHeader className="px-4 pt-4 sm:px-0 sm:pt-0 pb-2">
-                  <DialogTitle>Edit Match Sets</DialogTitle>
-                </DialogHeader>
-                <MatchForm
-                  sessionId={sessionId}
-                  pairs={pairs}
-                  allPlayers={allPlayers}
-                  onClose={() => setEditOpen(false)}
-                  initialMatch={match}
-                />
-              </DialogContent>
-            </Dialog>
+          {isAdmin && (
+            <div className="flex items-center gap-1 sm:gap-2">
+              <Dialog open={editOpen} onOpenChange={setEditOpen}>
+                <DialogTrigger render={<Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-muted-foreground h-8 px-2 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
+                />}>
+                  Edit
+                </DialogTrigger>
+                <DialogContent className="max-w-lg sm:max-w-lg max-h-[95vh] sm:max-h-[85vh] overflow-hidden flex flex-col p-0 sm:p-6 gap-0">
+                  <DialogHeader className="px-4 pt-4 sm:px-0 sm:pt-0 pb-2">
+                    <DialogTitle>Edit Match Sets</DialogTitle>
+                  </DialogHeader>
+                  <MatchForm
+                    sessionId={sessionId}
+                    pairs={pairs}
+                    allPlayers={allPlayers}
+                    onClose={() => setEditOpen(false)}
+                    initialMatch={match}
+                  />
+                </DialogContent>
+              </Dialog>
 
-            <AlertDialog>
-              <AlertDialogTrigger render={<Button
-                variant="ghost"
-                size="sm"
-                className="text-destructive h-8 px-2 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
-              />}>
-                Del
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Delete this match?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    This cannot be undone. The match and all its sets will be removed.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction
-                    onClick={() => deleteMatch(match.id, sessionId)}
-                    className="bg-destructive text-white hover:bg-destructive/90"
-                  >
-                    Delete
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          </div>
+              <AlertDialog>
+                <AlertDialogTrigger render={<Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-destructive h-8 px-2 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
+                />}>
+                  Del
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete this match?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This cannot be undone. The match and all its sets will be removed.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={() => deleteMatch(match.id, sessionId)}
+                      className="bg-destructive text-white hover:bg-destructive/90"
+                    >
+                      Delete
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+          )}
         </div>
 
         <div className="flex flex-col gap-2 mt-1 sm:mt-2">
@@ -253,11 +262,13 @@ function MatchesTab({
   matches,
   pairs,
   allPlayers,
+  isAdmin,
 }: {
   sessionId: string;
   matches: any[];
   pairs: any[];
   allPlayers: Player[];
+  isAdmin?: boolean;
 }) {
   const [createOpen, setCreateOpen] = useState(false);
 
@@ -265,23 +276,25 @@ function MatchesTab({
     <div className="flex flex-col gap-3 sm:gap-4">
       <div className="flex justify-between items-center">
         <h2 className="text-base sm:text-lg font-semibold">Match History</h2>
-        <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-          <DialogTrigger render={<Button size="sm" className="h-9 touch-target" />}>
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-4 mr-1.5"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
-            Record Match
-          </DialogTrigger>
-          <DialogContent className="max-w-lg sm:max-w-lg max-h-[95vh] sm:max-h-[85vh] overflow-hidden flex flex-col p-0 sm:p-6 gap-0">
-            <DialogHeader className="px-4 pt-4 sm:px-0 sm:pt-0 pb-2">
-              <DialogTitle>Record Match</DialogTitle>
-            </DialogHeader>
-            <MatchForm
-              sessionId={sessionId}
-              pairs={pairs}
-              allPlayers={allPlayers}
-              onClose={() => setCreateOpen(false)}
-            />
-          </DialogContent>
-        </Dialog>
+        {isAdmin && (
+          <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+            <DialogTrigger render={<Button size="sm" className="h-9 touch-target" />}>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-4 mr-1.5"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+              Record Match
+            </DialogTrigger>
+            <DialogContent className="max-w-lg sm:max-w-lg max-h-[95vh] sm:max-h-[85vh] overflow-hidden flex flex-col p-0 sm:p-6 gap-0">
+              <DialogHeader className="px-4 pt-4 sm:px-0 sm:pt-0 pb-2">
+                <DialogTitle>Record Match</DialogTitle>
+              </DialogHeader>
+              <MatchForm
+                sessionId={sessionId}
+                pairs={pairs}
+                allPlayers={allPlayers}
+                onClose={() => setCreateOpen(false)}
+              />
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
 
       <div className="flex flex-col gap-3 sm:gap-4">
@@ -292,6 +305,7 @@ function MatchesTab({
             sessionId={sessionId}
             pairs={pairs}
             allPlayers={allPlayers}
+            isAdmin={isAdmin}
           />
         ))}
       </div>
@@ -717,10 +731,12 @@ function PairsTab({
   sessionId,
   pairs,
   allPlayers,
+  isAdmin,
 }: {
   sessionId: string;
   pairs: any[];
   allPlayers: Player[];
+  isAdmin?: boolean;
 }) {
   const [createOpen, setCreateOpen] = useState(false);
 
@@ -728,22 +744,24 @@ function PairsTab({
     <div className="flex flex-col gap-3 sm:gap-4">
       <div className="flex justify-between items-center">
         <h2 className="text-base sm:text-lg font-semibold">Pairs</h2>
-        <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-          <DialogTrigger render={<Button size="sm" className="h-9 touch-target" />}>
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-4 mr-1.5"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
-            Create Pair
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Create New Pair</DialogTitle>
-            </DialogHeader>
-            <PairForm
-              sessionId={sessionId}
-              allPlayers={allPlayers}
-              onClose={() => setCreateOpen(false)}
-            />
-          </DialogContent>
-        </Dialog>
+        {isAdmin && (
+          <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+            <DialogTrigger render={<Button size="sm" className="h-9 touch-target" />}>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-4 mr-1.5"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+              Create Pair
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Create New Pair</DialogTitle>
+              </DialogHeader>
+              <PairForm
+                sessionId={sessionId}
+                allPlayers={allPlayers}
+                onClose={() => setCreateOpen(false)}
+              />
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
@@ -765,33 +783,35 @@ function PairsTab({
                   {pair.player2?.name}
                 </span>
               </div>
-              <AlertDialog>
-                <AlertDialogTrigger render={<Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-destructive h-8 w-8 p-0 shrink-0 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
-                />}>
-                  ×
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Delete this pair?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      This pair will be removed. Existing matches using this pair
-                      must be deleted first.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={() => deletePair(pair.id, sessionId)}
-                      className="bg-destructive text-white hover:bg-destructive/90"
-                    >
-                      Delete
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+              {isAdmin && (
+                <AlertDialog>
+                  <AlertDialogTrigger render={<Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-destructive h-8 w-8 p-0 shrink-0 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
+                  />}>
+                    ×
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete this pair?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This pair will be removed. Existing matches using this pair
+                        must be deleted first.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={() => deletePair(pair.id, sessionId)}
+                        className="bg-destructive text-white hover:bg-destructive/90"
+                      >
+                        Delete
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
             </CardContent>
           </Card>
         ))}
@@ -889,10 +909,12 @@ function TeamsTab({
   sessionId,
   teams,
   allPlayers,
+  isAdmin,
 }: {
   sessionId: string;
   teams: any[];
   allPlayers: Player[];
+  isAdmin?: boolean;
 }) {
   const [createOpen, setCreateOpen] = useState(false);
 
@@ -900,22 +922,24 @@ function TeamsTab({
     <div className="flex flex-col gap-3 sm:gap-4">
       <div className="flex justify-between items-center">
         <h2 className="text-base sm:text-lg font-semibold">Teams</h2>
-        <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-          <DialogTrigger render={<Button size="sm" className="h-9 touch-target" />}>
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-4 mr-1.5"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
-            Create Team
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Create Team</DialogTitle>
-            </DialogHeader>
-            <TeamForm
-              sessionId={sessionId}
-              allPlayers={allPlayers}
-              onClose={() => setCreateOpen(false)}
-            />
-          </DialogContent>
-        </Dialog>
+        {isAdmin && (
+          <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+            <DialogTrigger render={<Button size="sm" className="h-9 touch-target" />}>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-4 mr-1.5"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+              Create Team
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Create Team</DialogTitle>
+              </DialogHeader>
+              <TeamForm
+                sessionId={sessionId}
+                allPlayers={allPlayers}
+                onClose={() => setCreateOpen(false)}
+              />
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
@@ -923,32 +947,34 @@ function TeamsTab({
           <Card key={team.id} className="group">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-base">{team.name}</CardTitle>
-              <AlertDialog>
-                <AlertDialogTrigger render={<Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-destructive sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
-                />}>
-                  Delete
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Delete {team.name}?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      This will remove the team and its member assignments.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={() => deleteTeam(team.id, sessionId)}
-                      className="bg-destructive text-white hover:bg-destructive/90"
-                    >
-                      Delete
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+              {isAdmin && (
+                <AlertDialog>
+                  <AlertDialogTrigger render={<Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-destructive sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
+                  />}>
+                    Delete
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete {team.name}?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This will remove the team and its member assignments.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={() => deleteTeam(team.id, sessionId)}
+                        className="bg-destructive text-white hover:bg-destructive/90"
+                      >
+                        Delete
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
             </CardHeader>
             <CardContent>
               <div className="flex flex-wrap gap-2">

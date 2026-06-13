@@ -84,25 +84,27 @@ function SessionForm({ onClose }: { onClose: () => void }) {
   );
 }
 
-export function SessionList({ sessions }: { sessions: SessionWithCount[] }) {
+export function SessionList({ sessions, isAdmin }: { sessions: SessionWithCount[], isAdmin?: boolean }) {
   const [createOpen, setCreateOpen] = useState(false);
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex justify-end">
-        <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-          <DialogTrigger render={<Button />}>
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-4 mr-2"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
-            New Session
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Create New Session</DialogTitle>
-            </DialogHeader>
-            <SessionForm onClose={() => setCreateOpen(false)} />
-          </DialogContent>
-        </Dialog>
-      </div>
+      {isAdmin && (
+        <div className="flex justify-end">
+          <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+            <DialogTrigger render={<Button />}>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-4 mr-2"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+              New Session
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Create New Session</DialogTitle>
+              </DialogHeader>
+              <SessionForm onClose={() => setCreateOpen(false)} />
+            </DialogContent>
+          </Dialog>
+        </div>
+      )}
 
       <div className="flex flex-col gap-3">
         {sessions.map((session) => (
@@ -138,40 +140,42 @@ export function SessionList({ sessions }: { sessions: SessionWithCount[] }) {
                   <Badge variant="secondary" className="tabular-nums">
                     {session.matchCount} match{session.matchCount !== 1 ? "es" : ""}
                   </Badge>
-                  <AlertDialog>
-                    <AlertDialogTrigger render={<Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-destructive hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                      }}
-                    />}>
-                      Delete
-                    </AlertDialogTrigger>
-                    <AlertDialogContent onClick={(e) => e.stopPropagation()}>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Delete Session?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          This will delete the session, all teams, pairs, and
-                          matches within it. This cannot be undone.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel onClick={(e) => e.stopPropagation()}>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            deleteSession(session.id);
-                          }}
-                          className="bg-destructive text-white hover:bg-destructive/90"
-                        >
-                          Delete
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
+                  {isAdmin && (
+                    <AlertDialog>
+                      <AlertDialogTrigger render={<Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-destructive hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                        }}
+                      />}>
+                        Delete
+                      </AlertDialogTrigger>
+                      <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete Session?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This will delete the session, all teams, pairs, and
+                            matches within it. This cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel onClick={(e) => e.stopPropagation()}>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              deleteSession(session.id);
+                            }}
+                            className="bg-destructive text-white hover:bg-destructive/90"
+                          >
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  )}
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-4 text-muted-foreground group-hover:text-primary transition-colors">
                     <path d="m9 18 6-6-6-6" />
                   </svg>

@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import { SessionDetail } from "@/components/sessions/session-detail";
+import { getIsAdmin } from "@/lib/auth";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -22,6 +23,7 @@ export default async function SessionDetailPage({
 }) {
   const { id } = await params;
   const supabase = await createClient();
+  const isAdmin = await getIsAdmin();
 
   const { data: session } = await supabase
     .from("sessions")
@@ -96,6 +98,7 @@ export default async function SessionDetailPage({
       pairs={pairs || []}
       matches={matchesWithGames}
       allPlayers={allPlayers || []}
+      isAdmin={isAdmin}
     />
   );
 }

@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-
+import { logout } from "@/app/actions";
+import { LogIn, LogOut } from "lucide-react";
 const navItems = [
   {
     label: "Dashboard",
@@ -53,7 +54,7 @@ const navItems = [
   },
 ];
 
-export function Sidebar() {
+export function Sidebar({ isAdmin }: { isAdmin?: boolean }) {
   const pathname = usePathname();
 
   return (
@@ -105,7 +106,20 @@ export function Sidebar() {
       </nav>
 
       {/* Footer */}
-      <div className="px-6 py-4 border-t border-sidebar-border">
+      <div className="px-6 py-4 border-t border-sidebar-border flex flex-col gap-3">
+        {isAdmin ? (
+          <form action={logout}>
+            <button type="submit" className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-2">
+              <LogOut className="size-4" />
+              Logout
+            </button>
+          </form>
+        ) : (
+          <Link href="/login" className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-2">
+            <LogIn className="size-4" />
+            Admin Login
+          </Link>
+        )}
         <p className="text-xs text-muted-foreground">
           v1.0 — Personal Use
         </p>
@@ -114,7 +128,7 @@ export function Sidebar() {
   );
 }
 
-export function MobileNav() {
+export function MobileNav({ isAdmin }: { isAdmin?: boolean }) {
   const pathname = usePathname();
 
   return (
@@ -143,6 +157,21 @@ export function MobileNav() {
             </li>
           );
         })}
+        <li>
+          {isAdmin ? (
+            <form action={logout} className="m-0 p-0">
+              <button type="submit" className="flex flex-col items-center gap-0.5 px-4 py-2 rounded-lg text-xs font-medium transition-colors touch-target text-muted-foreground hover:text-foreground">
+                <LogOut className="size-5" />
+                <span>Logout</span>
+              </button>
+            </form>
+          ) : (
+            <Link href="/login" className="flex flex-col items-center gap-0.5 px-4 py-2 rounded-lg text-xs font-medium transition-colors touch-target text-muted-foreground hover:text-foreground">
+              <LogIn className="size-5" />
+              <span>Login</span>
+            </Link>
+          )}
+        </li>
       </ul>
     </nav>
   );

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Sidebar, MobileNav } from "@/components/layout/sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { getIsAdmin } from "@/lib/auth";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -20,11 +21,13 @@ export const metadata: Metadata = {
     "Track badminton matches, analyze player performance, and discover winning partnerships with detailed statistics.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const isAdmin = await getIsAdmin();
+
   return (
     <html
       lang="en"
@@ -32,13 +35,13 @@ export default function RootLayout({
     >
       <body className="min-h-full flex">
         <TooltipProvider>
-          <Sidebar />
+          <Sidebar isAdmin={isAdmin} />
           <main className="flex-1 min-h-screen pb-20 md:pb-0">
             <div className="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8 py-4 sm:py-6">
               {children}
             </div>
           </main>
-          <MobileNav />
+          <MobileNav isAdmin={isAdmin} />
         </TooltipProvider>
       </body>
     </html>

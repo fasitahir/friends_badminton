@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { PlayerTable } from "@/components/players/player-table";
+import { getIsAdmin } from "@/lib/auth";
 
 export const metadata = {
   title: "Players — Shuttle Stats",
@@ -8,6 +9,7 @@ export const metadata = {
 
 export default async function PlayersPage() {
   const supabase = await createClient();
+  const isAdmin = await getIsAdmin();
   const { data: players } = await supabase
     .from("players")
     .select("*")
@@ -23,7 +25,7 @@ export default async function PlayersPage() {
           Manage your badminton group roster
         </p>
       </div>
-      <PlayerTable players={players || []} />
+      <PlayerTable players={players || []} isAdmin={isAdmin} />
     </div>
   );
 }

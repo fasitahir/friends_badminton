@@ -121,26 +121,28 @@ function PlayerForm({
   );
 }
 
-export function PlayerTable({ players }: { players: Player[] }) {
+export function PlayerTable({ players, isAdmin }: { players: Player[], isAdmin?: boolean }) {
   const [createOpen, setCreateOpen] = useState(false);
   const [editPlayer, setEditPlayer] = useState<Player | null>(null);
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex justify-end">
-        <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-          <DialogTrigger render={<Button />}>
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-4 mr-2"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
-            Add Player
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Add New Player</DialogTitle>
-            </DialogHeader>
-            <PlayerForm onClose={() => setCreateOpen(false)} />
-          </DialogContent>
-        </Dialog>
-      </div>
+      {isAdmin && (
+        <div className="flex justify-end">
+          <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+            <DialogTrigger render={<Button />}>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-4 mr-2"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+              Add Player
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Add New Player</DialogTitle>
+              </DialogHeader>
+              <PlayerForm onClose={() => setCreateOpen(false)} />
+            </DialogContent>
+          </Dialog>
+        </div>
+      )}
 
       {/* Edit Dialog */}
       <Dialog open={!!editPlayer} onOpenChange={(open) => !open && setEditPlayer(null)}>
@@ -188,38 +190,40 @@ export function PlayerTable({ players }: { players: Player[] }) {
                   {player.skill_level}
                 </Badge>
               </div>
-              <div className="flex gap-2 mt-4">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setEditPlayer(player)}
-                >
-                  Edit
-                </Button>
-                <AlertDialog>
-                  <AlertDialogTrigger render={<Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" />}>
-                    Delete
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Delete {player.name}?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        This will permanently delete this player and all their
-                        match history. This action cannot be undone.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction
-                        onClick={() => deletePlayer(player.id)}
-                        className="bg-destructive text-white hover:bg-destructive/90"
-                      >
-                        Delete
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </div>
+              {isAdmin && (
+                <div className="flex gap-2 mt-4">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setEditPlayer(player)}
+                  >
+                    Edit
+                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger render={<Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" />}>
+                      Delete
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete {player.name}?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This will permanently delete this player and all their
+                          match history. This action cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => deletePlayer(player.id)}
+                          className="bg-destructive text-white hover:bg-destructive/90"
+                        >
+                          Delete
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              )}
             </CardContent>
             <div className="absolute inset-0 bg-gradient-to-br from-primary/3 to-transparent pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity" />
           </Card>

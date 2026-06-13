@@ -1,7 +1,48 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { getIsAdmin } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
+import { cookies } from "next/headers";
+
+export async function login(formData: FormData) {
+  const username = formData.get("username") as string;
+  const password = formData.get("password") as string;
+
+  if (!username || !password) {
+    return { error: "Username and password are required" };
+  }
+
+  const supabase = await createClient();
+  
+  const { data: admin, error } = await supabase
+    .from("admins")
+    .select("id")
+    .eq("username", username)
+    .eq("password", password)
+    .single();
+
+  if (error || !admin) {
+    return { error: "Invalid username or password" };
+  }
+
+  const cookieStore = await cookies();
+  cookieStore.set("admin_auth", "true", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
+    maxAge: 60 * 60 * 24 * 30, // 30 days
+  });
+
+  return { success: true };
+}
+
+export async function logout() {
+  const cookieStore = await cookies();
+  cookieStore.delete("admin_auth");
+  return { success: true };
+}
 import {
   playerSchema,
   sessionSchema,
@@ -12,6 +53,8 @@ import {
 // ==================== PLAYER ACTIONS ====================
 
 export async function createPlayer(formData: FormData) {
+  if (!(await getIsAdmin())) return { error: "Unauthorized" };
+
   const supabase = await createClient();
 
   const parsed = playerSchema.safeParse({
@@ -36,6 +79,8 @@ export async function createPlayer(formData: FormData) {
 }
 
 export async function updatePlayer(id: string, formData: FormData) {
+  if (!(await getIsAdmin())) return { error: "Unauthorized" };
+
   const supabase = await createClient();
 
   const parsed = playerSchema.safeParse({
@@ -64,6 +109,8 @@ export async function updatePlayer(id: string, formData: FormData) {
 }
 
 export async function deletePlayer(id: string) {
+  if (!(await getIsAdmin())) return { error: "Unauthorized" };
+
   const supabase = await createClient();
 
   const { error } = await supabase.from("players").delete().eq("id", id);
@@ -81,6 +128,8 @@ export async function deletePlayer(id: string) {
 // ==================== SESSION ACTIONS ====================
 
 export async function createSession(formData: FormData) {
+  if (!(await getIsAdmin())) return { error: "Unauthorized" };
+
   const supabase = await createClient();
 
   const parsed = sessionSchema.safeParse({
@@ -109,6 +158,8 @@ export async function createSession(formData: FormData) {
 }
 
 export async function updateSession(id: string, formData: FormData) {
+  if (!(await getIsAdmin())) return { error: "Unauthorized" };
+
   const supabase = await createClient();
 
   const parsed = sessionSchema.safeParse({
@@ -136,6 +187,8 @@ export async function updateSession(id: string, formData: FormData) {
 }
 
 export async function deleteSession(id: string) {
+  if (!(await getIsAdmin())) return { error: "Unauthorized" };
+
   const supabase = await createClient();
 
   const { error } = await supabase.from("sessions").delete().eq("id", id);
@@ -153,6 +206,8 @@ export async function deleteSession(id: string) {
 // ==================== TEAM ACTIONS ====================
 
 export async function createTeam(sessionId: string, name: string, playerIds: string[]) {
+  if (!(await getIsAdmin())) return { error: "Unauthorized" };
+
   const supabase = await createClient();
 
   // Create team
@@ -189,6 +244,8 @@ export async function createTeam(sessionId: string, name: string, playerIds: str
 }
 
 export async function deleteTeam(teamId: string, sessionId: string) {
+  if (!(await getIsAdmin())) return { error: "Unauthorized" };
+
   const supabase = await createClient();
 
   const { error } = await supabase.from("teams").delete().eq("id", teamId);
@@ -208,6 +265,8 @@ export async function createPair(
   player1Id: string,
   player2Id: string
 ) {
+  if (!(await getIsAdmin())) return { error: "Unauthorized" };
+
   const supabase = await createClient();
 
   if (player1Id === player2Id) {
@@ -239,6 +298,8 @@ export async function createPair(
 }
 
 export async function deletePair(pairId: string, sessionId: string) {
+  if (!(await getIsAdmin())) return { error: "Unauthorized" };
+
   const supabase = await createClient();
 
   // Check if pair is used in any match_games
@@ -271,6 +332,8 @@ export async function createMatch(data: {
   winning_team_id?: string | null;
   games?: { game_number: number; pair1_id: string; pair2_id: string; pair1_score: number; pair2_score: number; winning_pair_id?: string | null }[];
 }) {
+  if (!(await getIsAdmin())) return { error: "Unauthorized" };
+
   const supabase = await createClient();
 
   const parsed = matchSchema.safeParse(data);
@@ -329,6 +392,8 @@ export async function createMatch(data: {
 }
 
 export async function deleteMatch(matchId: string, sessionId: string) {
+  if (!(await getIsAdmin())) return { error: "Unauthorized" };
+
   const supabase = await createClient();
 
   const { error } = await supabase.from("matches").delete().eq("id", matchId);
@@ -354,6 +419,8 @@ export async function updateMatch(
     games?: { game_number: number; pair1_id: string; pair2_id: string; pair1_score: number; pair2_score: number; winning_pair_id?: string | null }[];
   }
 ) {
+  if (!(await getIsAdmin())) return { error: "Unauthorized" };
+
   const supabase = await createClient();
 
   const parsed = matchSchema.safeParse(data);

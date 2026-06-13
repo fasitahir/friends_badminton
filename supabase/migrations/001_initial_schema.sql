@@ -98,3 +98,18 @@ CREATE POLICY "Allow all access to match_games" ON match_games FOR ALL USING (tr
 CREATE INDEX idx_match_games_match ON match_games(match_id);
 CREATE INDEX idx_match_games_pair1 ON match_games(pair1_id);
 CREATE INDEX idx_match_games_pair2 ON match_games(pair2_id);
+
+-- 8. Admins
+CREATE TABLE admins (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  username TEXT NOT NULL UNIQUE,
+  password TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE admins ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow all access to admins" ON admins FOR ALL USING (true) WITH CHECK (true);
+
+INSERT INTO admins (username, password) VALUES
+  ('fasitahir', 'fasitahir@404'),
+  ('rafay', 'rafay@500'),
+  ('abdulrehman', 'adbdulrehman@200');

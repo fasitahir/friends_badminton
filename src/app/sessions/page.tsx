@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { SessionList } from "@/components/sessions/session-list";
+import { getIsAdmin } from "@/lib/auth";
 
 export const metadata = {
   title: "Sessions — Shuttle Stats",
@@ -8,6 +9,7 @@ export const metadata = {
 
 export default async function SessionsPage() {
   const supabase = await createClient();
+  const isAdmin = await getIsAdmin();
 
   const { data: sessions } = await supabase
     .from("sessions")
@@ -39,7 +41,7 @@ export default async function SessionsPage() {
           Track your badminton gatherings and matches
         </p>
       </div>
-      <SessionList sessions={sessionsWithCounts} />
+      <SessionList sessions={sessionsWithCounts} isAdmin={isAdmin} />
     </div>
   );
 }
