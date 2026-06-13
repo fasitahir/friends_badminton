@@ -143,11 +143,14 @@ export function SessionList({ sessions }: { sessions: SessionWithCount[] }) {
                       variant="ghost"
                       size="sm"
                       className="text-destructive hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
-                      onClick={(e) => e.preventDefault()}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                      }}
                     />}>
                       Delete
                     </AlertDialogTrigger>
-                    <AlertDialogContent>
+                    <AlertDialogContent onClick={(e) => e.stopPropagation()}>
                       <AlertDialogHeader>
                         <AlertDialogTitle>Delete Session?</AlertDialogTitle>
                         <AlertDialogDescription>
@@ -156,9 +159,12 @@ export function SessionList({ sessions }: { sessions: SessionWithCount[] }) {
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogCancel onClick={(e) => e.stopPropagation()}>Cancel</AlertDialogCancel>
                         <AlertDialogAction
-                          onClick={() => deleteSession(session.id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deleteSession(session.id);
+                          }}
                           className="bg-destructive text-white hover:bg-destructive/90"
                         >
                           Delete
