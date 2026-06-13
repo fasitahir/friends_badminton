@@ -80,15 +80,15 @@ export function AnalyticsDashboard({ players, matches }: AnalyticsDashboardProps
 
   return (
     <Tabs defaultValue="overview" className="w-full">
-      <TabsList className="flex flex-wrap h-auto gap-1">
-        <TabsTrigger value="overview">Overview</TabsTrigger>
-        <TabsTrigger value="head-to-head">Head-to-Head</TabsTrigger>
-        <TabsTrigger value="pairs">Pairs</TabsTrigger>
-        <TabsTrigger value="pair-vs-pair">Pair vs Pair</TabsTrigger>
-        <TabsTrigger value="partners">Best Partners</TabsTrigger>
-        <TabsTrigger value="opponents">Toughest Opponents</TabsTrigger>
-        <TabsTrigger value="skill">Skill Analysis</TabsTrigger>
-        <TabsTrigger value="underdog">Underdog</TabsTrigger>
+      <TabsList className="flex flex-wrap !h-auto w-full justify-start gap-1 p-1 bg-muted/50">
+        <TabsTrigger value="overview" className="h-8">Overview</TabsTrigger>
+        <TabsTrigger value="head-to-head" className="h-8">Head-to-Head</TabsTrigger>
+        <TabsTrigger value="pairs" className="h-8">Pairs</TabsTrigger>
+        <TabsTrigger value="pair-vs-pair" className="h-8">Pair vs Pair</TabsTrigger>
+        <TabsTrigger value="partners" className="h-8">Best Partners</TabsTrigger>
+        <TabsTrigger value="opponents" className="h-8">Toughest Opponents</TabsTrigger>
+        <TabsTrigger value="skill" className="h-8">Skill Analysis</TabsTrigger>
+        <TabsTrigger value="underdog" className="h-8">Underdog</TabsTrigger>
       </TabsList>
 
       {/* ==================== OVERVIEW ==================== */}
@@ -201,7 +201,7 @@ function OverviewTab({
           </CardHeader>
           <CardContent>
             <div className="h-72">
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="99%" height="100%" minHeight={1}>
                 <BarChart data={chartData} layout="vertical" margin={{ left: 20 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                   <XAxis
@@ -321,7 +321,11 @@ function HeadToHeadTab({ players, matches }: { players: Player[]; matches: Match
         <div className="flex flex-col gap-2">
           <label className="text-sm font-medium">Player A</label>
           <Select value={playerAId} onValueChange={(v) => setPlayerAId(v || "")}>
-            <SelectTrigger><SelectValue placeholder="Select player" /></SelectTrigger>
+            <SelectTrigger>
+              <SelectValue placeholder="Select player">
+                {players.find((p) => p.id === playerAId)?.name}
+              </SelectValue>
+            </SelectTrigger>
             <SelectContent>
               {players.map((p) => (
                 <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
@@ -332,7 +336,11 @@ function HeadToHeadTab({ players, matches }: { players: Player[]; matches: Match
         <div className="flex flex-col gap-2">
           <label className="text-sm font-medium">Player B</label>
           <Select value={playerBId} onValueChange={(v) => setPlayerBId(v || "")}>
-            <SelectTrigger><SelectValue placeholder="Select player" /></SelectTrigger>
+            <SelectTrigger>
+              <SelectValue placeholder="Select player">
+                {players.find((p) => p.id === playerBId)?.name}
+              </SelectValue>
+            </SelectTrigger>
             <SelectContent>
               {players.filter((p) => p.id !== playerAId).map((p) => (
                 <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
@@ -479,7 +487,11 @@ function PairVsPairTab({ players, matches }: { players: Player[]; matches: Match
           <CardHeader><CardTitle className="text-base">Pair 1</CardTitle></CardHeader>
           <CardContent className="flex flex-col gap-3">
             <Select value={p1a} onValueChange={(v) => setP1a(v || "")}>
-              <SelectTrigger><SelectValue placeholder="Player 1" /></SelectTrigger>
+              <SelectTrigger>
+                <SelectValue placeholder="Player 1">
+                  {players.find((p) => p.id === p1a)?.name}
+                </SelectValue>
+              </SelectTrigger>
               <SelectContent>
                 {players.filter((p) => !selectedIds.includes(p.id) || p.id === p1a).map((p) => (
                   <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
@@ -487,7 +499,11 @@ function PairVsPairTab({ players, matches }: { players: Player[]; matches: Match
               </SelectContent>
             </Select>
             <Select value={p1b} onValueChange={(v) => setP1b(v || "")}>
-              <SelectTrigger><SelectValue placeholder="Player 2" /></SelectTrigger>
+              <SelectTrigger>
+                <SelectValue placeholder="Player 2">
+                  {players.find((p) => p.id === p1b)?.name}
+                </SelectValue>
+              </SelectTrigger>
               <SelectContent>
                 {players.filter((p) => !selectedIds.includes(p.id) || p.id === p1b).map((p) => (
                   <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
@@ -500,7 +516,11 @@ function PairVsPairTab({ players, matches }: { players: Player[]; matches: Match
           <CardHeader><CardTitle className="text-base">Pair 2</CardTitle></CardHeader>
           <CardContent className="flex flex-col gap-3">
             <Select value={p2a} onValueChange={(v) => setP2a(v || "")}>
-              <SelectTrigger><SelectValue placeholder="Player 1" /></SelectTrigger>
+              <SelectTrigger>
+                <SelectValue placeholder="Player 1">
+                  {players.find((p) => p.id === p2a)?.name}
+                </SelectValue>
+              </SelectTrigger>
               <SelectContent>
                 {players.filter((p) => !selectedIds.includes(p.id) || p.id === p2a).map((p) => (
                   <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
@@ -508,7 +528,11 @@ function PairVsPairTab({ players, matches }: { players: Player[]; matches: Match
               </SelectContent>
             </Select>
             <Select value={p2b} onValueChange={(v) => setP2b(v || "")}>
-              <SelectTrigger><SelectValue placeholder="Player 2" /></SelectTrigger>
+              <SelectTrigger>
+                <SelectValue placeholder="Player 2">
+                  {players.find((p) => p.id === p2b)?.name}
+                </SelectValue>
+              </SelectTrigger>
               <SelectContent>
                 {players.filter((p) => !selectedIds.includes(p.id) || p.id === p2b).map((p) => (
                   <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
@@ -562,7 +586,11 @@ function BestPartnersTab({ players, matches }: { players: Player[]; matches: Mat
       <div className="flex flex-col gap-2 max-w-sm">
         <label className="text-sm font-medium">Select Player</label>
         <Select value={selectedId} onValueChange={(v) => setSelectedId(v || "")}>
-          <SelectTrigger><SelectValue placeholder="Select player" /></SelectTrigger>
+          <SelectTrigger>
+            <SelectValue placeholder="Select player">
+              {players.find((p) => p.id === selectedId)?.name}
+            </SelectValue>
+          </SelectTrigger>
           <SelectContent>
             {players.map((p) => (
                <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
@@ -625,7 +653,11 @@ function ToughestOpponentsTab({ players, matches }: { players: Player[]; matches
       <div className="flex flex-col gap-2 max-w-sm">
         <label className="text-sm font-medium">Select Player</label>
         <Select value={selectedId} onValueChange={(v) => setSelectedId(v || "")}>
-          <SelectTrigger><SelectValue placeholder="Select player" /></SelectTrigger>
+          <SelectTrigger>
+            <SelectValue placeholder="Select player">
+              {players.find((p) => p.id === selectedId)?.name}
+            </SelectValue>
+          </SelectTrigger>
           <SelectContent>
             {players.map((p) => (
               <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
@@ -688,7 +720,11 @@ function SkillAnalysisTab({ players, matches }: { players: Player[]; matches: Ma
       <div className="flex flex-col gap-2 max-w-sm">
         <label className="text-sm font-medium">Select Player</label>
         <Select value={selectedId} onValueChange={(v) => setSelectedId(v || "")}>
-          <SelectTrigger><SelectValue placeholder="Select player" /></SelectTrigger>
+          <SelectTrigger>
+            <SelectValue placeholder="Select player">
+              {players.find((p) => p.id === selectedId)?.name}
+            </SelectValue>
+          </SelectTrigger>
           <SelectContent>
             {players.map((p) => (
               <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>

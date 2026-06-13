@@ -48,6 +48,7 @@ function PlayerForm({
   player?: Player;
   onClose: () => void;
 }) {
+  const [skillLevel, setSkillLevel] = useState(player?.skill_level || "Competitive");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -57,6 +58,7 @@ function PlayerForm({
     setError("");
 
     const formData = new FormData(e.currentTarget);
+    formData.set("skill_level", skillLevel); // Ensure the state value is set in form data
     const result = player
       ? await updatePlayer(player.id, formData)
       : await createPlayer(formData);
@@ -92,12 +94,15 @@ function PlayerForm({
       </div>
       <div className="flex flex-col gap-2">
         <Label htmlFor="skill_level">Skill Level</Label>
+        <input type="hidden" name="skill_level" value={skillLevel} />
         <Select
-          name="skill_level"
-          defaultValue={player?.skill_level || "Competitive"}
+          value={skillLevel}
+          onValueChange={(v) => setSkillLevel(v as "Developing" | "Competitive" | "Advanced")}
         >
           <SelectTrigger>
-            <SelectValue placeholder="Select skill level" />
+            <SelectValue placeholder="Select skill level">
+              {skillLevel}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="Developing">Developing</SelectItem>
