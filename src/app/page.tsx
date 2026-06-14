@@ -28,8 +28,7 @@ export default async function DashboardPage() {
       .select(
         `*, games:match_games(*, pair1:pairs!match_games_pair1_id_fkey(*, player1:players!pairs_player1_id_fkey(*), player2:players!pairs_player2_id_fkey(*)), pair2:pairs!match_games_pair2_id_fkey(*, player1:players!pairs_player1_id_fkey(*), player2:players!pairs_player2_id_fkey(*)))`
       )
-      .order("created_at", { ascending: false })
-      .limit(10),
+      .order("created_at", { ascending: false }),
   ]);
 
   const matches = (matchesData || []) as any[];
