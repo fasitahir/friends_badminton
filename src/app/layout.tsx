@@ -8,11 +8,13 @@ import "./globals.css";
 const geistSans = Geist({
   variable: "--font-sans",
   subsets: ["latin"],
+  display: "swap", // font-display: swap prevents FOIT
 });
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -34,12 +36,23 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const isAdmin = await getIsAdmin();
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseHostname = supabaseUrl ? new URL(supabaseUrl).hostname : null;
 
   return (
     <html
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased dark`}
     >
+      <head>
+        {/* Preconnect to Supabase to eliminate TCP/TLS handshake latency */}
+        {supabaseHostname && (
+          <>
+            <link rel="preconnect" href={`https://${supabaseHostname}`} />
+            <link rel="dns-prefetch" href={`https://${supabaseHostname}`} />
+          </>
+        )}
+      </head>
       <body className="min-h-full flex">
         <TooltipProvider>
           <Sidebar isAdmin={isAdmin} />

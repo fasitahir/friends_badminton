@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { getPlayers, getAnalyticsMatches } from "@/lib/data";
 import type { Player, MatchWithDetails } from "@/lib/supabase/types";
 import { AnalyticsDashboard } from "@/components/analytics/analytics-dashboard";
 
@@ -7,17 +7,13 @@ export const metadata = {
   description: "Deep analytics for your badminton group",
 };
 
-export default async function AnalyticsPage() {
-  const supabase = await createClient();
+// ISR: revalidate every 60 s (purged immediately on mutations via cache tags)
+export const revalidate = 60;
 
-  const [{ data: players }, { data: rawMatches }] = await Promise.all([
-    supabase.from("players").select("*").order("name"),
-    supabase
-      .from("matches")
-      .select(
-        `*, team1:teams!matches_team1_id_fkey(*), team2:teams!matches_team2_id_fkey(*), winning_team:teams!matches_winning_team_id_fkey(*), games:match_games(*, pair1:pairs!match_games_pair1_id_fkey(*, player1:players!pairs_player1_id_fkey(*), player2:players!pairs_player2_id_fkey(*)), pair2:pairs!match_games_pair2_id_fkey(*, player1:players!pairs_player1_id_fkey(*), player2:players!pairs_player2_id_fkey(*)), winning_pair:pairs!match_games_winning_pair_id_fkey(*, player1:players!pairs_player1_id_fkey(*), player2:players!pairs_player2_id_fkey(*)))`
-      )
-      .order("created_at", { ascending: false }),
+export default async function AnalyticsPage() {
+  const [players, rawMatches] = await Promise.all([
+    getPlayers(),
+    getAnalyticsMatches(),
   ]);
 
   return (

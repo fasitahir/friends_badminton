@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { getPlayers } from "@/lib/data";
 import { PlayerTable } from "@/components/players/player-table";
 import { getIsAdmin } from "@/lib/auth";
 
@@ -7,13 +7,11 @@ export const metadata = {
   description: "Manage your badminton group players",
 };
 
+// ISR: revalidate every 60 s
+export const revalidate = 60;
+
 export default async function PlayersPage() {
-  const supabase = await createClient();
-  const isAdmin = await getIsAdmin();
-  const { data: players } = await supabase
-    .from("players")
-    .select("*")
-    .order("name");
+  const [isAdmin, players] = await Promise.all([getIsAdmin(), getPlayers()]);
 
   return (
     <div className="flex flex-col gap-6">

@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { getSessions, getMatchCounts } from "@/lib/data";
 import { SessionList } from "@/components/sessions/session-list";
 import { getIsAdmin } from "@/lib/auth";
 
@@ -7,18 +7,15 @@ export const metadata = {
   description: "View and manage badminton sessions",
 };
 
-export default async function SessionsPage() {
-  const supabase = await createClient();
+// ISR: serve from cache, revalidate every 60 s
+export const revalidate = 60;
 
-  const [isAdmin, { data: sessions }, { data: matchCounts }] =
-    await Promise.all([
-      getIsAdmin(),
-      supabase
-        .from("sessions")
-        .select("*")
-        .order("date", { ascending: false }),
-      supabase.from("matches").select("session_id"),
-    ]);
+export default async function SessionsPage() {
+  const [isAdmin, sessions, matchCounts] = await Promise.all([
+    getIsAdmin(),
+    getSessions(),
+    getMatchCounts(),
+  ]);
 
   const countMap: Record<string, number> = {};
   for (const m of matchCounts || []) {

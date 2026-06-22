@@ -1,35 +1,19 @@
-import { createClient } from "@/lib/supabase/server";
+import { getCounts, getRecentSessions, getPlayers, getMatchesWithDetails } from "@/lib/data";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 
-export default async function DashboardPage() {
-  const supabase = await createClient();
+// ISR: serve from cache, revalidate in background every 60 s
+export const revalidate = 60;
 
-  const [
-    { count: playerCount },
-    { count: sessionCount },
-    { count: matchCount },
-    { data: recentSessions },
-    { data: players },
-    { data: matchesData },
-  ] = await Promise.all([
-    supabase.from("players").select("*", { count: "exact", head: true }),
-    supabase.from("sessions").select("*", { count: "exact", head: true }),
-    supabase.from("matches").select("*", { count: "exact", head: true }),
-    supabase
-      .from("sessions")
-      .select("*")
-      .order("date", { ascending: false })
-      .limit(5),
-    supabase.from("players").select("*").order("name"),
-    supabase
-      .from("matches")
-      .select(
-        `*, games:match_games(*, pair1:pairs!match_games_pair1_id_fkey(*, player1:players!pairs_player1_id_fkey(*), player2:players!pairs_player2_id_fkey(*)), pair2:pairs!match_games_pair2_id_fkey(*, player1:players!pairs_player1_id_fkey(*), player2:players!pairs_player2_id_fkey(*)))`
-      )
-      .order("created_at", { ascending: false }),
-  ]);
+export default async function DashboardPage() {
+  const [{ playerCount, sessionCount, matchCount }, recentSessions, players, matchesData] =
+    await Promise.all([
+      getCounts(),
+      getRecentSessions(),
+      getPlayers(),
+      getMatchesWithDetails(),
+    ]);
 
   const matches = (matchesData || []) as any[];
 
