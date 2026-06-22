@@ -142,3 +142,19 @@ export type UnderdogStats = {
   totalUnderdogSets: number;
   underdogWinRate: number;
 };
+
+// Monthly leaderboard types
+export type MonthlySnapshot = {
+  id: string;
+  month: string;        // ISO date string: '2026-06-01'
+  player_id: string;
+  sets_played: number;
+  sets_won: number;
+  sets_lost: number;
+  win_rate: number;
+  created_at: string;
+};
+
+export type MonthlyPlayerEntry = MonthlySnapshot & {
+  player: Player;
+};

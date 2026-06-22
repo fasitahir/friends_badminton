@@ -187,3 +187,51 @@ export const getMatchesWithDetails = cache(cachedFetchMatchesWithDetails);
 
 /** Matches with full analytics detail (teams + pairs + players). */
 export const getAnalyticsMatches = cache(cachedFetchAnalyticsMatches);
+
+// ─── Monthly leaderboard fetchers ────────────────────────────────────────────
+
+/** Returns list of saved month strings ['2026-06', '2026-05', ...] */
+async function _fetchSavedMonths() {
+  const supabase = createCacheClient();
+  const { data } = await supabase
+    .from("monthly_snapshots")
+    .select("month")
+    .order("month", { ascending: false });
+  if (!data) return [] as string[];
+  // Deduplicate months and format as YYYY-MM
+  const seen = new Set<string>();
+  for (const row of data) {
+    seen.add((row.month as string).slice(0, 7));
+  }
+  return Array.from(seen);
+}
+
+/** Returns ranked leaderboard rows for a given month (YYYY-MM). */
+async function _fetchMonthlyLeaderboard(yearMonth: string) {
+  const supabase = createCacheClient();
+  const monthDate = `${yearMonth}-01`;
+  const { data } = await supabase
+    .from("monthly_snapshots")
+    .select("*, player:players(*)")
+    .eq("month", monthDate)
+    .order("win_rate", { ascending: false });
+  return (data ?? []) as any[];
+}
+
+const cachedFetchSavedMonths = unstable_cache(
+  _fetchSavedMonths,
+  ["saved-months"],
+  { tags: ["monthly_snapshots"], revalidate: DEFAULT_REVALIDATE }
+);
+
+const cachedFetchMonthlyLeaderboard = unstable_cache(
+  _fetchMonthlyLeaderboard,
+  ["monthly-leaderboard"],
+  { tags: ["monthly_snapshots"], revalidate: DEFAULT_REVALIDATE }
+);
+
+/** List of months that have been snapshotted (most recent first). */
+export const getSavedMonths = cache(cachedFetchSavedMonths);
+
+/** Ranked leaderboard for a specific month (YYYY-MM). */
+export const getMonthlyLeaderboard = cache(cachedFetchMonthlyLeaderboard);
