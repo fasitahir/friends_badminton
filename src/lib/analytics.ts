@@ -7,17 +7,9 @@ import type {
   PairStatsResult,
   PartnerStats,
   OpponentStats,
-  SkillLevelBreakdown,
-  UnderdogStats,
   MatchGameWithPairs,
 } from "@/lib/supabase/types";
 
-// Skill level weight for underdog calculations
-const SKILL_WEIGHTS: Record<string, number> = {
-  Developing: 1,
-  Competitive: 2,
-  Advanced: 3,
-};
 
 /**
  * Check if a player is in a pair
@@ -326,114 +318,4 @@ export function computeToughestOpponents(
     })
     .filter((s) => s.opponent)
     .sort((a, b) => a.winRate - b.winRate); // lowest win rate first = toughest
-}
-
-/**
- * Skill level analysis: performance when paired with players of each skill level
- */
-export function computeSkillAnalysis(
-  playerId: string,
-  players: Player[],
-  matches: MatchWithDetails[]
-): SkillLevelBreakdown[] {
-  const sets = getAllSets(matches);
-  const playerMap = new Map(players.map((p) => [p.id, p]));
-  const levels: Record<string, { wins: number; losses: number }> = {
-    Developing: { wins: 0, losses: 0 },
-    Competitive: { wins: 0, losses: 0 },
-    Advanced: { wins: 0, losses: 0 },
-  };
-
-  for (const set of sets) {
-    const isPair1 = isPlayerInPair(playerId, set.pair1);
-    const isPair2 = isPlayerInPair(playerId, set.pair2);
-
-    if (isPair1 || isPair2) {
-      const myPair = isPair1 ? set.pair1 : set.pair2;
-      const won = set.winning_pair_id === myPair.id;
-      const partnerId = getPartnerId(playerId, myPair);
-      const partner = playerMap.get(partnerId);
-      
-      if (partner) {
-        if (won) levels[partner.skill_level].wins++;
-        else levels[partner.skill_level].losses++;
-      }
-    }
-  }
-
-  return (["Developing", "Competitive", "Advanced"] as const).map((level) => {
-    const played = levels[level].wins + levels[level].losses;
-    return {
-      level,
-      setsPlayed: played,
-      wins: levels[level].wins,
-      losses: levels[level].losses,
-      winRate: played > 0 ? (levels[level].wins / played) * 100 : 0,
-    };
-  });
-}
-
-/**
- * Underdog analysis: wins when combined team skill level is lower
- */
-export function computeUnderdogStats(
-  players: Player[],
-  matches: MatchWithDetails[]
-): UnderdogStats[] {
-  const sets = getAllSets(matches);
-  const playerMap = new Map(players.map((p) => [p.id, p]));
-
-  // For each player, track underdog situations
-  const underdogMap = new Map<string, { wins: number; losses: number }>();
-
-  for (const set of sets) {
-    const wpId = set.winning_pair_id;
-    const wp = wpId === set.pair1.id ? set.pair1 : set.pair2;
-    const lp = wpId === set.pair1.id ? set.pair2 : set.pair1;
-
-    const wpP1 = playerMap.get(wp.player1_id);
-    const wpP2 = playerMap.get(wp.player2_id);
-    const lpP1 = playerMap.get(lp.player1_id);
-    const lpP2 = playerMap.get(lp.player2_id);
-
-    if (!wpP1 || !wpP2 || !lpP1 || !lpP2) continue;
-
-    const winningSkill =
-      SKILL_WEIGHTS[wpP1.skill_level] + SKILL_WEIGHTS[wpP2.skill_level];
-    const losingSkill =
-      SKILL_WEIGHTS[lpP1.skill_level] + SKILL_WEIGHTS[lpP2.skill_level];
-
-    if (winningSkill < losingSkill) {
-      // Winning pair was the underdog — they won despite lower skill
-      for (const pid of [wp.player1_id, wp.player2_id]) {
-        if (!underdogMap.has(pid)) underdogMap.set(pid, { wins: 0, losses: 0 });
-        underdogMap.get(pid)!.wins++;
-      }
-      for (const pid of [lp.player1_id, lp.player2_id]) {
-        if (!underdogMap.has(pid)) underdogMap.set(pid, { wins: 0, losses: 0 });
-        underdogMap.get(pid)!.losses++;
-      }
-    } else if (losingSkill < winningSkill) {
-      // Losing pair was the underdog — they lost as underdog
-      for (const pid of [lp.player1_id, lp.player2_id]) {
-        if (!underdogMap.has(pid)) underdogMap.set(pid, { wins: 0, losses: 0 });
-        underdogMap.get(pid)!.losses++;
-      }
-    }
-  }
-
-  return players
-    .map((player) => {
-      const stats = underdogMap.get(player.id) || { wins: 0, losses: 0 };
-      const total = stats.wins + stats.losses;
-      return {
-        player,
-        underdogWins: stats.wins,
-        underdogLosses: stats.losses,
-        totalUnderdogSets: total,
-        underdogWinRate: total > 0 ? (stats.wins / total) * 100 : 0,
-      };
-    })
-    .filter((s) => s.totalUnderdogSets > 0)
-    .sort((a, b) => b.underdogWinRate - a.underdogWinRate);
 }

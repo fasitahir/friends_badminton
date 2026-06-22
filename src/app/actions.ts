@@ -59,7 +59,6 @@ export async function createPlayer(formData: FormData) {
   const parsed = playerSchema.safeParse({
     name: formData.get("name"),
     nickname: formData.get("nickname") || null,
-    skill_level: formData.get("skill_level"),
   });
 
   if (!parsed.success) {
@@ -85,7 +84,6 @@ export async function updatePlayer(id: string, formData: FormData) {
   const parsed = playerSchema.safeParse({
     name: formData.get("name"),
     nickname: formData.get("nickname") || null,
-    skill_level: formData.get("skill_level"),
   });
 
   if (!parsed.success) {
@@ -340,54 +338,32 @@ export async function createMatch(data: {
     return { error: parsed.error.issues[0].message };
   }
 
-  const { data: match, error: matchError } = await supabase
-    .from("matches")
-    .insert({
-      session_id: parsed.data.session_id,
-      best_of: parsed.data.best_of,
-      team1_id: parsed.data.team1_id,
-      team2_id: parsed.data.team2_id,
-      winning_team_id: parsed.data.winning_team_id,
-    })
-    .select()
-    .single();
+  if (data.games && data.games.length > 0) {
+    for (const game of data.games) {
+      const gameParsed = matchGameSchema.safeParse({ ...game, match_id: "00000000-0000-0000-0000-000000000000" });
+      if (!gameParsed.success) {
+        return { error: `Game ${game.game_number}: ${gameParsed.error.issues[0].message}` };
+      }
+    }
+  }
+
+  const { data: matchId, error: matchError } = await supabase.rpc("record_match_with_elo", {
+    p_session_id: parsed.data.session_id,
+    p_best_of: parsed.data.best_of,
+    p_team1_id: parsed.data.team1_id || null,
+    p_team2_id: parsed.data.team2_id || null,
+    p_winning_team_id: parsed.data.winning_team_id || null,
+    p_games: data.games || [],
+  });
 
   if (matchError) {
     return { error: matchError.message };
   }
 
-  // Insert game scores if provided
-  if (data.games && data.games.length > 0) {
-    const games = data.games.map((g) => ({
-      match_id: match.id,
-      game_number: g.game_number,
-      pair1_id: g.pair1_id,
-      pair2_id: g.pair2_id,
-      pair1_score: g.pair1_score,
-      pair2_score: g.pair2_score,
-      winning_pair_id: g.winning_pair_id,
-    }));
-
-    for (const game of games) {
-      const gameParsed = matchGameSchema.safeParse(game);
-      if (!gameParsed.success) {
-        return { error: `Game ${game.game_number}: ${gameParsed.error.issues[0].message}` };
-      }
-    }
-
-    const { error: gameError } = await supabase
-      .from("match_games")
-      .insert(games);
-
-    if (gameError) {
-      return { error: gameError.message };
-    }
-  }
-
   revalidatePath(`/sessions/${data.session_id}`);
   revalidatePath("/analytics");
   revalidatePath("/");
-  return { success: true, matchId: match.id };
+  return { success: true, matchId: matchId };
 }
 
 export async function deleteMatch(matchId: string, sessionId: string) {
@@ -395,7 +371,9 @@ export async function deleteMatch(matchId: string, sessionId: string) {
 
   const supabase = await createClient();
 
-  const { error } = await supabase.from("matches").delete().eq("id", matchId);
+  const { error } = await supabase.rpc("delete_match_with_elo", {
+    p_match_id: matchId,
+  });
 
   if (error) {
     return { error: error.message };
@@ -427,56 +405,26 @@ export async function updateMatch(
     return { error: parsed.error.issues[0].message };
   }
 
-  const { error: matchError } = await supabase
-    .from("matches")
-    .update({
-      best_of: parsed.data.best_of,
-      team1_id: parsed.data.team1_id,
-      team2_id: parsed.data.team2_id,
-      winning_team_id: parsed.data.winning_team_id,
-    })
-    .eq("id", matchId);
-
-  if (matchError) {
-    return { error: matchError.message };
-  }
-
-  // Delete existing games
-  const { error: deleteError } = await supabase
-    .from("match_games")
-    .delete()
-    .eq("match_id", matchId);
-
-  if (deleteError) {
-    return { error: deleteError.message };
-  }
-
-  // Insert new game scores if provided
   if (data.games && data.games.length > 0) {
-    const games = data.games.map((g) => ({
-      match_id: matchId,
-      game_number: g.game_number,
-      pair1_id: g.pair1_id,
-      pair2_id: g.pair2_id,
-      pair1_score: g.pair1_score,
-      pair2_score: g.pair2_score,
-      winning_pair_id: g.winning_pair_id,
-    }));
-
-    for (const game of games) {
-      const gameParsed = matchGameSchema.safeParse(game);
+    for (const game of data.games) {
+      const gameParsed = matchGameSchema.safeParse({ ...game, match_id: matchId });
       if (!gameParsed.success) {
         return { error: `Game ${game.game_number}: ${gameParsed.error.issues[0].message}` };
       }
     }
+  }
 
-    const { error: gameError } = await supabase
-      .from("match_games")
-      .insert(games);
+  const { error: matchError } = await supabase.rpc("update_match_with_elo", {
+    p_match_id: matchId,
+    p_best_of: parsed.data.best_of,
+    p_team1_id: parsed.data.team1_id || null,
+    p_team2_id: parsed.data.team2_id || null,
+    p_winning_team_id: parsed.data.winning_team_id || null,
+    p_games: data.games || [],
+  });
 
-    if (gameError) {
-      return { error: gameError.message };
-    }
+  if (matchError) {
+    return { error: matchError.message };
   }
 
   revalidatePath(`/sessions/${data.session_id}`);

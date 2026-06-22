@@ -7,7 +7,7 @@ import {
 } from "@/lib/data";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
-import { MonthlyLeaderboard } from "@/components/dashboard/monthly-leaderboard";
+import { LeaderboardTabs } from "@/components/dashboard/leaderboard-tabs";
 
 // ISR: serve from cache, revalidate in background every 60 s
 export const revalidate = 60;
@@ -111,7 +111,11 @@ export default async function DashboardPage() {
   // 4. Combine months for dropdown (ensure currentMonth is at top and unique)
   const availableMonths = Array.from(new Set([currentMonth, ...savedMonths]));
 
-  const topPlayer = allTimeStats[0];
+  const sortedPlayers = (players ?? [])
+    .filter(p => p.elo_rating)
+    .sort((a, b) => b.elo_rating - a.elo_rating);
+    
+  const topPlayer = sortedPlayers[0];
 
   const statCards = [
     {
@@ -180,9 +184,9 @@ export default async function DashboardPage() {
       ),
     },
     {
-      label: "Win Rate Leader (All-Time)",
+      label: "Highest Rated",
       value: topPlayer
-        ? `${topPlayer.name} (${topPlayer.winRate.toFixed(0)}%)`
+        ? `${topPlayer.name} (${topPlayer.elo_rating})`
         : "—",
       icon: (
         <svg
@@ -235,8 +239,8 @@ export default async function DashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Monthly Leaderboard — dynamic live current month, snapshot switcher */}
-        <MonthlyLeaderboard
+        <LeaderboardTabs 
+          players={players || []}
           availableMonths={availableMonths}
           initialMonth={currentMonth}
           initialEntries={initialEntries}

@@ -3,9 +3,6 @@ import { z } from "zod";
 export const playerSchema = z.object({
   name: z.string().min(1, "Name is required").max(50, "Name too long"),
   nickname: z.string().max(30, "Nickname too long").nullable().optional(),
-  skill_level: z.enum(["Developing", "Competitive", "Advanced"], {
-    message: "Skill level is required",
-  }),
 });
 
 export const sessionSchema = z.object({

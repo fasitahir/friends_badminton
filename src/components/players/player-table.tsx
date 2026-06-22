@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import NextLink from "next/link";
 import type { Player } from "@/lib/supabase/types";
 import { createPlayer, updatePlayer, deletePlayer } from "@/app/actions";
 import { Button } from "@/components/ui/button";
@@ -26,20 +27,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import Link from "next/link";
 
-const skillColors: Record<string, string> = {
-  Developing: "bg-amber-500/15 text-amber-400 border-amber-500/30",
-  Competitive: "bg-blue-500/15 text-blue-400 border-blue-500/30",
-  Advanced: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
-};
 
 function PlayerForm({
   player,
@@ -48,7 +36,6 @@ function PlayerForm({
   player?: Player;
   onClose: () => void;
 }) {
-  const [skillLevel, setSkillLevel] = useState(player?.skill_level || "Competitive");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -58,7 +45,6 @@ function PlayerForm({
     setError("");
 
     const formData = new FormData(e.currentTarget);
-    formData.set("skill_level", skillLevel); // Ensure the state value is set in form data
     const result = player
       ? await updatePlayer(player.id, formData)
       : await createPlayer(formData);
@@ -91,25 +77,6 @@ function PlayerForm({
           defaultValue={player?.nickname || ""}
           placeholder="Nickname"
         />
-      </div>
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="skill_level">Skill Level</Label>
-        <input type="hidden" name="skill_level" value={skillLevel} />
-        <Select
-          value={skillLevel}
-          onValueChange={(v) => setSkillLevel(v as "Developing" | "Competitive" | "Advanced")}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Select skill level">
-              {skillLevel}
-            </SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="Developing">Developing</SelectItem>
-            <SelectItem value="Competitive">Competitive</SelectItem>
-            <SelectItem value="Advanced">Advanced</SelectItem>
-          </SelectContent>
-        </Select>
       </div>
       {error && (
         <p className="text-sm text-destructive">{error}</p>
@@ -170,12 +137,12 @@ export function PlayerTable({ players, isAdmin }: { players: Player[], isAdmin?:
                     {player.name.charAt(0).toUpperCase()}
                   </div>
                   <div>
-                    <Link
+                    <NextLink
                       href={`/players/${player.id}`}
                       className="font-medium hover:text-primary transition-colors"
                     >
                       {player.name}
-                    </Link>
+                    </NextLink>
                     {player.nickname && (
                       <p className="text-xs text-muted-foreground">
                         &ldquo;{player.nickname}&rdquo;
@@ -183,12 +150,9 @@ export function PlayerTable({ players, isAdmin }: { players: Player[], isAdmin?:
                     )}
                   </div>
                 </div>
-                <Badge
-                  variant="outline"
-                  className={skillColors[player.skill_level]}
-                >
-                  {player.skill_level}
-                </Badge>
+                <span className="text-sm font-bold font-mono text-muted-foreground">
+                  {player.elo_rating}
+                </span>
               </div>
               {isAdmin && (
                 <div className="flex gap-2 mt-4">

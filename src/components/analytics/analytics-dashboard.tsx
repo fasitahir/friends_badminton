@@ -10,9 +10,8 @@ import {
   computePairVsPair,
   computeBestPartners,
   computeToughestOpponents,
-  computeSkillAnalysis,
-  computeUnderdogStats,
 } from "@/lib/analytics";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -36,11 +35,7 @@ const WinRateChart = dynamic(
   }
 );
 
-const skillColors: Record<string, string> = {
-  Developing: "bg-amber-500/15 text-amber-400 border-amber-500/30",
-  Competitive: "bg-blue-500/15 text-blue-400 border-blue-500/30",
-  Advanced: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
-};
+
 
 interface AnalyticsDashboardProps {
   players: Player[];
@@ -58,11 +53,7 @@ export function AnalyticsDashboard({ players, matches }: AnalyticsDashboardProps
     [players, matches]
   );
 
-  const underdogStats = useMemo(
-    () => computeUnderdogStats(players, matches),
-    [players, matches]
-  );
-  
+
   // A helper to get the total number of sets played across all matches
   const totalSetsPlayed = useMemo(() => {
     return matches.reduce((acc, m) => acc + m.games.filter(g => g.winning_pair_id).length, 0);
@@ -91,8 +82,6 @@ export function AnalyticsDashboard({ players, matches }: AnalyticsDashboardProps
             <TabsTrigger value="pair-vs-pair" className="h-8 text-xs sm:text-sm shrink-0">Pair vs Pair</TabsTrigger>
             <TabsTrigger value="partners" className="h-8 text-xs sm:text-sm shrink-0">Best Partners</TabsTrigger>
             <TabsTrigger value="opponents" className="h-8 text-xs sm:text-sm shrink-0">Toughest Opponents</TabsTrigger>
-            <TabsTrigger value="skill" className="h-8 text-xs sm:text-sm shrink-0">Skill Analysis</TabsTrigger>
-            <TabsTrigger value="underdog" className="h-8 text-xs sm:text-sm shrink-0">Underdog</TabsTrigger>
           </TabsList>
         </div>
         {/* Mobile scroll-right indicator */}
@@ -131,15 +120,6 @@ export function AnalyticsDashboard({ players, matches }: AnalyticsDashboardProps
         <ToughestOpponentsTab players={players} matches={matches} />
       </TabsContent>
 
-      {/* ==================== SKILL ANALYSIS ==================== */}
-      <TabsContent value="skill" className="mt-6">
-        <SkillAnalysisTab players={players} matches={matches} />
-      </TabsContent>
-
-      {/* ==================== UNDERDOG ==================== */}
-      <TabsContent value="underdog" className="mt-6">
-        <UnderdogTab stats={underdogStats} />
-      </TabsContent>
     </Tabs>
   );
 }
@@ -242,9 +222,9 @@ function OverviewTab({
                     <td className="py-3 px-2">
                       <div className="flex items-center gap-2">
                         <span className="font-medium whitespace-nowrap">{s.player.name}</span>
-                        <Badge variant="outline" className={`text-[10px] ${skillColors[s.player.skill_level]}`}>
-                          {s.player.skill_level}
-                        </Badge>
+                        <span className="text-xs font-mono text-muted-foreground bg-muted/60 px-1.5 py-0.5 rounded border">
+                          {s.player.elo_rating}
+                        </span>
                       </div>
                     </td>
                     <td className="py-3 px-2 text-right">
@@ -678,121 +658,3 @@ function ToughestOpponentsTab({ players, matches }: { players: Player[]; matches
   );
 }
 
-// ==================== SKILL ANALYSIS TAB ====================
-function SkillAnalysisTab({ players, matches }: { players: Player[]; matches: MatchWithDetails[] }) {
-  const [selectedId, setSelectedId] = useState("");
-
-  const analysis = useMemo(() => {
-    if (!selectedId) return [];
-    return computeSkillAnalysis(selectedId, players, matches);
-  }, [selectedId, players, matches]);
-
-  return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-2 max-w-sm">
-        <label className="text-sm font-medium">Select Player</label>
-        <Select value={selectedId} onValueChange={(v) => setSelectedId(v || "")}>
-          <SelectTrigger>
-            <SelectValue placeholder="Select player">
-              {players.find((p) => p.id === selectedId)?.name}
-            </SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            {players.map((p) => (
-              <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      {selectedId && (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {analysis.map((sa) => (
-            <Card key={sa.level}>
-              <CardHeader className="pb-2">
-                <Badge variant="outline" className={skillColors[sa.level]}>
-                  Paired with {sa.level}
-                </Badge>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-col gap-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Sets</span>
-                    <span className="font-mono tabular-nums">{sa.setsPlayed}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Wins</span>
-                    <span className="font-mono tabular-nums text-win">{sa.wins}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Losses</span>
-                    <span className="font-mono tabular-nums text-loss">{sa.losses}</span>
-                  </div>
-                  <Separator />
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Win Rate</span>
-                    <span className="font-mono tabular-nums font-bold text-lg">
-                      {sa.winRate.toFixed(0)}%
-                    </span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ==================== UNDERDOG TAB ====================
-function UnderdogTab({ stats }: { stats: ReturnType<typeof computeUnderdogStats> }) {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Underdog Performance</CardTitle>
-        <p className="text-sm text-muted-foreground mt-1">
-          When a pair wins despite having a lower combined team skill level
-        </p>
-      </CardHeader>
-      <CardContent>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border">
-                <th className="text-left py-3 px-2 font-medium text-muted-foreground whitespace-nowrap">Player</th>
-                <th className="text-right py-3 px-2 font-medium text-muted-foreground whitespace-nowrap">Win %</th>
-                <th className="text-center py-3 px-2 font-medium text-muted-foreground whitespace-nowrap">Underdog Sets</th>
-                <th className="text-center py-3 px-2 font-medium text-muted-foreground whitespace-nowrap">Wins</th>
-                <th className="text-center py-3 px-2 font-medium text-muted-foreground whitespace-nowrap">Losses</th>
-              </tr>
-            </thead>
-            <tbody>
-              {stats.map((s) => (
-                <tr key={s.player.id} className="border-b border-border/50 hover:bg-muted/50 transition-colors">
-                  <td className="py-3 px-2 font-medium whitespace-nowrap">{s.player.name}</td>
-                  <td className="py-3 px-2 text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <div className="hidden sm:block w-16 h-1.5 rounded-full bg-muted overflow-hidden">
-                        <div className="h-full rounded-full bg-win" style={{ width: `${s.underdogWinRate}%` }} />
-                      </div>
-                      <span className="font-mono tabular-nums text-xs w-10 text-right">{s.underdogWinRate.toFixed(0)}%</span>
-                    </div>
-                  </td>
-                  <td className="py-3 px-2 text-center font-mono tabular-nums">{s.totalUnderdogSets}</td>
-                  <td className="py-3 px-2 text-center font-mono tabular-nums text-win">{s.underdogWins}</td>
-                  <td className="py-3 px-2 text-center font-mono tabular-nums text-loss">{s.underdogLosses}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        {stats.length === 0 && (
-          <p className="text-center text-muted-foreground py-6">
-            No underdog sets found. Underdog situations occur when a pair with lower combined skill wins.
-          </p>
-        )}
-      </CardContent>
-    </Card>
-  );
-}

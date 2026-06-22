@@ -25,6 +25,9 @@ const nextConfig: NextConfig = {
 
   // Custom HTTP headers for cache control
   async headers() {
+    if (process.env.NODE_ENV === "development") {
+      return [];
+    }
     return [
       {
         // Immutable cache for hashed static assets (JS, CSS, fonts, images)

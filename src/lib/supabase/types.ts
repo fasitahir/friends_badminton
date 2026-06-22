@@ -2,7 +2,7 @@ export type Player = {
   id: string;
   name: string;
   nickname: string | null;
-  skill_level: 'Developing' | 'Competitive' | 'Advanced';
+  elo_rating: number;
   created_at: string;
 };
 
@@ -52,6 +52,12 @@ export type MatchGame = {
   pair1_score: number;
   pair2_score: number;
   winning_pair_id: string | null;
+  pair1_p1_elo_before: number | null;
+  pair1_p2_elo_before: number | null;
+  pair2_p1_elo_before: number | null;
+  pair2_p2_elo_before: number | null;
+  pair1_elo_change: number | null;
+  pair2_elo_change: number | null;
 };
 
 // Extended types with joined data
@@ -127,21 +133,7 @@ export type OpponentStats = {
   winRate: number;
 };
 
-export type SkillLevelBreakdown = {
-  level: 'Developing' | 'Competitive' | 'Advanced';
-  setsPlayed: number;
-  wins: number;
-  losses: number;
-  winRate: number;
-};
-
-export type UnderdogStats = {
-  player: Player;
-  underdogWins: number;
-  underdogLosses: number;
-  totalUnderdogSets: number;
-  underdogWinRate: number;
-};
+// Underdog and Skill breakdown removed for Elo system
 
 // Monthly leaderboard types
 export type MonthlySnapshot = {

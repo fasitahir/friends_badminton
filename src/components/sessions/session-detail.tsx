@@ -218,11 +218,21 @@ function MatchCard({
                   </div>
                   <div className={`flex-1 text-right ${p1won ? 'font-bold text-win' : 'text-muted-foreground'}`}>
                     {game.pair1?.player1?.name} & {game.pair1?.player2?.name}
+                    {game.pair1_elo_change !== undefined && (
+                      <span className={`ml-2 text-[10px] font-mono ${game.pair1_elo_change > 0 ? 'text-green-500' : 'text-red-500'}`}>
+                        {game.pair1_elo_change > 0 ? '+' : ''}{game.pair1_elo_change}
+                      </span>
+                    )}
                   </div>
                   <div className="font-mono tabular-nums font-bold px-3 py-1 bg-background rounded-md border shadow-sm">
                     {game.pair1_score} - {game.pair2_score}
                   </div>
                   <div className={`flex-1 ${p2won ? 'font-bold text-win' : 'text-muted-foreground'}`}>
+                    {game.pair2_elo_change !== undefined && (
+                      <span className={`mr-2 text-[10px] font-mono ${game.pair2_elo_change > 0 ? 'text-green-500' : 'text-red-500'}`}>
+                        {game.pair2_elo_change > 0 ? '+' : ''}{game.pair2_elo_change}
+                      </span>
+                    )}
                     {game.pair2?.player1?.name} & {game.pair2?.player2?.name}
                   </div>
                 </div>
@@ -234,6 +244,11 @@ function MatchCard({
                   <div className="flex-1 min-w-0">
                     <div className={`text-xs truncate ${p1won ? 'font-bold text-win' : 'text-muted-foreground'}`}>
                       {game.pair1?.player1?.name?.split(' ')[0]} & {game.pair1?.player2?.name?.split(' ')[0]}
+                      {game.pair1_elo_change !== undefined && (
+                        <span className={`ml-1 text-[9px] font-mono ${game.pair1_elo_change > 0 ? 'text-green-500' : 'text-red-500'}`}>
+                          {game.pair1_elo_change > 0 ? '+' : ''}{game.pair1_elo_change}
+                        </span>
+                      )}
                     </div>
                   </div>
                   <div className="font-mono tabular-nums font-bold text-xs px-2 py-0.5 bg-background rounded border shadow-sm shrink-0">
@@ -241,6 +256,11 @@ function MatchCard({
                   </div>
                   <div className="flex-1 min-w-0 text-right">
                     <div className={`text-xs truncate ${p2won ? 'font-bold text-win' : 'text-muted-foreground'}`}>
+                      {game.pair2_elo_change !== undefined && (
+                        <span className={`mr-1 text-[9px] font-mono ${game.pair2_elo_change > 0 ? 'text-green-500' : 'text-red-500'}`}>
+                          {game.pair2_elo_change > 0 ? '+' : ''}{game.pair2_elo_change}
+                        </span>
+                      )}
                       {game.pair2?.player1?.name?.split(' ')[0]} & {game.pair2?.player2?.name?.split(' ')[0]}
                     </div>
                   </div>

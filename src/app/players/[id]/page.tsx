@@ -8,15 +8,9 @@ import {
   computePlayerStats,
   computeBestPartners,
   computeToughestOpponents,
-  computeSkillAnalysis,
 } from "@/lib/analytics";
 import Link from "next/link";
 
-const skillColors: Record<string, string> = {
-  Developing: "bg-amber-500/15 text-amber-400 border-amber-500/30",
-  Competitive: "bg-blue-500/15 text-blue-400 border-blue-500/30",
-  Advanced: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
-};
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -77,7 +71,6 @@ export default async function PlayerProfilePage({
   const stats = computePlayerStats(player as Player, matches);
   const bestPartners = computeBestPartners(player.id, players, matches);
   const toughestOpponents = computeToughestOpponents(player.id, players, matches);
-  const skillAnalysis = computeSkillAnalysis(player.id, players, matches);
 
   // Recent sets for this player
   const allSets = matches.flatMap(m => m.games);
@@ -104,9 +97,9 @@ export default async function PlayerProfilePage({
             {player.nickname && (
               <span className="text-muted-foreground text-sm sm:text-base">&ldquo;{player.nickname}&rdquo;</span>
             )}
-            <Badge variant="outline" className={skillColors[player.skill_level]}>
-              {player.skill_level}
-            </Badge>
+            <span className="text-sm font-semibold text-muted-foreground bg-muted/40 px-2.5 py-1 rounded-md border font-mono">
+              Elo: {player.elo_rating}
+            </span>
           </div>
         </div>
       </div>
@@ -216,43 +209,6 @@ export default async function PlayerProfilePage({
         </Card>
       </div>
 
-      {/* Skill Level Analysis */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Performance by Partner Skill Level</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {skillAnalysis.map((sa) => (
-              <div key={sa.level} className="rounded-lg bg-muted/50 p-4">
-                <Badge variant="outline" className={skillColors[sa.level]}>
-                  {sa.level}
-                </Badge>
-                <div className="mt-3 flex flex-col gap-1">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Played</span>
-                    <span className="font-mono tabular-nums">{sa.setsPlayed}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">W/L</span>
-                    <span className="font-mono tabular-nums">
-                      <span className="text-win">{sa.wins}</span> /{" "}
-                      <span className="text-loss">{sa.losses}</span>
-                    </span>
-                  </div>
-                  <Separator className="my-1" />
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Win Rate</span>
-                    <span className="font-mono tabular-nums font-medium">
-                      {sa.winRate.toFixed(0)}%
-                    </span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Recent Matches */}
       <Card>
