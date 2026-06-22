@@ -229,10 +229,10 @@ function OverviewTab({
                 <tr className="border-b border-border">
                   <th className="text-left py-3 px-2 font-medium text-muted-foreground whitespace-nowrap">#</th>
                   <th className="text-left py-3 px-2 font-medium text-muted-foreground whitespace-nowrap">Player</th>
+                  <th className="text-right py-3 px-2 font-medium text-muted-foreground whitespace-nowrap">Win %</th>
                   <th className="text-center py-3 px-2 font-medium text-muted-foreground whitespace-nowrap">Sets Played</th>
                   <th className="text-center py-3 px-2 font-medium text-muted-foreground whitespace-nowrap">Won</th>
                   <th className="text-center py-3 px-2 font-medium text-muted-foreground whitespace-nowrap">Lost</th>
-                  <th className="text-right py-3 px-2 font-medium text-muted-foreground whitespace-nowrap">Win %</th>
                 </tr>
               </thead>
               <tbody>
@@ -247,9 +247,6 @@ function OverviewTab({
                         </Badge>
                       </div>
                     </td>
-                    <td className="py-3 px-2 text-center font-mono tabular-nums">{s.setsPlayed}</td>
-                    <td className="py-3 px-2 text-center font-mono tabular-nums text-win">{s.setsWon}</td>
-                    <td className="py-3 px-2 text-center font-mono tabular-nums text-loss">{s.setsLost}</td>
                     <td className="py-3 px-2 text-right">
                       <div className="flex items-center justify-end gap-2">
                         <div className="hidden sm:block w-16 h-1.5 rounded-full bg-muted overflow-hidden">
@@ -263,6 +260,9 @@ function OverviewTab({
                         </span>
                       </div>
                     </td>
+                    <td className="py-3 px-2 text-center font-mono tabular-nums">{s.setsPlayed}</td>
+                    <td className="py-3 px-2 text-center font-mono tabular-nums text-win">{s.setsWon}</td>
+                    <td className="py-3 px-2 text-center font-mono tabular-nums text-loss">{s.setsLost}</td>
                   </tr>
                 ))}
               </tbody>
@@ -397,10 +397,10 @@ function PairsTab({ stats }: { stats: ReturnType<typeof computeAllPairStats> }) 
             <thead>
               <tr className="border-b border-border">
                 <th className="text-left py-3 px-2 font-medium text-muted-foreground whitespace-nowrap">Pair</th>
+                <th className="text-right py-3 px-2 font-medium text-muted-foreground whitespace-nowrap">Win %</th>
                 <th className="text-center py-3 px-2 font-medium text-muted-foreground whitespace-nowrap">Sets Played</th>
                 <th className="text-center py-3 px-2 font-medium text-muted-foreground whitespace-nowrap">Won</th>
                 <th className="text-center py-3 px-2 font-medium text-muted-foreground whitespace-nowrap">Lost</th>
-                <th className="text-right py-3 px-2 font-medium text-muted-foreground whitespace-nowrap">Win %</th>
               </tr>
             </thead>
             <tbody>
@@ -409,9 +409,6 @@ function PairsTab({ stats }: { stats: ReturnType<typeof computeAllPairStats> }) 
                   <td className="py-3 px-2 font-medium whitespace-nowrap">
                     {s.player1.name} & {s.player2.name}
                   </td>
-                  <td className="py-3 px-2 text-center font-mono tabular-nums">{s.setsPlayed}</td>
-                  <td className="py-3 px-2 text-center font-mono tabular-nums text-win">{s.wins}</td>
-                  <td className="py-3 px-2 text-center font-mono tabular-nums text-loss">{s.losses}</td>
                   <td className="py-3 px-2 text-right">
                     <div className="flex items-center justify-end gap-2">
                       <div className="hidden sm:block w-16 h-1.5 rounded-full bg-muted overflow-hidden">
@@ -420,6 +417,9 @@ function PairsTab({ stats }: { stats: ReturnType<typeof computeAllPairStats> }) 
                       <span className="font-mono tabular-nums text-xs w-10 text-right">{s.winRate.toFixed(0)}%</span>
                     </div>
                   </td>
+                  <td className="py-3 px-2 text-center font-mono tabular-nums">{s.setsPlayed}</td>
+                  <td className="py-3 px-2 text-center font-mono tabular-nums text-win">{s.wins}</td>
+                  <td className="py-3 px-2 text-center font-mono tabular-nums text-loss">{s.losses}</td>
                 </tr>
               ))}
             </tbody>
@@ -761,19 +761,16 @@ function UnderdogTab({ stats }: { stats: ReturnType<typeof computeUnderdogStats>
             <thead>
               <tr className="border-b border-border">
                 <th className="text-left py-3 px-2 font-medium text-muted-foreground whitespace-nowrap">Player</th>
+                <th className="text-right py-3 px-2 font-medium text-muted-foreground whitespace-nowrap">Win %</th>
                 <th className="text-center py-3 px-2 font-medium text-muted-foreground whitespace-nowrap">Underdog Sets</th>
                 <th className="text-center py-3 px-2 font-medium text-muted-foreground whitespace-nowrap">Wins</th>
                 <th className="text-center py-3 px-2 font-medium text-muted-foreground whitespace-nowrap">Losses</th>
-                <th className="text-right py-3 px-2 font-medium text-muted-foreground whitespace-nowrap">Win %</th>
               </tr>
             </thead>
             <tbody>
               {stats.map((s) => (
                 <tr key={s.player.id} className="border-b border-border/50 hover:bg-muted/50 transition-colors">
                   <td className="py-3 px-2 font-medium whitespace-nowrap">{s.player.name}</td>
-                  <td className="py-3 px-2 text-center font-mono tabular-nums">{s.totalUnderdogSets}</td>
-                  <td className="py-3 px-2 text-center font-mono tabular-nums text-win">{s.underdogWins}</td>
-                  <td className="py-3 px-2 text-center font-mono tabular-nums text-loss">{s.underdogLosses}</td>
                   <td className="py-3 px-2 text-right">
                     <div className="flex items-center justify-end gap-2">
                       <div className="hidden sm:block w-16 h-1.5 rounded-full bg-muted overflow-hidden">
@@ -782,6 +779,9 @@ function UnderdogTab({ stats }: { stats: ReturnType<typeof computeUnderdogStats>
                       <span className="font-mono tabular-nums text-xs w-10 text-right">{s.underdogWinRate.toFixed(0)}%</span>
                     </div>
                   </td>
+                  <td className="py-3 px-2 text-center font-mono tabular-nums">{s.totalUnderdogSets}</td>
+                  <td className="py-3 px-2 text-center font-mono tabular-nums text-win">{s.underdogWins}</td>
+                  <td className="py-3 px-2 text-center font-mono tabular-nums text-loss">{s.underdogLosses}</td>
                 </tr>
               ))}
             </tbody>

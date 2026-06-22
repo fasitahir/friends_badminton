@@ -133,7 +133,7 @@ export function MobileNav({ isAdmin }: { isAdmin?: boolean }) {
 
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-lg border-t border-border pb-[max(env(safe-area-inset-bottom),12px)]">
-      <ul className="flex justify-around py-1.5">
+      <ul className="flex w-full py-1.5">
         {navItems.map((item) => {
           const isActive =
             item.href === "/"
@@ -141,34 +141,34 @@ export function MobileNav({ isAdmin }: { isAdmin?: boolean }) {
               : pathname.startsWith(item.href);
 
           return (
-            <li key={item.href}>
+            <li key={item.href} className="flex-1">
               <Link
                 href={item.href}
                 className={cn(
-                  "flex flex-col items-center gap-0.5 px-4 py-2 rounded-lg text-xs font-medium transition-colors touch-target",
+                  "flex flex-col items-center gap-0.5 px-1 py-2 rounded-lg text-xs font-medium transition-colors touch-target",
                   isActive
                     ? "text-primary"
                     : "text-muted-foreground hover:text-foreground"
                 )}
               >
                 {item.icon}
-                <span>{item.label}</span>
+                <span className="truncate max-w-full">{item.label}</span>
               </Link>
             </li>
           );
         })}
-        <li>
+        <li className="flex-1">
           {isAdmin ? (
             <form action={logout} className="m-0 p-0">
-              <button type="submit" className="flex flex-col items-center gap-0.5 px-4 py-2 rounded-lg text-xs font-medium transition-colors touch-target text-muted-foreground hover:text-foreground">
+              <button type="submit" className="flex flex-col items-center gap-0.5 px-1 py-2 rounded-lg text-xs font-medium transition-colors touch-target text-muted-foreground hover:text-foreground w-full">
                 <LogOut className="size-5" />
-                <span>Logout</span>
+                <span className="truncate max-w-full">Logout</span>
               </button>
             </form>
           ) : (
-            <Link href="/login" className="flex flex-col items-center gap-0.5 px-4 py-2 rounded-lg text-xs font-medium transition-colors touch-target text-muted-foreground hover:text-foreground">
+            <Link href="/login" className="flex flex-col items-center gap-0.5 px-1 py-2 rounded-lg text-xs font-medium transition-colors touch-target text-muted-foreground hover:text-foreground">
               <LogIn className="size-5" />
-              <span>Login</span>
+              <span className="truncate max-w-full">Login</span>
             </Link>
           )}
         </li>
