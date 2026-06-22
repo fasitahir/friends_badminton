@@ -33,48 +33,55 @@ export default async function SessionDetailPage({
 
   if (!session) notFound();
 
-  // Fetch all related data
+  // Fetch all teams for this session first
+  const { data: teams } = await supabase
+    .from("teams")
+    .select("*")
+    .eq("session_id", id);
+
+  const teamIds = teams?.map((t) => t.id) || [];
+
+  // Fetch all matches for this session first
+  const { data: matches } = await supabase
+    .from("matches")
+    .select(
+      "*, team1:teams!matches_team1_id_fkey(*), team2:teams!matches_team2_id_fkey(*), winning_team:teams!matches_winning_team_id_fkey(*)"
+    )
+    .eq("session_id", id)
+    .order("created_at", { ascending: false });
+
+  const matchIds = matches?.map((m) => m.id) || [];
+
+  // Now fetch related data in parallel — no N+1 sub-queries
   const [
-    { data: teams },
     { data: teamMembers },
     { data: pairs },
-    { data: matches },
     { data: allPlayers },
     { data: matchGames },
   ] = await Promise.all([
-    supabase.from("teams").select("*").eq("session_id", id),
-    supabase
-      .from("team_members")
-      .select("*, player:players(*)")
-      .in(
-        "team_id",
-        (await supabase.from("teams").select("id").eq("session_id", id)).data?.map((t) => t.id) || []
-      ),
+    teamIds.length > 0
+      ? supabase
+          .from("team_members")
+          .select("*, player:players(*)")
+          .in("team_id", teamIds)
+      : Promise.resolve({ data: [] as any[] }),
     supabase
       .from("pairs")
       .select("*, player1:players!pairs_player1_id_fkey(*), player2:players!pairs_player2_id_fkey(*)")
       .eq("session_id", id),
-    supabase
-      .from("matches")
-      .select(
-        "*, team1:teams!matches_team1_id_fkey(*), team2:teams!matches_team2_id_fkey(*), winning_team:teams!matches_winning_team_id_fkey(*)"
-      )
-      .eq("session_id", id)
-      .order("created_at", { ascending: false }),
     supabase.from("players").select("*").order("name"),
-    supabase
-      .from("match_games")
-      .select(`
-        *,
-        pair1:pairs!match_games_pair1_id_fkey(*, player1:players!pairs_player1_id_fkey(*), player2:players!pairs_player2_id_fkey(*)),
-        pair2:pairs!match_games_pair2_id_fkey(*, player1:players!pairs_player1_id_fkey(*), player2:players!pairs_player2_id_fkey(*)),
-        winning_pair:pairs!match_games_winning_pair_id_fkey(*, player1:players!pairs_player1_id_fkey(*), player2:players!pairs_player2_id_fkey(*))
-      `)
-      .in(
-        "match_id",
-        (await supabase.from("matches").select("id").eq("session_id", id)).data?.map((m) => m.id) || []
-      )
-      .order("game_number"),
+    matchIds.length > 0
+      ? supabase
+          .from("match_games")
+          .select(`
+            *,
+            pair1:pairs!match_games_pair1_id_fkey(*, player1:players!pairs_player1_id_fkey(*), player2:players!pairs_player2_id_fkey(*)),
+            pair2:pairs!match_games_pair2_id_fkey(*, player1:players!pairs_player1_id_fkey(*), player2:players!pairs_player2_id_fkey(*)),
+            winning_pair:pairs!match_games_winning_pair_id_fkey(*, player1:players!pairs_player1_id_fkey(*), player2:players!pairs_player2_id_fkey(*))
+          `)
+          .in("match_id", matchIds)
+          .order("game_number")
+      : Promise.resolve({ data: [] as any[] }),
   ]);
 
   // Group team members by team

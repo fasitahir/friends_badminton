@@ -9,17 +9,16 @@ export const metadata = {
 
 export default async function SessionsPage() {
   const supabase = await createClient();
-  const isAdmin = await getIsAdmin();
 
-  const { data: sessions } = await supabase
-    .from("sessions")
-    .select("*")
-    .order("date", { ascending: false });
-
-  // Get match counts per session
-  const { data: matchCounts } = await supabase
-    .from("matches")
-    .select("session_id");
+  const [isAdmin, { data: sessions }, { data: matchCounts }] =
+    await Promise.all([
+      getIsAdmin(),
+      supabase
+        .from("sessions")
+        .select("*")
+        .order("date", { ascending: false }),
+      supabase.from("matches").select("session_id"),
+    ]);
 
   const countMap: Record<string, number> = {};
   for (const m of matchCounts || []) {
@@ -34,7 +33,7 @@ export default async function SessionsPage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-3xl font-heading font-bold tracking-tight">
+        <h1 className="text-2xl sm:text-3xl font-heading font-bold tracking-tight">
           Sessions
         </h1>
         <p className="text-muted-foreground mt-1">

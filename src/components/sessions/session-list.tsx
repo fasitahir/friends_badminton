@@ -110,18 +110,26 @@ export function SessionList({ sessions, isAdmin }: { sessions: SessionWithCount[
         {sessions.map((session) => (
           <Link key={session.id} href={`/sessions/${session.id}`}>
             <Card className="hover:border-primary/30 transition-colors cursor-pointer group">
-              <CardContent className="flex items-center justify-between py-4">
-                <div className="flex items-center gap-4">
-                  <div className="size-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-5 text-primary">
+              <CardContent className="flex items-center justify-between py-3 sm:py-4 gap-3">
+                <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
+                  <div className="size-10 sm:size-12 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-4 sm:size-5 text-primary">
                       <path d="M8 2v4" /><path d="M16 2v4" /><rect width="18" height="18" x="3" y="4" rx="2" /><path d="M3 10h18" />
                     </svg>
                   </div>
-                  <div>
-                    <p className="font-medium group-hover:text-primary transition-colors">
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium group-hover:text-primary transition-colors text-sm sm:text-base truncate">
                       {session.name}
                     </p>
-                    <p className="text-sm text-muted-foreground">
+                    {/* Short date on mobile, long date on desktop */}
+                    <p className="text-xs sm:text-sm text-muted-foreground sm:hidden">
+                      {new Date(session.date).toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                      })}
+                    </p>
+                    <p className="text-sm text-muted-foreground hidden sm:block">
                       {new Date(session.date).toLocaleDateString("en-US", {
                         weekday: "long",
                         month: "long",
@@ -130,14 +138,14 @@ export function SessionList({ sessions, isAdmin }: { sessions: SessionWithCount[
                       })}
                     </p>
                     {session.notes && (
-                      <p className="text-xs text-muted-foreground mt-0.5 truncate max-w-md">
+                      <p className="text-xs text-muted-foreground mt-0.5 truncate max-w-[200px] sm:max-w-md">
                         {session.notes}
                       </p>
                     )}
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <Badge variant="secondary" className="tabular-nums">
+                <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+                  <Badge variant="secondary" className="tabular-nums text-xs">
                     {session.matchCount} match{session.matchCount !== 1 ? "es" : ""}
                   </Badge>
                   {isAdmin && (
@@ -145,13 +153,13 @@ export function SessionList({ sessions, isAdmin }: { sessions: SessionWithCount[
                       <AlertDialogTrigger render={<Button
                         variant="ghost"
                         size="sm"
-                        className="text-destructive hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                        className="text-destructive hover:text-destructive sm:opacity-0 sm:group-hover:opacity-100 transition-opacity h-8 px-2"
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
                         }}
                       />}>
-                        Delete
+                        Del
                       </AlertDialogTrigger>
                       <AlertDialogContent onClick={(e) => e.stopPropagation()}>
                         <AlertDialogHeader>
@@ -176,7 +184,7 @@ export function SessionList({ sessions, isAdmin }: { sessions: SessionWithCount[
                       </AlertDialogContent>
                     </AlertDialog>
                   )}
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-4 text-muted-foreground group-hover:text-primary transition-colors">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-4 text-muted-foreground group-hover:text-primary transition-colors hidden sm:block">
                     <path d="m9 18 6-6-6-6" />
                   </svg>
                 </div>

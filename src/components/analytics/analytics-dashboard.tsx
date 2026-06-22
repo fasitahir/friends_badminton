@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import dynamic from "next/dynamic";
 import type { Player, MatchWithDetails } from "@/lib/supabase/types";
 import {
   computeAllPlayerStats,
@@ -16,6 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
   SelectContent,
@@ -23,16 +25,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Cell,
-} from "recharts";
+import { ChevronRight } from "lucide-react";
+
+// Lazy-load win rate chart (~200KB recharts) — only loaded when analytics page is visited
+const WinRateChart = dynamic(
+  () => import("./win-rate-chart"),
+  {
+    ssr: false,
+    loading: () => <Skeleton className="h-full w-full rounded-lg" />,
+  }
+);
 
 const skillColors: Record<string, string> = {
   Developing: "bg-amber-500/15 text-amber-400 border-amber-500/30",
@@ -80,16 +82,24 @@ export function AnalyticsDashboard({ players, matches }: AnalyticsDashboardProps
 
   return (
     <Tabs defaultValue="overview" className="w-full">
-      <TabsList className="flex flex-wrap !h-auto w-full justify-start gap-1 p-1 bg-muted/50">
-        <TabsTrigger value="overview" className="h-8">Overview</TabsTrigger>
-        <TabsTrigger value="head-to-head" className="h-8">Head-to-Head</TabsTrigger>
-        <TabsTrigger value="pairs" className="h-8">Pairs</TabsTrigger>
-        <TabsTrigger value="pair-vs-pair" className="h-8">Pair vs Pair</TabsTrigger>
-        <TabsTrigger value="partners" className="h-8">Best Partners</TabsTrigger>
-        <TabsTrigger value="opponents" className="h-8">Toughest Opponents</TabsTrigger>
-        <TabsTrigger value="skill" className="h-8">Skill Analysis</TabsTrigger>
-        <TabsTrigger value="underdog" className="h-8">Underdog</TabsTrigger>
-      </TabsList>
+      <div className="relative w-full">
+        <div className="overflow-x-auto -mx-3 sm:mx-0 px-3 sm:px-0 scrollbar-none">
+          <TabsList className="flex !h-auto w-max sm:w-full sm:flex-wrap justify-start gap-1 p-1 bg-muted/50">
+            <TabsTrigger value="overview" className="h-8 text-xs sm:text-sm shrink-0">Overview</TabsTrigger>
+            <TabsTrigger value="head-to-head" className="h-8 text-xs sm:text-sm shrink-0">Head-to-Head</TabsTrigger>
+            <TabsTrigger value="pairs" className="h-8 text-xs sm:text-sm shrink-0">Pairs</TabsTrigger>
+            <TabsTrigger value="pair-vs-pair" className="h-8 text-xs sm:text-sm shrink-0">Pair vs Pair</TabsTrigger>
+            <TabsTrigger value="partners" className="h-8 text-xs sm:text-sm shrink-0">Best Partners</TabsTrigger>
+            <TabsTrigger value="opponents" className="h-8 text-xs sm:text-sm shrink-0">Toughest Opponents</TabsTrigger>
+            <TabsTrigger value="skill" className="h-8 text-xs sm:text-sm shrink-0">Skill Analysis</TabsTrigger>
+            <TabsTrigger value="underdog" className="h-8 text-xs sm:text-sm shrink-0">Underdog</TabsTrigger>
+          </TabsList>
+        </div>
+        {/* Mobile scroll-right indicator */}
+        <div className="sm:hidden absolute right-0 top-1/2 -translate-y-1/2 flex items-center justify-center h-8 w-8 bg-gradient-to-l from-background to-transparent pointer-events-none pr-1">
+          <ChevronRight className="size-4 text-muted-foreground/80 animate-pulse" />
+        </div>
+      </div>
 
       {/* ==================== OVERVIEW ==================== */}
       <TabsContent value="overview" className="mt-6">
@@ -200,46 +210,8 @@ function OverviewTab({
             <CardTitle>Win Rate by Player</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-72">
-              <ResponsiveContainer width="99%" height="100%" minHeight={1}>
-                <BarChart data={chartData} layout="vertical" margin={{ left: 20 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                  <XAxis
-                    type="number"
-                    domain={[0, 100]}
-                    tick={{ fill: "var(--muted-foreground)", fontSize: 12 }}
-                  />
-                  <YAxis
-                    dataKey="name"
-                    type="category"
-                    width={60}
-                    tick={{ fill: "var(--muted-foreground)", fontSize: 12 }}
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      background: "var(--card)",
-                      border: "1px solid var(--border)",
-                      borderRadius: "8px",
-                      color: "var(--foreground)",
-                    }}
-                    formatter={(value: any) => [`${value}%`, "Win Rate"]}
-                  />
-                  <Bar dataKey="winRate" radius={[0, 4, 4, 0]}>
-                    {chartData.map((entry, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={
-                          entry.winRate >= 60
-                            ? "var(--win)"
-                            : entry.winRate >= 40
-                            ? "var(--chart-2)"
-                            : "var(--loss)"
-                        }
-                      />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
+            <div style={{ height: `${Math.max(260, chartData.length * 30)}px` }} className="w-full">
+              <WinRateChart data={chartData} />
             </div>
           </CardContent>
         </Card>
@@ -255,12 +227,12 @@ function OverviewTab({
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border">
-                  <th className="text-left py-3 px-2 font-medium text-muted-foreground">#</th>
-                  <th className="text-left py-3 px-2 font-medium text-muted-foreground">Player</th>
-                  <th className="text-center py-3 px-2 font-medium text-muted-foreground">Sets Played</th>
-                  <th className="text-center py-3 px-2 font-medium text-muted-foreground">Won</th>
-                  <th className="text-center py-3 px-2 font-medium text-muted-foreground">Lost</th>
-                  <th className="text-right py-3 px-2 font-medium text-muted-foreground">Win %</th>
+                  <th className="text-left py-3 px-2 font-medium text-muted-foreground whitespace-nowrap">#</th>
+                  <th className="text-left py-3 px-2 font-medium text-muted-foreground whitespace-nowrap">Player</th>
+                  <th className="text-center py-3 px-2 font-medium text-muted-foreground whitespace-nowrap">Sets Played</th>
+                  <th className="text-center py-3 px-2 font-medium text-muted-foreground whitespace-nowrap">Won</th>
+                  <th className="text-center py-3 px-2 font-medium text-muted-foreground whitespace-nowrap">Lost</th>
+                  <th className="text-right py-3 px-2 font-medium text-muted-foreground whitespace-nowrap">Win %</th>
                 </tr>
               </thead>
               <tbody>
@@ -269,7 +241,7 @@ function OverviewTab({
                     <td className="py-3 px-2 font-mono text-muted-foreground">{idx + 1}</td>
                     <td className="py-3 px-2">
                       <div className="flex items-center gap-2">
-                        <span className="font-medium">{s.player.name}</span>
+                        <span className="font-medium whitespace-nowrap">{s.player.name}</span>
                         <Badge variant="outline" className={`text-[10px] ${skillColors[s.player.skill_level]}`}>
                           {s.player.skill_level}
                         </Badge>
@@ -280,7 +252,7 @@ function OverviewTab({
                     <td className="py-3 px-2 text-center font-mono tabular-nums text-loss">{s.setsLost}</td>
                     <td className="py-3 px-2 text-right">
                       <div className="flex items-center justify-end gap-2">
-                        <div className="w-16 h-1.5 rounded-full bg-muted overflow-hidden">
+                        <div className="hidden sm:block w-16 h-1.5 rounded-full bg-muted overflow-hidden">
                           <div
                             className="h-full rounded-full bg-primary"
                             style={{ width: `${s.winRate}%` }}
@@ -354,26 +326,26 @@ function HeadToHeadTab({ players, matches }: { players: Player[]; matches: Match
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center justify-between mb-6">
-              <div className="text-center flex-1">
-                <p className="text-2xl font-bold">{result.playerA.name}</p>
-                <p className="text-4xl font-bold font-mono tabular-nums text-win mt-2">
+              <div className="text-center flex-1 min-w-0">
+                <p className="text-base sm:text-2xl font-bold truncate">{result.playerA.name}</p>
+                <p className="text-2xl sm:text-4xl font-bold font-mono tabular-nums text-win mt-2">
                   {result.playerAWins}
                 </p>
-                <p className="text-sm text-muted-foreground">set wins</p>
+                <p className="text-xs sm:text-sm text-muted-foreground">set wins</p>
               </div>
-              <div className="text-center px-6">
-                <p className="text-sm text-muted-foreground">faced</p>
-                <p className="text-3xl font-bold font-mono tabular-nums">
+              <div className="text-center px-3 sm:px-6 shrink-0">
+                <p className="text-xs sm:text-sm text-muted-foreground">faced</p>
+                <p className="text-2xl sm:text-3xl font-bold font-mono tabular-nums">
                   {result.timesFaced}
                 </p>
-                <p className="text-sm text-muted-foreground">sets</p>
+                <p className="text-xs sm:text-sm text-muted-foreground">sets</p>
               </div>
-              <div className="text-center flex-1">
-                <p className="text-2xl font-bold">{result.playerB.name}</p>
-                <p className="text-4xl font-bold font-mono tabular-nums text-loss mt-2">
+              <div className="text-center flex-1 min-w-0">
+                <p className="text-base sm:text-2xl font-bold truncate">{result.playerB.name}</p>
+                <p className="text-2xl sm:text-4xl font-bold font-mono tabular-nums text-loss mt-2">
                   {result.playerBWins}
                 </p>
-                <p className="text-sm text-muted-foreground">set wins</p>
+                <p className="text-xs sm:text-sm text-muted-foreground">set wins</p>
               </div>
             </div>
 
@@ -424,17 +396,17 @@ function PairsTab({ stats }: { stats: ReturnType<typeof computeAllPairStats> }) 
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border">
-                <th className="text-left py-3 px-2 font-medium text-muted-foreground">Pair</th>
-                <th className="text-center py-3 px-2 font-medium text-muted-foreground">Sets Played</th>
-                <th className="text-center py-3 px-2 font-medium text-muted-foreground">Won</th>
-                <th className="text-center py-3 px-2 font-medium text-muted-foreground">Lost</th>
-                <th className="text-right py-3 px-2 font-medium text-muted-foreground">Win %</th>
+                <th className="text-left py-3 px-2 font-medium text-muted-foreground whitespace-nowrap">Pair</th>
+                <th className="text-center py-3 px-2 font-medium text-muted-foreground whitespace-nowrap">Sets Played</th>
+                <th className="text-center py-3 px-2 font-medium text-muted-foreground whitespace-nowrap">Won</th>
+                <th className="text-center py-3 px-2 font-medium text-muted-foreground whitespace-nowrap">Lost</th>
+                <th className="text-right py-3 px-2 font-medium text-muted-foreground whitespace-nowrap">Win %</th>
               </tr>
             </thead>
             <tbody>
               {stats.map((s) => (
                 <tr key={`${s.player1.id}-${s.player2.id}`} className="border-b border-border/50 hover:bg-muted/50 transition-colors">
-                  <td className="py-3 px-2 font-medium">
+                  <td className="py-3 px-2 font-medium whitespace-nowrap">
                     {s.player1.name} & {s.player2.name}
                   </td>
                   <td className="py-3 px-2 text-center font-mono tabular-nums">{s.setsPlayed}</td>
@@ -442,7 +414,7 @@ function PairsTab({ stats }: { stats: ReturnType<typeof computeAllPairStats> }) 
                   <td className="py-3 px-2 text-center font-mono tabular-nums text-loss">{s.losses}</td>
                   <td className="py-3 px-2 text-right">
                     <div className="flex items-center justify-end gap-2">
-                      <div className="w-16 h-1.5 rounded-full bg-muted overflow-hidden">
+                      <div className="hidden sm:block w-16 h-1.5 rounded-full bg-muted overflow-hidden">
                         <div className="h-full rounded-full bg-primary" style={{ width: `${s.winRate}%` }} />
                       </div>
                       <span className="font-mono tabular-nums text-xs w-10 text-right">{s.winRate.toFixed(0)}%</span>
@@ -547,19 +519,19 @@ function PairVsPairTab({ players, matches }: { players: Player[]; matches: Match
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
-              <div className="text-center flex-1">
-                <p className="font-bold">{result.pp1a.name} & {result.pp1b.name}</p>
-                <p className="text-4xl font-bold font-mono tabular-nums text-win mt-2">{result.pair1Wins}</p>
-                <p className="text-sm text-muted-foreground">wins ({result.pair1WinRate.toFixed(0)}%)</p>
+              <div className="text-center flex-1 min-w-0">
+                <p className="text-xs sm:text-sm font-bold truncate">{result.pp1a.name} & {result.pp1b.name}</p>
+                <p className="text-2xl sm:text-4xl font-bold font-mono tabular-nums text-win mt-2">{result.pair1Wins}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground">wins ({result.pair1WinRate.toFixed(0)}%)</p>
               </div>
-              <div className="text-center px-4">
-                <p className="text-3xl font-bold font-mono tabular-nums">{result.total}</p>
-                <p className="text-sm text-muted-foreground">total sets</p>
+              <div className="text-center px-2 sm:px-4 shrink-0">
+                <p className="text-2xl sm:text-3xl font-bold font-mono tabular-nums">{result.total}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground">total sets</p>
               </div>
-              <div className="text-center flex-1">
-                <p className="font-bold">{result.pp2a.name} & {result.pp2b.name}</p>
-                <p className="text-4xl font-bold font-mono tabular-nums text-loss mt-2">{result.pair2Wins}</p>
-                <p className="text-sm text-muted-foreground">wins ({result.total > 0 ? (100 - result.pair1WinRate).toFixed(0) : 0}%)</p>
+              <div className="text-center flex-1 min-w-0">
+                <p className="text-xs sm:text-sm font-bold truncate">{result.pp2a.name} & {result.pp2b.name}</p>
+                <p className="text-2xl sm:text-4xl font-bold font-mono tabular-nums text-loss mt-2">{result.pair2Wins}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground">wins ({result.total > 0 ? (100 - result.pair1WinRate).toFixed(0) : 0}%)</p>
               </div>
             </div>
             {result.total === 0 && (
@@ -614,7 +586,7 @@ function BestPartnersTab({ players, matches }: { players: Player[]; matches: Mat
                     <span className="text-xs text-muted-foreground font-mono tabular-nums">
                       {ps.wins}W {ps.losses}L
                     </span>
-                    <div className="w-20 h-1.5 rounded-full bg-muted overflow-hidden">
+                    <div className="hidden sm:block w-20 h-1.5 rounded-full bg-muted overflow-hidden">
                       <div className="h-full rounded-full bg-win" style={{ width: `${ps.winRate}%` }} />
                     </div>
                     <span className="text-sm font-bold font-mono tabular-nums w-12 text-right">
@@ -681,7 +653,7 @@ function ToughestOpponentsTab({ players, matches }: { players: Player[]; matches
                     <span className="text-xs text-muted-foreground font-mono tabular-nums">
                       {os.wins}W {os.losses}L
                     </span>
-                    <div className="w-20 h-1.5 rounded-full bg-muted overflow-hidden">
+                    <div className="hidden sm:block w-20 h-1.5 rounded-full bg-muted overflow-hidden">
                       <div className="h-full rounded-full bg-loss" style={{ width: `${100 - os.winRate}%` }} />
                     </div>
                     <span className="text-sm font-bold font-mono tabular-nums w-12 text-right">
@@ -788,23 +760,23 @@ function UnderdogTab({ stats }: { stats: ReturnType<typeof computeUnderdogStats>
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border">
-                <th className="text-left py-3 px-2 font-medium text-muted-foreground">Player</th>
-                <th className="text-center py-3 px-2 font-medium text-muted-foreground">Underdog Sets</th>
-                <th className="text-center py-3 px-2 font-medium text-muted-foreground">Wins</th>
-                <th className="text-center py-3 px-2 font-medium text-muted-foreground">Losses</th>
-                <th className="text-right py-3 px-2 font-medium text-muted-foreground">Win %</th>
+                <th className="text-left py-3 px-2 font-medium text-muted-foreground whitespace-nowrap">Player</th>
+                <th className="text-center py-3 px-2 font-medium text-muted-foreground whitespace-nowrap">Underdog Sets</th>
+                <th className="text-center py-3 px-2 font-medium text-muted-foreground whitespace-nowrap">Wins</th>
+                <th className="text-center py-3 px-2 font-medium text-muted-foreground whitespace-nowrap">Losses</th>
+                <th className="text-right py-3 px-2 font-medium text-muted-foreground whitespace-nowrap">Win %</th>
               </tr>
             </thead>
             <tbody>
               {stats.map((s) => (
                 <tr key={s.player.id} className="border-b border-border/50 hover:bg-muted/50 transition-colors">
-                  <td className="py-3 px-2 font-medium">{s.player.name}</td>
+                  <td className="py-3 px-2 font-medium whitespace-nowrap">{s.player.name}</td>
                   <td className="py-3 px-2 text-center font-mono tabular-nums">{s.totalUnderdogSets}</td>
                   <td className="py-3 px-2 text-center font-mono tabular-nums text-win">{s.underdogWins}</td>
                   <td className="py-3 px-2 text-center font-mono tabular-nums text-loss">{s.underdogLosses}</td>
                   <td className="py-3 px-2 text-right">
                     <div className="flex items-center justify-end gap-2">
-                      <div className="w-16 h-1.5 rounded-full bg-muted overflow-hidden">
+                      <div className="hidden sm:block w-16 h-1.5 rounded-full bg-muted overflow-hidden">
                         <div className="h-full rounded-full bg-win" style={{ width: `${s.underdogWinRate}%` }} />
                       </div>
                       <span className="font-mono tabular-nums text-xs w-10 text-right">{s.underdogWinRate.toFixed(0)}%</span>

@@ -92,17 +92,17 @@ export default async function PlayerProfilePage({
   return (
     <div className="flex flex-col gap-6">
       {/* Header */}
-      <div className="flex items-center gap-4">
-        <div className="size-16 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-2xl">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
+        <div className="size-14 sm:size-16 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xl sm:text-2xl shrink-0">
           {player.name.charAt(0).toUpperCase()}
         </div>
         <div>
-          <h1 className="text-3xl font-heading font-bold tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-heading font-bold tracking-tight">
             {player.name}
           </h1>
           <div className="flex items-center gap-2 mt-1">
             {player.nickname && (
-              <span className="text-muted-foreground">&ldquo;{player.nickname}&rdquo;</span>
+              <span className="text-muted-foreground text-sm sm:text-base">&ldquo;{player.nickname}&rdquo;</span>
             )}
             <Badge variant="outline" className={skillColors[player.skill_level]}>
               {player.skill_level}
@@ -273,7 +273,7 @@ export default async function PlayerProfilePage({
                 return (
                   <div
                     key={idx}
-                    className="flex items-center gap-3 p-3 rounded-lg bg-muted/50"
+                    className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg bg-muted/50"
                   >
                     <Badge
                       variant="outline"
@@ -286,7 +286,7 @@ export default async function PlayerProfilePage({
                       {won ? "W" : "L"}
                     </Badge>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm">
+                      <p className="text-xs sm:text-sm truncate">
                         <span className="font-medium">
                           {set.pair1?.player1?.name} &amp; {set.pair1?.player2?.name}
                         </span>{" "}
@@ -296,7 +296,7 @@ export default async function PlayerProfilePage({
                         </span>
                       </p>
                     </div>
-                    <Badge variant="secondary" className="text-xs font-mono tabular-nums">
+                    <Badge variant="secondary" className="text-xs font-mono tabular-nums shrink-0">
                       {set.pair1_score} - {set.pair2_score}
                     </Badge>
                   </div>
