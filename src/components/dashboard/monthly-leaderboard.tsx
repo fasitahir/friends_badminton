@@ -1,8 +1,4 @@
-"use client";
-
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -11,6 +7,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import Link from "next/link";
+import { Flame, Minus } from "lucide-react";
 
 interface MonthlyEntry {
   player_id: string;
@@ -30,10 +27,10 @@ interface AllTimeEntry {
 }
 
 interface MonthlyLeaderboardProps {
-  availableMonths: string[];       // ['2026-06', '2026-05', ...] with current month first
-  initialMonth: string;            // current month (e.g. '2026-06')
-  initialEntries: MonthlyEntry[];  // pre-computed live leaderboard for current month
-  allTimeStats: AllTimeEntry[];    // pre-computed all-time stats for the total badge
+  availableMonths: string[];
+  initialMonth: string;
+  initialEntries: MonthlyEntry[];
+  allTimeStats: AllTimeEntry[];
 }
 
 function formatMonthLabel(ym: string) {
@@ -42,6 +39,13 @@ function formatMonthLabel(ym: string) {
     month: "long",
     year: "numeric",
   });
+}
+
+function getRankStyle(idx: number) {
+  if (idx === 0) return "font-heading text-4xl";
+  if (idx === 1) return "font-heading text-3xl";
+  if (idx === 2) return "font-heading text-2xl";
+  return "font-mono text-sm text-muted-foreground";
 }
 
 export function MonthlyLeaderboard({
@@ -73,96 +77,110 @@ export function MonthlyLeaderboard({
   const displayedStats = loading ? [] : entries.slice(0, 8);
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <CardTitle className="flex items-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-5 text-primary">
-              <path d="M3 3v18h18" /><path d="m19 9-5 5-4-4-3 3" />
-            </svg>
-            Leaderboard
-          </CardTitle>
+    <div className="flex flex-col">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between pb-4 border-b border-border mb-6">
+        <h2 className="text-sm font-mono uppercase tracking-[0.2em] text-muted-foreground">
+          Monthly Win Rate
+        </h2>
 
-          {/* Month selector */}
-          <Select value={selectedMonth} onValueChange={(val) => handleMonthChange(val ?? initialMonth)}>
-            <SelectTrigger className="h-8 text-xs w-44" id="leaderboard-month-select">
-              <SelectValue placeholder="Select period" />
-            </SelectTrigger>
-            <SelectContent>
-              {availableMonths.map((m) => (
-                <SelectItem key={m} value={m}>
-                  {formatMonthLabel(m)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        {/* Month selector */}
+        <Select value={selectedMonth} onValueChange={(val) => handleMonthChange(val ?? initialMonth)}>
+          <SelectTrigger className="mt-4 sm:mt-0 h-8 text-xs font-mono uppercase w-44 bg-transparent border-border/50 rounded-none focus:ring-0 focus:border-foreground" id="leaderboard-month-select">
+            <SelectValue placeholder="Select period" />
+          </SelectTrigger>
+          <SelectContent className="rounded-none border-border font-mono text-xs uppercase">
+            {availableMonths.map((m) => (
+              <SelectItem key={m} value={m} className="rounded-none focus:bg-muted">
+                {formatMonthLabel(m)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
 
-        <p className="text-xs text-muted-foreground mt-1">
-          Stats for <span className="text-foreground font-medium">
-            {formatMonthLabel(selectedMonth)}
-          </span> · All-time totals shown in parentheses
-        </p>
-      </CardHeader>
+      <div className="flex flex-col gap-0">
+        {loading && (
+          <div className="flex flex-col gap-0">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="h-16 border-b border-border bg-muted/10 animate-pulse" />
+            ))}
+          </div>
+        )}
 
-      <CardContent>
-        <div className="flex flex-col gap-3">
-          {loading && (
-            <div className="flex flex-col gap-3">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="h-9 rounded bg-muted animate-pulse" />
-              ))}
-            </div>
-          )}
+        {!loading && displayedStats.length === 0 && (
+          <div className="py-8 text-xs font-mono text-muted-foreground uppercase text-center">
+            [ No Data for {formatMonthLabel(selectedMonth)} ]
+          </div>
+        )}
 
-          {!loading && displayedStats.length === 0 && (
-            <p className="text-sm text-muted-foreground py-4 text-center">
-              No games played yet in this period.
-            </p>
-          )}
+        {!loading && displayedStats.map((entry, idx) => {
+          const allTime = allTimeStats.find((a) => a.id === entry.player_id);
+          const isTopThree = idx < 3;
+          const isRankOne = idx === 0;
+          const isElite = entry.win_rate >= 65;
 
-          {!loading && displayedStats.map((entry, idx) => {
-            const allTime = allTimeStats.find((a) => a.id === entry.player_id);
-            return (
-              <Link
-                key={entry.player_id}
-                href={`/players/${entry.player_id}`}
-                className="flex items-center gap-3 group"
-              >
-                <span className="size-7 rounded-full bg-muted flex items-center justify-center text-xs font-bold font-mono text-muted-foreground shrink-0">
-                  {idx + 1}
-                </span>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate group-hover:text-primary transition-colors">
+          // If allTime is available, we can use streaks. If not, default to false.
+          const isOnFire = allTime ? (allTime as any).winStreak >= 3 : false;
+          const isCold = allTime ? ((allTime as any).lossStreak >= 3 && (allTime as any).totalSets > 0 && idx !== 0) : false;
+
+          return (
+            <Link
+              key={entry.player_id}
+              href={`/players/${entry.player_id}`}
+              className={`flex items-center gap-4 p-4 border-b border-border hover:bg-muted/30 transition-colors ${
+                isElite ? "border-l-2 border-l-aviation-red pl-3" : "pl-4"
+              } ${isRankOne ? "shadow-[-4px_0_12px_rgba(230,25,25,0.15)] animate-pulse" : ""} ${
+                isCold ? "opacity-70" : ""
+              }`}
+            >
+              {/* Rank */}
+              <div className={`w-8 text-right shrink-0 ${getRankStyle(idx)} ${isElite ? 'font-bold text-foreground' : ''}`}>
+                {idx + 1}.
+              </div>
+
+              {/* Name + win bar */}
+              <div className="flex-1 min-w-0 flex flex-col justify-center">
+                <div className="flex items-center gap-2">
+                  <p className={`text-base truncate ${isRankOne ? 'font-bold font-heading text-xl tracking-tight text-foreground' : isElite ? 'font-bold font-heading text-lg tracking-tight' : 'font-medium'}`}>
                     {entry.player?.name ?? entry.player_id}
                   </p>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
-                      <div
-                        className="h-full rounded-full bg-primary transition-all duration-500"
-                        style={{ width: `${entry.win_rate}%` }}
-                      />
-                    </div>
-                    <span className="text-xs font-mono text-muted-foreground tabular-nums w-10 text-right">
-                      {entry.win_rate.toFixed(0)}%
-                    </span>
+                  {isOnFire && <Flame className="size-3.5 text-aviation-red fill-aviation-red" />}
+                  {isCold && <Minus className="size-3.5 text-muted-foreground" />}
+                </div>
+                {isRankOne && (
+                  <p className="text-[10px] font-mono text-muted-foreground uppercase mt-1 tracking-widest">
+                    [MONTHLY LEADER]
+                  </p>
+                )}
+                {isCold && (
+                  <p className="text-[10px] font-mono text-muted-foreground uppercase mt-1 tracking-widest">
+                    [NEEDS A WIN]
+                  </p>
+                )}
+                
+                <div className="flex items-center gap-2 mt-2">
+                  <div className="flex-1 h-[2px] bg-border overflow-hidden">
+                    <div
+                      className={`h-full ${isElite ? 'bg-aviation-red' : 'bg-foreground'}`}
+                      style={{ width: `${entry.win_rate}%` }}
+                    />
                   </div>
                 </div>
-                <div className="flex flex-col items-end shrink-0">
-                  <Badge variant="secondary" className="text-xs">
-                    {entry.sets_played} sets
-                  </Badge>
-                  {allTime && (
-                    <span className="text-[10px] text-muted-foreground/60 mt-0.5">
-                      {allTime.played} total
-                    </span>
-                  )}
-                </div>
-              </Link>
-            );
-          })}
-        </div>
-      </CardContent>
-    </Card>
+              </div>
+
+              {/* Stats */}
+              <div className="flex flex-col items-end shrink-0 gap-1 w-20">
+                <span className={`font-mono tabular-nums ${isRankOne ? 'text-3xl font-bold text-foreground' : isElite ? 'text-2xl font-bold' : 'text-xl'}`}>
+                  {entry.win_rate.toFixed(0)}%
+                </span>
+                <span className="text-[10px] font-mono tabular-nums text-muted-foreground">
+                  {entry.sets_won}W / {entry.sets_lost}L
+                </span>
+              </div>
+            </Link>
+          );
+        })}
+      </div>
+    </div>
   );
 }

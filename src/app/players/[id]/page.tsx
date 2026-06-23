@@ -2,7 +2,6 @@ import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import type { Player, MatchWithDetails } from "@/lib/supabase/types";
 import {
   computePlayerStats,
@@ -10,7 +9,7 @@ import {
   computeToughestOpponents,
 } from "@/lib/analytics";
 import Link from "next/link";
-
+import { TrendingUp, TrendingDown, Minus, Trophy, Target, Zap, Shield } from "lucide-react";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -24,6 +23,30 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   return {
     title: player ? `${player.name} — Shuttle Stats` : "Player Not Found",
   };
+}
+
+const AVATAR_COLORS = [
+  "from-green-500 to-emerald-600",
+  "from-blue-500 to-cyan-600",
+  "from-purple-500 to-violet-600",
+  "from-orange-500 to-amber-600",
+  "from-pink-500 to-rose-600",
+  "from-teal-500 to-cyan-600",
+  "from-indigo-500 to-blue-600",
+  "from-yellow-500 to-amber-600",
+];
+
+function getAvatarColor(name: string) {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
+}
+
+function getEloTier(elo: number) {
+  if (elo >= 700) return { label: "Elite", emoji: "🔥", color: "text-yellow-400", bg: "bg-yellow-500/15 border-yellow-500/30" };
+  if (elo >= 650) return { label: "Advanced", emoji: "⚡", color: "text-primary", bg: "bg-primary/15 border-primary/30" };
+  if (elo >= 600) return { label: "Intermediate", emoji: "🌟", color: "text-blue-400", bg: "bg-blue-500/15 border-blue-500/30" };
+  return { label: "Beginner", emoji: "🎯", color: "text-muted-foreground", bg: "bg-muted/50 border-border/50" };
 }
 
 export default async function PlayerProfilePage({
@@ -47,13 +70,11 @@ export default async function PlayerProfilePage({
     .select("*")
     .order("name");
 
-  // Fetch all matches, then we will fetch games separately or joined
   const { data: matchesData } = await supabase
     .from("matches")
     .select(`*`)
     .order("created_at", { ascending: false });
 
-  // Fetch games for these matches
   const matchIds = matchesData?.map(m => m.id) || [];
   const { data: gamesData } = await supabase
     .from("match_games")
@@ -72,7 +93,6 @@ export default async function PlayerProfilePage({
   const bestPartners = computeBestPartners(player.id, players, matches);
   const toughestOpponents = computeToughestOpponents(player.id, players, matches);
 
-  // Recent sets for this player
   const allSets = matches.flatMap(m => m.games);
   const recentSets = allSets.filter(
     (s) =>
@@ -80,44 +100,119 @@ export default async function PlayerProfilePage({
       s.pair1?.player2_id === id ||
       s.pair2?.player1_id === id ||
       s.pair2?.player2_id === id
-  ).sort((a, b) => b.game_number - a.game_number).slice(0, 10); // basic sort
+  ).sort((a, b) => b.game_number - a.game_number).slice(0, 10);
+
+  const avatarGradient = getAvatarColor(player.name);
+  const tier = getEloTier(player.elo_rating ?? 600);
+  const winStreak = recentSets.reduce((streak, set, i) => {
+    if (i > 0) return streak; // only check most recent
+    const won = set.winning_pair_id === set.pair1_id
+      ? (set.pair1?.player1_id === id || set.pair1?.player2_id === id)
+      : (set.pair2?.player1_id === id || set.pair2?.player2_id === id);
+    return won ? streak + 1 : streak;
+  }, 0);
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
-        <div className="size-14 sm:size-16 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xl sm:text-2xl shrink-0">
-          {player.name.charAt(0).toUpperCase()}
-        </div>
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-heading font-bold tracking-tight">
-            {player.name}
-          </h1>
-          <div className="flex items-center gap-2 mt-1">
-            {player.nickname && (
-              <span className="text-muted-foreground text-sm sm:text-base">&ldquo;{player.nickname}&rdquo;</span>
-            )}
-            <span className="text-sm font-semibold text-muted-foreground bg-muted/40 px-2.5 py-1 rounded-md border font-mono">
-              Elo: {player.elo_rating}
-            </span>
+      {/* Hero Header */}
+      <div className="relative rounded-2xl overflow-hidden border border-border/50 bg-card">
+        <div className="absolute inset-0 court-bg opacity-30" />
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-transparent" />
+        
+        <div className="relative flex flex-col sm:flex-row items-start sm:items-center gap-4 p-5 sm:p-6">
+          {/* Large Avatar */}
+          <div className={`size-20 sm:size-24 rounded-2xl bg-gradient-to-br ${avatarGradient} flex items-center justify-center font-heading font-bold text-4xl sm:text-5xl text-white shrink-0 shadow-lg`}>
+            {player.name.charAt(0).toUpperCase()}
+          </div>
+
+          <div className="flex-1 min-w-0">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-heading font-bold tracking-tight">
+                  {player.name}
+                </h1>
+                {player.nickname && (
+                  <p className="text-muted-foreground text-sm sm:text-base mt-0.5">
+                    &ldquo;{player.nickname}&rdquo;
+                  </p>
+                )}
+              </div>
+              <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-sm font-semibold ${tier.bg} ${tier.color} shrink-0`}>
+                <span>{tier.emoji}</span>
+                <span>{tier.label}</span>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2 mt-3">
+              {player.elo_rating && (
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-muted/40 border border-border/50">
+                  <Zap className="size-3.5 text-primary" />
+                  <span className="text-sm font-mono font-bold">{player.elo_rating}</span>
+                  <span className="text-xs text-muted-foreground">ELO</span>
+                </div>
+              )}
+              {stats.setsPlayed > 0 && (
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-muted/40 border border-border/50">
+                  <span className="text-sm font-mono font-bold">{stats.winRate.toFixed(0)}%</span>
+                  <span className="text-xs text-muted-foreground">win rate</span>
+                  {stats.winRate >= 60 ? (
+                    <TrendingUp className="size-3.5 text-win" />
+                  ) : stats.winRate < 40 ? (
+                    <TrendingDown className="size-3.5 text-loss" />
+                  ) : (
+                    <Minus className="size-3.5 text-muted-foreground/40" />
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
 
       {/* Stat Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {[
-          { label: "Sets Played", value: stats.setsPlayed },
-          { label: "Wins", value: stats.setsWon, color: "text-win" },
-          { label: "Losses", value: stats.setsLost, color: "text-loss" },
-          { label: "Win Rate", value: `${stats.winRate.toFixed(1)}%` },
-        ].map((s) => (
-          <Card key={s.label}>
-            <CardContent className="pt-5">
-              <p className="text-xs text-muted-foreground uppercase tracking-wider">
-                {s.label}
-              </p>
-              <p className={`text-3xl font-bold font-mono tabular-nums mt-1 ${s.color || ""}`}>
+          {
+            label: "Sets Played",
+            value: stats.setsPlayed,
+            emoji: "🎯",
+            gradient: "from-blue-500/20 via-blue-500/8 to-transparent",
+            color: "text-blue-400",
+            icon: <Target className="size-4" />,
+          },
+          {
+            label: "Wins",
+            value: stats.setsWon,
+            emoji: "🏆",
+            gradient: "from-win/20 via-win/8 to-transparent",
+            color: "text-win",
+            icon: <Trophy className="size-4" />,
+          },
+          {
+            label: "Losses",
+            value: stats.setsLost,
+            emoji: "💔",
+            gradient: "from-loss/20 via-loss/8 to-transparent",
+            color: "text-loss",
+            icon: <Shield className="size-4" />,
+          },
+          {
+            label: "Win Rate",
+            value: `${stats.winRate.toFixed(1)}%`,
+            emoji: stats.winRate >= 60 ? "🔥" : stats.winRate >= 50 ? "⚡" : "📊",
+            gradient: stats.winRate >= 60 ? "from-yellow-500/20 via-yellow-500/8 to-transparent" : "from-primary/20 via-primary/8 to-transparent",
+            color: stats.winRate >= 60 ? "text-yellow-400" : "text-primary",
+            icon: <Zap className="size-4" />,
+          },
+        ].map((s, i) => (
+          <Card key={s.label} className="relative overflow-hidden border-border/50 hover:border-primary/20 transition-all duration-200">
+            <div className={`absolute inset-0 bg-gradient-to-br ${s.gradient} pointer-events-none`} />
+            <CardContent className="relative pt-4 pb-4 px-4">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium">{s.label}</p>
+                <span className="text-base">{s.emoji}</span>
+              </div>
+              <p className={`text-3xl font-bold font-heading tabular-nums mt-1 ${s.color}`}>
                 {s.value}
               </p>
             </CardContent>
@@ -127,15 +222,23 @@ export default async function PlayerProfilePage({
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Best Partners */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Best Partners</CardTitle>
+        <Card className="border-border/50">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base font-heading flex items-center gap-2">
+              <span className="text-lg">🤝</span>
+              Best Partners
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-2">
               {bestPartners.length > 0 ? (
-                bestPartners.slice(0, 6).map((ps) => (
-                  <div key={ps.partner.id} className="flex items-center gap-3">
+                bestPartners.slice(0, 6).map((ps, i) => (
+                  <div key={ps.partner.id} className="flex items-center gap-3 p-2 rounded-xl hover:bg-muted/30 transition-colors group">
+                    <div className={`size-7 rounded-lg flex items-center justify-center text-xs font-bold ${
+                      i === 0 ? "bg-yellow-500/20 text-yellow-400" : "bg-primary/10 text-primary"
+                    }`}>
+                      {ps.partner.name.charAt(0).toUpperCase()}
+                    </div>
                     <Link
                       href={`/players/${ps.partner.id}`}
                       className="text-sm font-medium hover:text-primary transition-colors flex-1 min-w-0 truncate"
@@ -143,40 +246,49 @@ export default async function PlayerProfilePage({
                       {ps.partner.name}
                     </Link>
                     <div className="flex items-center gap-2">
-                      <div className="w-20 h-1.5 rounded-full bg-muted overflow-hidden">
+                      <div className="w-16 h-1.5 rounded-full bg-muted/50 overflow-hidden">
                         <div
-                          className="h-full rounded-full bg-win"
+                          className="h-full rounded-full bg-win transition-all duration-700"
                           style={{ width: `${ps.winRate}%` }}
                         />
                       </div>
-                      <span className="text-xs font-mono tabular-nums text-muted-foreground w-10 text-right">
+                      <span className="text-xs font-mono text-muted-foreground tabular-nums w-9 text-right">
                         {ps.winRate.toFixed(0)}%
                       </span>
                     </div>
-                    <Badge variant="secondary" className="text-xs tabular-nums">
+                    <Badge variant="secondary" className="text-xs tabular-nums bg-muted/30 text-muted-foreground">
                       {ps.setsPlayed}
                     </Badge>
                   </div>
                 ))
               ) : (
-                <p className="text-sm text-muted-foreground text-center py-4">
-                  No partner data yet
-                </p>
+                <div className="text-center py-6">
+                  <span className="text-3xl">🤝</span>
+                  <p className="text-sm text-muted-foreground mt-2">No partner data yet</p>
+                </div>
               )}
             </div>
           </CardContent>
         </Card>
 
         {/* Toughest Opponents */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Toughest Opponents</CardTitle>
+        <Card className="border-border/50">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base font-heading flex items-center gap-2">
+              <span className="text-lg">⚔️</span>
+              Toughest Opponents
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-2">
               {toughestOpponents.length > 0 ? (
-                toughestOpponents.slice(0, 6).map((os) => (
-                  <div key={os.opponent.id} className="flex items-center gap-3">
+                toughestOpponents.slice(0, 6).map((os, i) => (
+                  <div key={os.opponent.id} className="flex items-center gap-3 p-2 rounded-xl hover:bg-muted/30 transition-colors group">
+                    <div className={`size-7 rounded-lg flex items-center justify-center text-xs font-bold ${
+                      i === 0 ? "bg-loss/20 text-loss" : "bg-muted/30 text-muted-foreground"
+                    }`}>
+                      {os.opponent.name.charAt(0).toUpperCase()}
+                    </div>
                     <Link
                       href={`/players/${os.opponent.id}`}
                       className="text-sm font-medium hover:text-primary transition-colors flex-1 min-w-0 truncate"
@@ -184,36 +296,44 @@ export default async function PlayerProfilePage({
                       {os.opponent.name}
                     </Link>
                     <div className="flex items-center gap-2">
-                      <div className="w-20 h-1.5 rounded-full bg-muted overflow-hidden">
+                      <div className="w-16 h-1.5 rounded-full bg-muted/50 overflow-hidden">
                         <div
-                          className="h-full rounded-full bg-loss"
+                          className="h-full rounded-full bg-loss transition-all duration-700"
                           style={{ width: `${100 - os.winRate}%` }}
                         />
                       </div>
-                      <span className="text-xs font-mono tabular-nums text-muted-foreground w-10 text-right">
+                      <span className="text-xs font-mono text-muted-foreground tabular-nums w-9 text-right">
                         {os.winRate.toFixed(0)}%
                       </span>
                     </div>
-                    <Badge variant="secondary" className="text-xs tabular-nums">
+                    <Badge variant="secondary" className="text-xs tabular-nums bg-muted/30 text-muted-foreground">
                       {os.setsPlayed}
                     </Badge>
                   </div>
                 ))
               ) : (
-                <p className="text-sm text-muted-foreground text-center py-4">
-                  No opponent data yet
-                </p>
+                <div className="text-center py-6">
+                  <span className="text-3xl">⚔️</span>
+                  <p className="text-sm text-muted-foreground mt-2">No opponent data yet</p>
+                </div>
               )}
             </div>
           </CardContent>
         </Card>
       </div>
 
-
-      {/* Recent Matches */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Recent Sets</CardTitle>
+      {/* Recent Sets */}
+      <Card className="border-border/50">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base font-heading flex items-center gap-2">
+            <span className="text-lg">📋</span>
+            Recent Sets
+            {recentSets.length > 0 && (
+              <Badge variant="secondary" className="ml-1 text-xs bg-muted/30">
+                {recentSets.length}
+              </Badge>
+            )}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col gap-2">
@@ -229,39 +349,43 @@ export default async function PlayerProfilePage({
                 return (
                   <div
                     key={idx}
-                    className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg bg-muted/50"
+                    className={`flex items-center gap-2 sm:gap-3 p-3 rounded-xl border transition-colors ${
+                      won
+                        ? "bg-win/8 border-win/20 hover:bg-win/12"
+                        : "bg-loss/8 border-loss/20 hover:bg-loss/12"
+                    }`}
                   >
-                    <Badge
-                      variant="outline"
-                      className={
-                        won
-                          ? "bg-win/15 text-win border-win/30"
-                          : "bg-loss/15 text-loss border-loss/30"
-                      }
-                    >
+                    <div className={`flex items-center justify-center size-8 rounded-lg font-bold text-sm ${
+                      won
+                        ? "bg-win/20 text-win"
+                        : "bg-loss/20 text-loss"
+                    }`}>
                       {won ? "W" : "L"}
-                    </Badge>
+                    </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-xs sm:text-sm truncate">
                         <span className="font-medium">
-                          {set.pair1?.player1?.name} &amp; {set.pair1?.player2?.name}
+                          {set.pair1?.player1?.name} & {set.pair1?.player2?.name}
                         </span>{" "}
-                        <span className="text-muted-foreground">vs</span>{" "}
+                        <span className="text-muted-foreground text-xs">vs</span>{" "}
                         <span className="font-medium">
-                          {set.pair2?.player1?.name} &amp; {set.pair2?.player2?.name}
+                          {set.pair2?.player1?.name} & {set.pair2?.player2?.name}
                         </span>
                       </p>
                     </div>
-                    <Badge variant="secondary" className="text-xs font-mono tabular-nums shrink-0">
-                      {set.pair1_score} - {set.pair2_score}
-                    </Badge>
+                    <div className={`flex items-center gap-1.5 shrink-0 px-2.5 py-1 rounded-lg font-mono font-bold text-sm ${
+                      won ? "bg-win/20 text-win" : "bg-loss/20 text-loss"
+                    }`}>
+                      {set.pair1_score} <span className="text-muted-foreground font-normal text-xs">–</span> {set.pair2_score}
+                    </div>
                   </div>
                 );
               })
             ) : (
-              <p className="text-sm text-muted-foreground text-center py-4">
-                No sets recorded yet
-              </p>
+              <div className="text-center py-8">
+                <span className="text-4xl">🏸</span>
+                <p className="text-sm text-muted-foreground mt-3">No sets recorded yet</p>
+              </div>
             )}
           </div>
         </CardContent>

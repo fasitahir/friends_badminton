@@ -19,11 +19,14 @@ export default async function AnalyticsPage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl sm:text-3xl font-heading font-bold tracking-tight">
-          Analytics
-        </h1>
-        <p className="text-muted-foreground mt-1">
-          Deep dive into performance, partnerships, and rivalries
+        <div className="flex items-center gap-2 mb-1">
+          <span className="text-2xl">📊</span>
+          <h1 className="text-2xl sm:text-3xl font-heading font-bold tracking-tight gradient-text">
+            Analytics
+          </h1>
+        </div>
+        <p className="text-muted-foreground text-sm">
+          Deep dive into performance, partnerships & rivalries ⚡
         </p>
       </div>
       <AnalyticsDashboard

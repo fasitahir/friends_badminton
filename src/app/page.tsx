@@ -5,7 +5,6 @@ import {
   getMatchesWithDetails,
   getSavedMonths,
 } from "@/lib/data";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 import { LeaderboardTabs } from "@/components/dashboard/leaderboard-tabs";
 
@@ -29,8 +28,58 @@ export default async function DashboardPage() {
 
   const matches = (matchesData || []) as any[];
 
+  // Compute streaks and historical Elo (sparkline) for each player
+  const enrichedPlayers = (players ?? []).map((player) => {
+    let wStreak = 0;
+    let lStreak = 0;
+    let streakActive = true;
+    let sparkline = [player.elo_rating];
+    let currentElo = player.elo_rating;
+    let totalSets = 0;
+
+    for (const m of matches) {
+      for (const g of m.games || []) {
+        const inP1 = g.pair1?.player1_id === player.id || g.pair1?.player2_id === player.id;
+        const inP2 = g.pair2?.player1_id === player.id || g.pair2?.player2_id === player.id;
+        if (inP1 || inP2) {
+          totalSets++;
+          const wonSet = g.winning_pair_id === (inP1 ? g.pair1_id : g.pair2_id);
+
+          if (streakActive) {
+            if (wonSet) {
+              if (lStreak > 0) streakActive = false;
+              else wStreak++;
+            } else {
+              if (wStreak > 0) streakActive = false;
+              else lStreak++;
+            }
+          }
+
+          if (sparkline.length < 10) {
+            const eloChange = inP1 ? g.pair1_elo_change : g.pair2_elo_change;
+            if (eloChange != null) {
+              currentElo = currentElo - eloChange;
+              sparkline.unshift(currentElo);
+            } else {
+              currentElo = currentElo - (wonSet ? 15 : -15);
+              sparkline.unshift(currentElo);
+            }
+          }
+        }
+      }
+    }
+
+    return {
+      ...player,
+      winStreak: wStreak,
+      lossStreak: lStreak,
+      totalSets,
+      sparkline,
+    };
+  });
+
   // 1. Calculate all-time player stats for comparison total badge
-  const allTimeStats = (players ?? [])
+  const allTimeStats = enrichedPlayers
     .map((player) => {
       let played = 0;
       let won = 0;
@@ -62,10 +111,10 @@ export default async function DashboardPage() {
 
   // 2. Determine current month
   const now = new Date();
-  const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`; // e.g. "2026-06"
+  const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 
   // 3. Compute live current month leaderboard dynamically
-  const initialEntries = (players ?? [])
+  const initialEntries = enrichedPlayers
     .map((player) => {
       let played = 0;
       let won = 0;
@@ -111,210 +160,116 @@ export default async function DashboardPage() {
   // 4. Combine months for dropdown (ensure currentMonth is at top and unique)
   const availableMonths = Array.from(new Set([currentMonth, ...savedMonths]));
 
-  const sortedPlayers = (players ?? [])
-    .filter(p => p.elo_rating)
-    .sort((a, b) => b.elo_rating - a.elo_rating);
-    
-  const topPlayer = sortedPlayers[0];
+  const eligiblePlayers = allTimeStats.filter(p => p.played >= 5);
+  const topWinRatePlayer = eligiblePlayers.length > 0
+    ? eligiblePlayers.sort((a, b) => b.winRate - a.winRate)[0]
+    : allTimeStats.sort((a, b) => b.winRate - a.winRate)[0];
 
   const statCards = [
     {
       label: "Total Players",
       value: playerCount ?? 0,
-      icon: (
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className="size-5 text-primary"
-        >
-          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-          <circle cx="9" cy="7" r="4" />
-          <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-          <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-        </svg>
-      ),
     },
     {
-      label: "Sessions Played",
+      label: "Sessions",
       value: sessionCount ?? 0,
-      icon: (
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className="size-5 text-primary"
-        >
-          <path d="M8 2v4" />
-          <path d="M16 2v4" />
-          <rect width="18" height="18" x="3" y="4" rx="2" />
-          <path d="M3 10h18" />
-        </svg>
-      ),
     },
     {
-      label: "Matches Recorded",
+      label: "Sets Recorded",
       value: matchCount ?? 0,
-      icon: (
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className="size-5 text-primary"
-        >
-          <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5C7 4 6 9 6 9" />
-          <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5C17 4 18 9 18 9" />
-          <path d="M4 22h16" />
-          <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
-          <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
-          <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
-        </svg>
-      ),
     },
     {
-      label: "Highest Rated",
-      value: topPlayer
-        ? `${topPlayer.name} (${topPlayer.elo_rating})`
-        : "—",
-      icon: (
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className="size-5 text-primary"
-        >
-          <path d="m12 8-9.04 9.06a2.82 2.82 0 1 0 3.98 3.98L16 12" />
-          <circle cx="17" cy="7" r="5" />
-        </svg>
-      ),
+      label: "Top Win Rate",
+      value: topWinRatePlayer ? `${topWinRatePlayer.winRate.toFixed(1)}%` : "—",
+      subValue: topWinRatePlayer ? topWinRatePlayer.name : null,
     },
   ];
 
   return (
-    <div className="flex flex-col gap-8">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-heading font-bold tracking-tight">
-          Dashboard
+    <div className="flex flex-col gap-10">
+      {/* Header Panel (Bridged to Stats) */}
+      <div className="flex flex-col">
+        <h1 className="text-4xl sm:text-5xl font-heading tracking-tight uppercase mb-1">
+          Telemetry
         </h1>
-        <p className="text-muted-foreground mt-1">
-          Overview of your badminton group&apos;s performance
-        </p>
+        <div className="flex items-center gap-4">
+          <p className="text-muted-foreground font-mono text-sm tracking-widest uppercase">
+            [System Status: Active]
+          </p>
+          <div className="flex-1 h-px bg-border hidden sm:block" />
+        </div>
       </div>
 
-      {/* Stat Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        {statCards.map((stat) => (
-          <Card key={stat.label} className="relative overflow-hidden">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                {stat.label}
-              </CardTitle>
-              {stat.icon}
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold font-mono tracking-tight">
-                {stat.value}
+      {/* Stat Blocks (Instrument Cluster) */}
+      <div className="flex flex-row flex-wrap items-center border-y border-border py-6 bg-muted/5">
+        {statCards.map((stat, i) => (
+          <div 
+            key={stat.label} 
+            className="flex flex-col flex-1 min-w-[140px] px-4 sm:px-8 border-r border-border last:border-r-0"
+          >
+            <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-[0.2em] mb-2">
+              {stat.label}
+            </span>
+            <div className="font-mono text-3xl sm:text-4xl text-foreground">
+              {stat.value}
+            </div>
+            {stat.subValue && (
+              <div className="text-xs font-mono text-muted-foreground mt-1 uppercase">
+                {stat.subValue}
               </div>
-            </CardContent>
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
-          </Card>
+            )}
+          </div>
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <LeaderboardTabs 
-          players={players || []}
-          availableMonths={availableMonths}
-          initialMonth={currentMonth}
-          initialEntries={initialEntries}
-          allTimeStats={allTimeStats}
-        />
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 sm:gap-16">
+        <div className="lg:col-span-8">
+          <LeaderboardTabs 
+            players={enrichedPlayers}
+            availableMonths={availableMonths}
+            initialMonth={currentMonth}
+            initialEntries={initialEntries}
+            allTimeStats={allTimeStats}
+          />
+        </div>
 
         {/* Recent Sessions */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="size-5 text-primary"
-              >
-                <path d="M8 2v4" />
-                <path d="M16 2v4" />
-                <rect width="18" height="18" x="3" y="4" rx="2" />
-                <path d="M3 10h18" />
-              </svg>
-              Recent Sessions
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-col gap-3">
-              {recentSessions?.map((session) => (
+        <div className="lg:col-span-4 flex flex-col">
+          <div className="pb-4 mb-2 border-b border-border">
+            <h2 className="text-sm font-mono uppercase tracking-[0.2em] text-muted-foreground">
+              Recent Log
+            </h2>
+          </div>
+          
+          <div className="flex flex-col">
+            {recentSessions?.map((session) => {
+              const formattedDate = new Date(session.date).toLocaleDateString("en-US", {
+                month: "2-digit",
+                day: "2-digit",
+                year: "2-digit",
+              });
+              return (
                 <Link
                   key={session.id}
                   href={`/sessions/${session.id}`}
-                  className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors group"
+                  className="flex flex-row items-center justify-between py-4 border-b border-border group hover:bg-muted/30 transition-colors"
                 >
-                  <div>
-                    <p className="text-sm font-medium group-hover:text-primary transition-colors">
-                      {session.name}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      {new Date(session.date).toLocaleDateString("en-US", {
-                        weekday: "short",
-                        month: "short",
-                        day: "numeric",
-                        year: "numeric",
-                      })}
-                    </p>
-                  </div>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="size-4 text-muted-foreground group-hover:text-primary transition-colors"
-                  >
-                    <path d="m9 18 6-6-6-6" />
-                  </svg>
+                  <span className="text-sm font-medium group-hover:text-foreground/80">
+                    {session.name}
+                  </span>
+                  <span className="font-mono text-xs text-muted-foreground tabular-nums">
+                    {formattedDate}
+                  </span>
                 </Link>
-              ))}
-              {(!recentSessions || recentSessions.length === 0) && (
-                <p className="text-sm text-muted-foreground py-4 text-center">
-                  No sessions yet.{" "}
-                  <Link href="/sessions" className="text-primary hover:underline">
-                    Create your first session
-                  </Link>
-                </p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+              );
+            })}
+            {(!recentSessions || recentSessions.length === 0) && (
+              <div className="py-8 text-xs font-mono text-muted-foreground uppercase">
+                [ No Data ]
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

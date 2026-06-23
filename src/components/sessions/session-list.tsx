@@ -92,13 +92,17 @@ export function SessionList({ sessions, isAdmin }: { sessions: SessionWithCount[
       {isAdmin && (
         <div className="flex justify-end">
           <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-            <DialogTrigger render={<Button />}>
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-4 mr-2"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
-              New Session
-            </DialogTrigger>
+            <DialogTrigger render={
+              <Button className="gap-2 neon-glow-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-4"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+                New Session
+              </Button>
+            } />
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Create New Session</DialogTitle>
+                <DialogTitle className="flex items-center gap-2">
+                  <span>📅</span> Create New Session
+                </DialogTitle>
               </DialogHeader>
               <SessionForm onClose={() => setCreateOpen(false)} />
             </DialogContent>
@@ -107,21 +111,18 @@ export function SessionList({ sessions, isAdmin }: { sessions: SessionWithCount[
       )}
 
       <div className="flex flex-col gap-3">
-        {sessions.map((session) => (
+        {sessions.map((session, i) => (
           <Link key={session.id} href={`/sessions/${session.id}`}>
-            <Card className="hover:border-primary/30 transition-colors cursor-pointer group">
+            <Card className={`hover:border-primary/30 border-border/50 transition-all duration-200 cursor-pointer group hover:scale-[1.01] hover:shadow-md hover:shadow-primary/5 slide-up stagger-${Math.min(i + 1, 6)}`}>
               <CardContent className="flex items-center justify-between py-3 sm:py-4 gap-3">
                 <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
-                  <div className="size-10 sm:size-12 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-4 sm:size-5 text-primary">
-                      <path d="M8 2v4" /><path d="M16 2v4" /><rect width="18" height="18" x="3" y="4" rx="2" /><path d="M3 10h18" />
-                    </svg>
+                  <div className="size-10 sm:size-12 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center shrink-0 group-hover:from-primary/30 transition-all">
+                    <span className="text-xl sm:text-2xl">🎯</span>
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="font-medium group-hover:text-primary transition-colors text-sm sm:text-base truncate">
+                    <p className="font-semibold font-heading group-hover:text-primary transition-colors text-sm sm:text-base truncate">
                       {session.name}
                     </p>
-                    {/* Short date on mobile, long date on desktop */}
                     <p className="text-xs sm:text-sm text-muted-foreground sm:hidden">
                       {new Date(session.date).toLocaleDateString("en-US", {
                         month: "short",
@@ -138,15 +139,22 @@ export function SessionList({ sessions, isAdmin }: { sessions: SessionWithCount[
                       })}
                     </p>
                     {session.notes && (
-                      <p className="text-xs text-muted-foreground mt-0.5 truncate max-w-[200px] sm:max-w-md">
-                        {session.notes}
+                      <p className="text-xs text-muted-foreground/60 mt-0.5 truncate max-w-[200px] sm:max-w-md">
+                        📝 {session.notes}
                       </p>
                     )}
                   </div>
                 </div>
                 <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-                  <Badge variant="secondary" className="tabular-nums text-xs">
-                    {session.matchCount} match{session.matchCount !== 1 ? "es" : ""}
+                  <Badge
+                    variant="secondary"
+                    className={`tabular-nums text-xs border ${
+                      session.matchCount > 0
+                        ? "bg-primary/10 text-primary border-primary/20"
+                        : "bg-muted/30 text-muted-foreground border-border/50"
+                    }`}
+                  >
+                    ⚡ {session.matchCount} match{session.matchCount !== 1 ? "es" : ""}
                   </Badge>
                   {isAdmin && (
                     <AlertDialog>
@@ -159,11 +167,13 @@ export function SessionList({ sessions, isAdmin }: { sessions: SessionWithCount[
                           e.stopPropagation();
                         }}
                       />}>
-                        Del
+                        🗑️
                       </AlertDialogTrigger>
                       <AlertDialogContent onClick={(e) => e.stopPropagation()}>
                         <AlertDialogHeader>
-                          <AlertDialogTitle>Delete Session?</AlertDialogTitle>
+                          <AlertDialogTitle className="flex items-center gap-2">
+                            <span>⚠️</span> Delete Session?
+                          </AlertDialogTitle>
                           <AlertDialogDescription>
                             This will delete the session, all teams, pairs, and
                             matches within it. This cannot be undone.
@@ -184,7 +194,7 @@ export function SessionList({ sessions, isAdmin }: { sessions: SessionWithCount[
                       </AlertDialogContent>
                     </AlertDialog>
                   )}
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-4 text-muted-foreground group-hover:text-primary transition-colors hidden sm:block">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-4 text-muted-foreground/40 group-hover:text-primary group-hover:translate-x-0.5 transition-all hidden sm:block">
                     <path d="m9 18 6-6-6-6" />
                   </svg>
                 </div>
@@ -195,11 +205,11 @@ export function SessionList({ sessions, isAdmin }: { sessions: SessionWithCount[
       </div>
 
       {sessions.length === 0 && (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <p className="text-muted-foreground">
-              No sessions yet. Create your first badminton session!
-            </p>
+        <Card className="border-border/50">
+          <CardContent className="py-16 text-center">
+            <span className="text-5xl">📅</span>
+            <p className="text-muted-foreground mt-4 font-medium">No sessions yet.</p>
+            <p className="text-sm text-muted-foreground/60 mt-1">Create your first badminton session to get started!</p>
           </CardContent>
         </Card>
       )}
