@@ -105,6 +105,9 @@ export default async function DashboardPage() {
         played,
         won,
         winRate: played > 0 ? (won / played) * 100 : 0,
+        winStreak: player.winStreak,
+        lossStreak: player.lossStreak,
+        totalSets: player.totalSets,
       };
     })
     .sort((a, b) => b.winRate - a.winRate || b.won - a.won);

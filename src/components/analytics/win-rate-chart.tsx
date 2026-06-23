@@ -36,24 +36,23 @@ export default function WinRateChart({ data }: WinRateChartProps) {
           contentStyle={{
             background: "var(--card)",
             border: "1px solid var(--border)",
-            borderRadius: "8px",
+            borderRadius: "0px",
             color: "var(--foreground)",
+            fontFamily: "var(--font-mono)",
+            fontSize: "12px",
           }}
-          formatter={(value: any) => [`${value}%`, "Win Rate"]}
+          formatter={(value: any) => [`${value}%`, "WIN RATE"]}
         />
-        <Bar dataKey="winRate" radius={[0, 4, 4, 0]}>
-          {data.map((entry, index) => (
-            <Cell
-              key={`cell-${index}`}
-              fill={
-                entry.winRate >= 60
-                  ? "var(--win)"
-                  : entry.winRate >= 40
-                  ? "var(--chart-2)"
-                  : "var(--loss)"
-              }
-            />
-          ))}
+        <Bar dataKey="winRate" radius={0}>
+          {data.map((entry, index) => {
+            const isElite = entry.winRate >= 65;
+            return (
+              <Cell
+                key={`cell-${index}`}
+                fill={isElite ? "#E61919" : "currentColor"}
+              />
+            );
+          })}
         </Bar>
       </BarChart>
     </ResponsiveContainer>

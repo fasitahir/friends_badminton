@@ -5,8 +5,6 @@ import NextLink from "next/link";
 import type { Player } from "@/lib/supabase/types";
 import { createPlayer, updatePlayer, deletePlayer } from "@/app/actions";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -27,32 +25,34 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { Minus, Flame } from "lucide-react";
+import { EloTrend } from "@/components/dashboard/elo-trend";
+import { Sparkline } from "@/components/dashboard/sparkline";
+import { cn } from "@/lib/utils";
 
-// Vibrant player avatar colors (rotating)
-const AVATAR_COLORS = [
-  "from-green-500/30 to-emerald-500/20 text-green-400",
-  "from-blue-500/30 to-cyan-500/20 text-blue-400",
-  "from-purple-500/30 to-violet-500/20 text-purple-400",
-  "from-orange-500/30 to-amber-500/20 text-orange-400",
-  "from-pink-500/30 to-rose-500/20 text-pink-400",
-  "from-teal-500/30 to-cyan-500/20 text-teal-400",
-  "from-indigo-500/30 to-blue-500/20 text-indigo-400",
-  "from-yellow-500/30 to-amber-500/20 text-yellow-400",
-];
+interface EnrichedPlayer extends Player {
+  winStreak: number;
+  lossStreak: number;
+  totalSets: number;
+  setsWon: number;
+  setsLost: number;
+  winRate: number;
+  sparkline: number[];
+}
 
-function getAvatarColor(name: string) {
-  let hash = 0;
-  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
-  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
+function getRankStyle(idx: number) {
+  if (idx === 0) return "font-heading text-2xl text-foreground font-bold";
+  if (idx === 1) return "font-heading text-xl text-foreground/90 font-semibold";
+  if (idx === 2) return "font-heading text-lg text-foreground/80 font-medium";
+  return "font-mono text-sm text-muted-foreground";
 }
 
 function getEloTier(elo: number | null | undefined) {
-  if (!elo) return { label: "Unranked", color: "text-muted-foreground", emoji: "⬜" };
-  if (elo >= 700) return { label: "Elite", color: "text-yellow-400", emoji: "🔥" };
-  if (elo >= 650) return { label: "Advanced", color: "text-primary", emoji: "⚡" };
-  if (elo >= 600) return { label: "Intermediate", color: "text-blue-400", emoji: "🌟" };
-  return { label: "Beginner", color: "text-muted-foreground", emoji: "🎯" };
+  if (!elo) return { label: "UNRANKED", color: "text-muted-foreground border-muted-foreground/30 bg-muted-foreground/5" };
+  if (elo >= 700) return { label: "ELITE", color: "text-aviation-red border-aviation-red/30 bg-aviation-red/5 font-bold" };
+  if (elo >= 650) return { label: "ADVANCED", color: "text-foreground border-foreground/30 bg-foreground/5" };
+  if (elo >= 600) return { label: "INTERMEDIATE", color: "text-muted-foreground border-muted-foreground/50 bg-muted/5" };
+  return { label: "BEGINNER", color: "text-muted-foreground border-muted-foreground/30 bg-muted/3" };
 }
 
 function PlayerForm({
@@ -84,44 +84,43 @@ function PlayerForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-6">
       <div className="flex flex-col gap-2">
-        <Label htmlFor="name" className="font-medium">Name</Label>
+        <Label htmlFor="name" className="font-mono text-xs uppercase tracking-widest text-muted-foreground">Name</Label>
         <Input
           id="name"
           name="name"
           defaultValue={player?.name}
-          placeholder="Player name"
+          placeholder="ENTER PLAYER NAME"
           required
-          className="bg-muted/30 border-border/50"
+          className="bg-transparent border border-border rounded-none focus:border-foreground focus:ring-0 text-sm font-mono uppercase h-10 px-3"
         />
       </div>
       <div className="flex flex-col gap-2">
-        <Label htmlFor="nickname" className="font-medium">Nickname <span className="text-muted-foreground font-normal">(optional)</span></Label>
+        <Label htmlFor="nickname" className="font-mono text-xs uppercase tracking-widest text-muted-foreground">Nickname</Label>
         <Input
           id="nickname"
           name="nickname"
           defaultValue={player?.nickname || ""}
-          placeholder="e.g. The Smasher"
-          className="bg-muted/30 border-border/50"
+          placeholder="E.G. THE SMASHER (OPTIONAL)"
+          className="bg-transparent border border-border rounded-none focus:border-foreground focus:ring-0 text-sm font-mono uppercase h-10 px-3"
         />
       </div>
       {error && (
-        <p className="text-sm text-destructive bg-destructive/10 px-3 py-2 rounded-lg">{error}</p>
+        <p className="text-xs font-mono text-red-500 bg-red-950/20 border border-red-900/30 px-3 py-2 rounded-none uppercase">{error}</p>
       )}
-      <Button type="submit" disabled={loading} className="mt-2">
-        {loading ? (
-          <span className="flex items-center gap-2">
-            <span className="size-3.5 rounded-full border-2 border-primary-foreground/40 border-t-primary-foreground animate-spin" />
-            Saving...
-          </span>
-        ) : player ? "Update Player ✏️" : "Add Player 🏸"}
+      <Button
+        type="submit"
+        disabled={loading}
+        className="mt-2 rounded-none border border-border bg-transparent hover:bg-muted text-foreground transition-colors font-mono text-xs uppercase h-10 cursor-pointer"
+      >
+        {loading ? "SAVING..." : player ? "UPDATE PLAYER" : "ADD PLAYER"}
       </Button>
     </form>
   );
 }
 
-export function PlayerTable({ players, isAdmin }: { players: Player[], isAdmin?: boolean }) {
+export function PlayerTable({ players, isAdmin }: { players: EnrichedPlayer[], isAdmin?: boolean }) {
   const [createOpen, setCreateOpen] = useState(false);
   const [editPlayer, setEditPlayer] = useState<Player | null>(null);
 
@@ -134,15 +133,14 @@ export function PlayerTable({ players, isAdmin }: { players: Player[], isAdmin?:
         <div className="flex justify-end">
           <Dialog open={createOpen} onOpenChange={setCreateOpen}>
             <DialogTrigger render={
-              <Button className="gap-2 neon-glow-sm">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-4"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
-                Add Player
+              <Button className="rounded-none border border-border bg-transparent hover:bg-muted text-foreground transition-colors font-mono text-xs uppercase h-9 px-4 cursor-pointer">
+                + ADD PLAYER
               </Button>
             } />
-            <DialogContent>
+            <DialogContent className="rounded-none border border-border bg-background shadow-none max-w-md">
               <DialogHeader>
-                <DialogTitle className="flex items-center gap-2">
-                  <span>🏸</span> Add New Player
+                <DialogTitle className="font-heading uppercase tracking-widest text-lg">
+                  Add New Player
                 </DialogTitle>
               </DialogHeader>
               <PlayerForm onClose={() => setCreateOpen(false)} />
@@ -153,10 +151,10 @@ export function PlayerTable({ players, isAdmin }: { players: Player[], isAdmin?:
 
       {/* Edit Dialog */}
       <Dialog open={!!editPlayer} onOpenChange={(open) => !open && setEditPlayer(null)}>
-        <DialogContent>
+        <DialogContent className="rounded-none border border-border bg-background shadow-none max-w-md">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <span>✏️</span> Edit Player
+            <DialogTitle className="font-heading uppercase tracking-widest text-lg">
+              Edit Player
             </DialogTitle>
           </DialogHeader>
           {editPlayer && (
@@ -168,123 +166,169 @@ export function PlayerTable({ players, isAdmin }: { players: Player[], isAdmin?:
         </DialogContent>
       </Dialog>
 
-      {/* Player Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {sortedPlayers.map((player, i) => {
-          const avatarColor = getAvatarColor(player.name);
+      {/* Player Instrument Panel List */}
+      <div className="flex flex-col">
+        {/* Table Header Row */}
+        <div className="flex items-center gap-4 px-4 py-3 border-b border-border text-[10px] font-mono text-muted-foreground uppercase tracking-[0.2em]">
+          <div className="w-8 text-right shrink-0">RNK</div>
+          <div className="flex-1">PLAYER</div>
+          <div className="hidden sm:block w-36 shrink-0 text-center">SPARKLINE</div>
+          <div className="hidden md:block w-32 shrink-0 text-right">SETS RECORD</div>
+          <div className="hidden sm:block w-24 shrink-0 text-right">WIN RATE</div>
+          <div className="w-20 shrink-0 text-right">ELO</div>
+          {isAdmin && <div className="w-28 shrink-0 text-right">ACTIONS</div>}
+        </div>
+
+        {/* Rows */}
+        {sortedPlayers.map((player, idx) => {
           const tier = getEloTier(player.elo_rating);
-          const rank = i + 1;
-          const isTop3 = rank <= 3;
+          const rank = idx + 1;
+          const isOnFire = player.winStreak >= 3;
+          const isCold = player.lossStreak >= 3 && player.totalSets > 0 && idx !== 0;
+          const isRankOne = idx === 0;
+          const isElite = player.elo_rating && player.elo_rating >= 700;
 
           return (
-            <Card
+            <div
               key={player.id}
-              className={`group relative overflow-hidden border-border/50 hover:border-primary/30 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-primary/5 ${isTop3 ? "border-primary/20" : ""}`}
-            >
-              {isTop3 && (
-                <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
+              className={cn(
+                "flex items-center gap-4 py-4 border-b border-border hover:bg-muted/15 transition-colors",
+                isElite ? "border-l-2 border-l-aviation-red pl-3" : "pl-4",
+                isRankOne ? "animate-glow-fire" : "",
+                isCold ? "opacity-70 animate-glow-cold" : "pr-4"
               )}
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/3 to-transparent pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              
-              <CardContent className="pt-5 pb-4">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    {/* Avatar */}
-                    <div className={`relative size-12 rounded-xl bg-gradient-to-br ${avatarColor} flex items-center justify-center font-bold text-lg shrink-0`}>
-                      {player.name.charAt(0).toUpperCase()}
-                      {isTop3 && (
-                        <span className="absolute -top-1.5 -right-1.5 text-base leading-none">
-                          {rank === 1 ? "🥇" : rank === 2 ? "🥈" : "🥉"}
-                        </span>
-                      )}
-                    </div>
-                    
-                    {/* Name & nickname */}
-                    <div>
-                      <NextLink
-                        href={`/players/${player.id}`}
-                        className="font-heading font-semibold hover:text-primary transition-colors text-sm"
-                      >
-                        {player.name}
-                      </NextLink>
-                      {player.nickname && (
-                        <p className="text-[11px] text-muted-foreground/60 italic">
-                          &ldquo;{player.nickname}&rdquo;
-                        </p>
-                      )}
-                      <div className="flex items-center gap-1 mt-1">
-                        <span className="text-xs">{tier.emoji}</span>
-                        <span className={`text-[10px] font-medium ${tier.color}`}>{tier.label}</span>
-                      </div>
-                    </div>
-                  </div>
+            >
+              {/* Rank */}
+              <div className={cn("w-8 text-right shrink-0", getRankStyle(idx))}>
+                {rank}.
+              </div>
 
-                  {/* ELO badge */}
-                  <div className="flex flex-col items-end gap-1">
-                    {player.elo_rating ? (
-                      <div className={`px-2 py-1 rounded-lg text-xs font-mono font-bold bg-muted/50 ${
-                        isTop3 ? "text-primary" : "text-muted-foreground"
-                      }`}>
-                        {player.elo_rating}
-                      </div>
-                    ) : (
-                      <div className="px-2 py-1 rounded-lg text-xs font-mono text-muted-foreground/40 bg-muted/30">—</div>
+              {/* Name, Nickname & Status */}
+              <div className="flex-1 min-w-0 flex flex-col justify-center">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <NextLink
+                    href={`/players/${player.id}`}
+                    className={cn(
+                      "font-heading hover:text-primary transition-colors truncate",
+                      isRankOne
+                        ? "font-bold text-xl tracking-tight text-foreground"
+                        : isElite
+                          ? "font-bold text-lg tracking-tight"
+                          : "font-medium text-base"
                     )}
-                    <span className="text-[10px] text-muted-foreground/40 uppercase tracking-wide">ELO</span>
-                  </div>
+                  >
+                    {player.name}
+                  </NextLink>
+                  <span className={cn("text-[9px] font-mono tracking-wider border px-1.5 py-0.5 shrink-0 rounded-none uppercase", tier.color)}>
+                    {tier.label}
+                  </span>
+                  {isOnFire && <Flame className="size-3.5 text-aviation-red fill-aviation-red shrink-0" />}
+                  {isCold && <Minus className="size-3.5 text-muted-foreground shrink-0" />}
                 </div>
 
-                {isAdmin && (
-                  <div className="flex gap-2 mt-4 pt-3 border-t border-border/30">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setEditPlayer(player)}
-                      className="flex-1 text-xs h-7 hover:bg-primary/10 hover:text-primary"
-                    >
-                      ✏️ Edit
-                    </Button>
-                    <AlertDialog>
-                      <AlertDialogTrigger render={<Button variant="ghost" size="sm" className="flex-1 text-xs h-7 text-destructive hover:text-destructive hover:bg-destructive/10" />}>
-                        🗑️ Delete
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle className="flex items-center gap-2">
-                            <span>⚠️</span> Delete {player.name}?
-                          </AlertDialogTitle>
-                          <AlertDialogDescription>
-                            This will permanently delete this player and all their match history. This action cannot be undone.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction
-                            onClick={() => deletePlayer(player.id)}
-                            className="bg-destructive text-white hover:bg-destructive/90"
-                          >
-                            Delete Player
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                {/* Sub-details */}
+                <div className="flex items-center gap-2 mt-1 flex-wrap">
+                  {player.nickname && (
+                    <span className="text-[10px] font-mono text-muted-foreground uppercase truncate">
+                      "{player.nickname}"
+                    </span>
+                  )}
+                  {isRankOne && (
+                    <span className="text-[9px] font-mono text-muted-foreground uppercase tracking-widest">
+                      [DEFENDING #1]
+                    </span>
+                  )}
+                  {isCold && (
+                    <span className="text-[9px] font-mono text-muted-foreground uppercase tracking-widest">
+                      [NEEDS A WIN]
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Sparkline */}
+              <div className="hidden sm:block w-36 shrink-0 flex justify-center">
+                <Sparkline data={player.sparkline} />
+              </div>
+
+              {/* Sets Record */}
+              <div className="hidden md:flex flex-col items-end w-32 shrink-0 font-mono text-xs tabular-nums text-muted-foreground">
+                <span className="text-foreground">{player.totalSets} SETS</span>
+                <span>{player.setsWon}W / {player.setsLost}L</span>
+              </div>
+
+              {/* Win Rate */}
+              <div className="hidden sm:flex flex-col items-end w-24 shrink-0 font-mono text-sm tabular-nums text-foreground">
+                {player.winRate.toFixed(1)}%
+              </div>
+
+              {/* ELO Rating */}
+              <div className="flex flex-col items-end w-20 shrink-0 gap-1">
+                <span className={cn(
+                  "font-mono tabular-nums text-foreground",
+                  isRankOne ? "text-2xl font-bold" : isElite ? "text-xl font-bold" : "text-base"
+                )}>
+                  {player.elo_rating || "—"}
+                </span>
+                {player.elo_rating && <EloTrend elo={player.elo_rating} />}
+              </div>
+
+              {/* Admin Actions */}
+              {isAdmin && (
+                <div className="w-28 shrink-0 flex items-center justify-end gap-2 pr-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setEditPlayer(player)}
+                    className="h-7 w-12 rounded-none border border-border bg-transparent hover:bg-muted text-foreground transition-colors font-mono text-[10px] uppercase cursor-pointer"
+                  >
+                    EDIT
+                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger render={
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 w-12 rounded-none border border-red-900/30 bg-transparent text-red-500/80 hover:bg-red-950/20 hover:text-red-400 hover:border-red-500/50 transition-colors font-mono text-[10px] uppercase cursor-pointer"
+                      >
+                        DEL
+                      </Button>
+                    } />
+                    <AlertDialogContent className="rounded-none border border-border bg-background shadow-none max-w-md">
+                      <AlertDialogHeader>
+                        <AlertDialogTitle className="font-heading uppercase tracking-widest text-lg">
+                          Delete {player.name}?
+                        </AlertDialogTitle>
+                        <AlertDialogDescription className="font-mono text-xs uppercase text-muted-foreground mt-2 leading-relaxed">
+                          This will permanently delete this player and all their match history. This action cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter className="mt-4 gap-2">
+                        <AlertDialogCancel className="rounded-none border border-border bg-transparent hover:bg-muted text-foreground transition-colors font-mono text-xs uppercase cursor-pointer">
+                          Cancel
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => deletePlayer(player.id)}
+                          className="rounded-none bg-red-950/20 border border-red-900/30 text-red-500/80 hover:bg-red-950/40 hover:text-red-400 hover:border-red-500/50 transition-colors font-mono text-xs uppercase cursor-pointer"
+                        >
+                          Delete Player
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              )}
+            </div>
           );
         })}
-      </div>
 
-      {players.length === 0 && (
-        <Card className="border-border/50">
-          <CardContent className="py-16 text-center">
+        {players.length === 0 && (
+          <div className="py-16 text-center border-b border-border">
             <span className="text-5xl">🏸</span>
-            <p className="text-muted-foreground mt-4 font-medium">No players yet.</p>
-            <p className="text-sm text-muted-foreground/60 mt-1">Add your first player to get started!</p>
-          </CardContent>
-        </Card>
-      )}
+            <p className="text-muted-foreground mt-4 font-mono text-sm uppercase tracking-wider">No players registered.</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

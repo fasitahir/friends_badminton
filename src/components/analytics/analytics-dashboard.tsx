@@ -190,7 +190,7 @@ function OverviewTab({
             <CardTitle>Win Rate by Player</CardTitle>
           </CardHeader>
           <CardContent>
-            <div style={{ height: `${Math.max(260, chartData.length * 30)}px` }} className="w-full">
+            <div style={{ height: `${Math.max(260, chartData.length * 30)}px` }} className="w-full text-foreground">
               <WinRateChart data={chartData} />
             </div>
           </CardContent>
