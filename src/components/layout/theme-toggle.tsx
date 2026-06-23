@@ -1,30 +1,29 @@
-import { useEffect, useState } from "react";
-import { Sun, Moon } from "lucide-react";
+"use client";
+
+import * as React from "react";
+import { Moon, Sun } from "lucide-react";
+import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
 
 export function ThemeToggle() {
-  const [isDark, setIsDark] = useState(false);
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = React.useState(false);
 
-  useEffect(() => {
-    // Initialize based on user preference or existing class
-    const darkClass = document.documentElement.classList.contains("dark");
-    setIsDark(darkClass);
+  React.useEffect(() => {
+    setMounted(true);
   }, []);
 
-  const toggle = () => {
-    const html = document.documentElement;
-    if (isDark) {
-      html.classList.remove("dark");
-    } else {
-      html.classList.add("dark");
-    }
-    setIsDark(!isDark);
-  };
+  if (!mounted) {
+    return (
+      <button className="flex items-center justify-center rounded-full p-2 text-muted-foreground w-9 h-9" />
+    );
+  }
+
+  const isDark = theme === "dark";
 
   return (
     <button
-      type="button"
-      onClick={toggle}
+      onClick={() => setTheme(isDark ? "light" : "dark")}
       className={cn(
         "flex items-center justify-center rounded-full p-2 transition-colors hover:bg-sidebar-accent",
         isDark ? "text-yellow-300" : "text-gray-600"

@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Space_Grotesk } from "next/font/google";
 import { Sidebar, MobileNav } from "@/components/layout/sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { ThemeProvider } from "@/components/layout/theme-provider";
 import { getIsAdmin } from "@/lib/auth";
 import "./globals.css";
 
@@ -48,7 +49,8 @@ export default async function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${spaceGrotesk.variable} h-full antialiased dark`}
+      className={`${geistSans.variable} ${geistMono.variable} ${spaceGrotesk.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
       <head>
         {/* Preconnect to Supabase to eliminate TCP/TLS handshake latency */}
@@ -60,15 +62,17 @@ export default async function RootLayout({
         )}
       </head>
       <body className="min-h-full flex relative font-sans">
-        <TooltipProvider>
-          <Sidebar isAdmin={isAdmin} />
-          <main className="flex-1 min-w-0 min-h-screen pb-20 md:pb-0">
-            <div className="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8 py-10 sm:py-16">
-              {children}
-            </div>
-          </main>
-          <MobileNav isAdmin={isAdmin} />
-        </TooltipProvider>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <TooltipProvider>
+            <Sidebar isAdmin={isAdmin} />
+            <main className="flex-1 min-w-0 min-h-screen pb-20 md:pb-0">
+              <div className="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8 py-10 sm:py-16">
+                {children}
+              </div>
+            </main>
+            <MobileNav isAdmin={isAdmin} />
+          </TooltipProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

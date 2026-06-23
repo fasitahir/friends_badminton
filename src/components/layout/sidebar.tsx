@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { logout } from "@/app/actions";
 import { LogIn, LogOut } from "lucide-react";
+import { ThemeToggle } from "./theme-toggle";
 
 const navItems = [
   {
@@ -72,11 +73,14 @@ export function Sidebar({ isAdmin }: { isAdmin?: boolean }) {
         <div className="size-10 rounded-xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center neon-glow-sm shrink-0">
           <span className="text-xl leading-none">🏸</span>
         </div>
-        <div>
-          <h1 className="font-heading font-bold text-base tracking-tight text-sidebar-foreground">
+        <div className="flex-1 min-w-0">
+          <h1 className="font-heading font-bold text-base tracking-tight text-sidebar-foreground truncate">
             Shuttle Stats
           </h1>
-          <p className="text-[10px] text-primary/70 font-medium uppercase tracking-widest">Badminton Analytics</p>
+          <p className="text-[10px] text-primary/70 font-medium uppercase tracking-widest truncate">Badminton Analytics</p>
+        </div>
+        <div className="shrink-0">
+          <ThemeToggle />
         </div>
       </div>
 
@@ -174,6 +178,9 @@ export function MobileNav({ isAdmin }: { isAdmin?: boolean }) {
             </li>
           );
         })}
+        <li className="flex flex-col items-center justify-center">
+          <ThemeToggle />
+        </li>
         <li className="flex-1">
           {isAdmin ? (
             <form action={logout} className="m-0 p-0">

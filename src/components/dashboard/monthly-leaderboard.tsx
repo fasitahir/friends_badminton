@@ -129,8 +129,8 @@ export function MonthlyLeaderboard({
               href={`/players/${entry.player_id}`}
               className={`flex items-center gap-4 p-4 border-b border-border hover:bg-muted/30 transition-colors ${
                 isElite ? "border-l-2 border-l-aviation-red pl-3" : "pl-4"
-              } ${isRankOne ? "shadow-[-4px_0_12px_rgba(230,25,25,0.15)] animate-pulse" : ""} ${
-                isCold ? "opacity-70" : ""
+              } ${isRankOne ? "animate-glow-fire" : ""} ${
+                isCold ? "opacity-70 animate-glow-cold" : ""
               }`}
             >
               {/* Rank */}

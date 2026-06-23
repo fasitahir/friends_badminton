@@ -189,8 +189,8 @@ export default async function DashboardPage() {
     <div className="flex flex-col gap-10">
       {/* Header Panel (Bridged to Stats) */}
       <div className="flex flex-col">
-        <h1 className="text-4xl sm:text-5xl font-heading tracking-tight uppercase mb-1">
-          Telemetry
+        <h1 className="text-3xl sm:text-4xl font-heading tracking-tight uppercase mb-1">
+          Badminton Log
         </h1>
         <div className="flex items-center gap-4">
           <p className="text-muted-foreground font-mono text-sm tracking-widest uppercase">

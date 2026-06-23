@@ -42,9 +42,97 @@
   --radius-2xl: var(--radius);
   --radius-3xl: var(--radius);
   --radius-4xl: var(--radius);
+  --animate-glow-fire: glow-fire 4s ease-in-out infinite;
+  --animate-glow-cold: glow-cold 4s ease-in-out infinite;
 }
 
-:root, .dark {
+/* Ambient leaderboard animations — GPU-only (box-shadow), no layout shift */
+@keyframes glow-fire {
+  0%, 100% {
+    box-shadow: inset 2px 0 0 0 var(--aviation-red), 0 0 8px 2px var(--fire-glow);
+  }
+  50% {
+    box-shadow: inset 2px 0 0 0 var(--aviation-red), 0 0 20px 6px var(--fire-glow-strong);
+  }
+}
+@keyframes glow-cold {
+  0%, 100% {
+    box-shadow: 0 0 4px 1px var(--cold-glow);
+  }
+  50% {
+    box-shadow: 0 0 14px 4px var(--cold-glow-strong);
+  }
+}
+
+@layer utilities {
+  .animate-glow-fire {
+    animation: glow-fire 4s ease-in-out infinite;
+  }
+  .animate-glow-cold {
+    animation: glow-cold 5s ease-in-out infinite;
+  }
+}
+
+/* Respect prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  .animate-glow-fire,
+  .animate-glow-cold {
+    animation: none;
+  }
+}
+
+:root {
+  /* Light Mode */
+  --background: #FBFBFA;
+  --foreground: #111111;
+  
+  --card: #FBFBFA;
+  --card-foreground: #111111;
+  
+  --popover: #FBFBFA;
+  --popover-foreground: #111111;
+  
+  --primary: #111111;
+  --primary-foreground: #FBFBFA;
+  
+  --secondary: #F0F0F0;
+  --secondary-foreground: #111111;
+  
+  --muted: #F0F0F0;
+  --muted-foreground: #737373; /* WCAG AA contrast */
+  
+  --accent: #E61919;
+  --accent-foreground: #FFFFFF;
+  
+  --destructive: #FEE2E2;
+  --destructive-foreground: #991B1B;
+  
+  --border: #E0E0E0;
+  --input: #E0E0E0;
+  --ring: #CCCCCC;
+
+  --aviation-red: #E61919;
+
+  --fire-glow: rgba(255, 138, 61, 0.1);
+  --fire-glow-strong: rgba(255, 138, 61, 0.2);
+  --cold-glow: rgba(110, 143, 163, 0.05);
+  --cold-glow-strong: rgba(110, 143, 163, 0.1);
+
+  /* Zero border radius */
+  --radius: 0px;
+  
+  /* Sidebar uses same exact tokens */
+  --sidebar: #FBFBFA;
+  --sidebar-foreground: #111111;
+  --sidebar-primary: #111111;
+  --sidebar-primary-foreground: #FBFBFA;
+  --sidebar-accent: #F0F0F0;
+  --sidebar-accent-foreground: #111111;
+  --sidebar-border: #E0E0E0;
+  --sidebar-ring: #CCCCCC;
+}
+
+.dark {
   /* Absolute Dark Mode - Telemetry System */
   --background: #0A0A0A;
   --foreground: #EAEAEA;
@@ -88,6 +176,11 @@
   --sidebar-accent-foreground: #EAEAEA;
   --sidebar-border: #222222;
   --sidebar-ring: #444444;
+
+  --fire-glow: rgba(255, 138, 61, 0.2);
+  --fire-glow-strong: rgba(255, 138, 61, 0.4);
+  --cold-glow: rgba(110, 143, 163, 0.1);
+  --cold-glow-strong: rgba(110, 143, 163, 0.2);
 }
 
 @layer base {
