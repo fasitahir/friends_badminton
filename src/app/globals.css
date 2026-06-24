@@ -35,6 +35,8 @@
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
   --color-aviation-red: var(--aviation-red);
+  --color-win: #22C55E;
+  --color-loss: #EF4444;
   --radius-sm: var(--radius);
   --radius-md: var(--radius);
   --radius-lg: var(--radius);
@@ -57,10 +59,10 @@
 }
 @keyframes glow-cold {
   0%, 100% {
-    box-shadow: 0 0 4px 1px var(--cold-glow);
+    box-shadow: inset 2px 0 0 0 #0EA5E9, 0 0 8px 2px var(--cold-glow);
   }
   50% {
-    box-shadow: 0 0 14px 4px var(--cold-glow-strong);
+    box-shadow: inset 2px 0 0 0 #0EA5E9, 0 0 20px 6px var(--cold-glow-strong);
   }
 }
 
@@ -115,8 +117,8 @@
 
   --fire-glow: rgba(255, 138, 61, 0.1);
   --fire-glow-strong: rgba(255, 138, 61, 0.2);
-  --cold-glow: rgba(110, 143, 163, 0.05);
-  --cold-glow-strong: rgba(110, 143, 163, 0.1);
+  --cold-glow: rgba(14, 165, 233, 0.15);
+  --cold-glow-strong: rgba(14, 165, 233, 0.35);
 
   /* Zero border radius */
   --radius: 0px;
@@ -179,8 +181,8 @@
 
   --fire-glow: rgba(255, 138, 61, 0.2);
   --fire-glow-strong: rgba(255, 138, 61, 0.4);
-  --cold-glow: rgba(110, 143, 163, 0.1);
-  --cold-glow-strong: rgba(110, 143, 163, 0.2);
+  --cold-glow: rgba(14, 165, 233, 0.25);
+  --cold-glow-strong: rgba(14, 165, 233, 0.55);
 }
 
 @layer base {

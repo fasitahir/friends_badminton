@@ -7,7 +7,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import Link from "next/link";
-import { Flame, Minus } from "lucide-react";
+import { Flame, Minus, Snowflake } from "lucide-react";
 
 interface MonthlyEntry {
   player_id: string;
@@ -74,7 +74,7 @@ export function MonthlyLeaderboard({
     }
   }
 
-  const displayedStats = loading ? [] : entries.slice(0, 8);
+  const displayedStats = loading ? [] : entries.slice(0, 10);
 
   return (
     <div className="flex flex-col">
@@ -130,7 +130,7 @@ export function MonthlyLeaderboard({
               className={`flex items-center gap-4 p-4 border-b border-border hover:bg-muted/30 transition-colors ${
                 isElite ? "border-l-2 border-l-aviation-red pl-3" : "pl-4"
               } ${isRankOne ? "animate-glow-fire" : ""} ${
-                isCold ? "opacity-70 animate-glow-cold" : ""
+                isCold ? "animate-glow-cold" : ""
               }`}
             >
               {/* Rank */}
@@ -144,16 +144,31 @@ export function MonthlyLeaderboard({
                   <p className={`text-base truncate ${isRankOne ? 'font-bold font-heading text-xl tracking-tight text-foreground' : isElite ? 'font-bold font-heading text-lg tracking-tight' : 'font-medium'}`}>
                     {entry.player?.name ?? entry.player_id}
                   </p>
-                  {isOnFire && <Flame className="size-3.5 text-aviation-red fill-aviation-red" />}
-                  {isCold && <Minus className="size-3.5 text-muted-foreground" />}
+                  {isOnFire && allTime && (
+                    <span className="inline-flex items-center gap-0.5 text-aviation-red font-bold text-xs shrink-0">
+                      <Flame className="size-3.5 fill-aviation-red animate-pulse" />
+                      <span className="font-mono text-[10px]">{(allTime as any).winStreak}</span>
+                    </span>
+                  )}
+                  {isCold && allTime && (
+                    <span className="inline-flex items-center gap-0.5 text-sky-400 font-bold text-xs shrink-0">
+                      <Snowflake className="size-3.5 fill-sky-400/20 animate-pulse" />
+                      <span className="font-mono text-[10px]">{(allTime as any).lossStreak}</span>
+                    </span>
+                  )}
                 </div>
                 {isRankOne && (
                   <p className="text-[10px] font-mono text-muted-foreground uppercase mt-1 tracking-widest">
                     [MONTHLY LEADER]
                   </p>
                 )}
+                {isOnFire && allTime && (
+                  <p className="text-[10px] font-mono text-aviation-red uppercase mt-1 tracking-widest">
+                    [ON FIRE]
+                  </p>
+                )}
                 {isCold && (
-                  <p className="text-[10px] font-mono text-muted-foreground uppercase mt-1 tracking-widest">
+                  <p className="text-[10px] font-mono text-sky-400 font-bold uppercase mt-1 tracking-widest animate-pulse">
                     [NEEDS A WIN]
                   </p>
                 )}

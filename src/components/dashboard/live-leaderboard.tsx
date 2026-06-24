@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { EloTrend } from "./elo-trend";
 import { Sparkline } from "./sparkline";
-import { Flame, TrendingDown, Minus } from "lucide-react";
+import { Flame, TrendingDown, Minus, Snowflake } from "lucide-react";
 
 function getRankStyle(idx: number) {
   if (idx === 0) return "font-heading text-4xl";
@@ -101,7 +101,7 @@ export function LiveLeaderboard({ players }: { players: any[] }) {
               className={`flex items-center gap-4 p-4 border-b border-border hover:bg-muted/30 transition-colors ${
                 isElite ? "border-l-2 border-l-aviation-red pl-3" : "pl-4"
               } ${isRankOne ? "animate-glow-fire" : ""} ${
-                isCold ? "opacity-70 animate-glow-cold" : ""
+                isCold ? "animate-glow-cold" : ""
               }`}
             >
               {/* Rank typographic */}
@@ -115,8 +115,18 @@ export function LiveLeaderboard({ players }: { players: any[] }) {
                   <p className={`text-base truncate ${isRankOne ? 'font-bold font-heading text-xl tracking-tight text-foreground' : isElite ? 'font-bold font-heading text-lg tracking-tight' : 'font-medium'}`}>
                     {player.name}
                   </p>
-                  {isOnFire && <Flame className="size-3.5 text-aviation-red fill-aviation-red" />}
-                  {isCold && <Minus className="size-3.5 text-muted-foreground" />}
+                  {isOnFire && (
+                    <span className="inline-flex items-center gap-0.5 text-aviation-red font-bold text-xs shrink-0">
+                      <Flame className="size-3.5 fill-aviation-red animate-pulse" />
+                      <span className="font-mono text-[10px]">{player.winStreak}</span>
+                    </span>
+                  )}
+                  {isCold && (
+                    <span className="inline-flex items-center gap-0.5 text-sky-400 font-bold text-xs shrink-0">
+                      <Snowflake className="size-3.5 fill-sky-400/20 animate-pulse" />
+                      <span className="font-mono text-[10px]">{player.lossStreak}</span>
+                    </span>
+                  )}
                 </div>
                 {player.nickname && (
                   <p className="text-xs font-mono text-muted-foreground uppercase truncate">
@@ -128,8 +138,13 @@ export function LiveLeaderboard({ players }: { players: any[] }) {
                     [DEFENDING #1]
                   </p>
                 )}
+                {isOnFire && (
+                  <p className="text-[10px] font-mono text-aviation-red uppercase mt-1 tracking-widest">
+                    [ON FIRE]
+                  </p>
+                )}
                 {isCold && (
-                  <p className="text-[10px] font-mono text-muted-foreground uppercase mt-1 tracking-widest">
+                  <p className="text-[10px] font-mono text-sky-400 font-bold uppercase mt-1 tracking-widest animate-pulse">
                     [NEEDS A WIN]
                   </p>
                 )}

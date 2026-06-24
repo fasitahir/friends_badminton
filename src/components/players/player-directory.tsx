@@ -25,7 +25,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Minus, Flame, Search } from "lucide-react";
+import { Minus, Flame, Search, Snowflake } from "lucide-react";
 import { EloTrend } from "@/components/dashboard/elo-trend";
 import { Sparkline } from "@/components/dashboard/sparkline";
 import { cn } from "@/lib/utils";
@@ -195,7 +195,8 @@ export function PlayerDirectory({ players, isAdmin }: { players: EnrichedPlayer[
               className={cn(
                 "flex flex-col justify-between border border-border p-4 bg-muted/5 hover:bg-muted/10 hover:border-foreground/30 transition-all gap-4 relative",
                 isElite ? "border-l-2 border-l-aviation-red" : "",
-                isOnFire ? "shadow-[0_0_10px_rgba(224,86,36,0.1)]" : ""
+                isOnFire ? "shadow-[0_0_10px_rgba(224,86,36,0.1)] animate-glow-fire" : "",
+                isCold ? "border-l-2 border-l-sky-400 shadow-[0_0_10px_rgba(14,165,233,0.15)] animate-glow-cold" : ""
               )}
             >
               {/* Card Top section */}
@@ -218,8 +219,18 @@ export function PlayerDirectory({ players, isAdmin }: { players: EnrichedPlayer[
                         >
                           {player.name}
                         </NextLink>
-                        {isOnFire && <Flame className="size-3.5 text-aviation-red fill-aviation-red shrink-0 animate-pulse" />}
-                        {isCold && <Minus className="size-3.5 text-muted-foreground shrink-0" />}
+                        {isOnFire && (
+                          <span className="inline-flex items-center gap-0.5 text-aviation-red font-bold text-xs shrink-0">
+                            <Flame className="size-3.5 fill-aviation-red animate-pulse" />
+                            <span className="font-mono text-[10px]">{player.winStreak}</span>
+                          </span>
+                        )}
+                        {isCold && (
+                          <span className="inline-flex items-center gap-0.5 text-sky-400 font-bold text-xs shrink-0">
+                            <Snowflake className="size-3.5 fill-sky-400/20 animate-pulse" />
+                            <span className="font-mono text-[10px]">{player.lossStreak}</span>
+                          </span>
+                        )}
                       </div>
                       {player.nickname && (
                         <p className="text-[10px] font-mono text-muted-foreground uppercase truncate mt-0.5">
@@ -249,7 +260,7 @@ export function PlayerDirectory({ players, isAdmin }: { players: EnrichedPlayer[
                     </span>
                   )}
                   {isCold && (
-                    <span className="text-[9px] font-mono text-muted-foreground uppercase tracking-wider border border-border bg-muted/5 px-1.5 py-0.5">
+                    <span className="text-[9px] font-mono text-sky-400 uppercase tracking-wider border border-sky-400/30 bg-sky-500/5 px-1.5 py-0.5 animate-pulse">
                       Needs a Win
                     </span>
                   )}
