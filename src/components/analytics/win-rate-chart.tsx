@@ -49,7 +49,7 @@ export default function WinRateChart({ data }: WinRateChartProps) {
             return (
               <Cell
                 key={`cell-${index}`}
-                fill={isElite ? "#E61919" : "currentColor"}
+                fill={isElite ? "var(--aviation-red)" : "var(--foreground)"}
               />
             );
           })}

@@ -1,5 +1,5 @@
 import { getPlayers, getMatchesWithDetails } from "@/lib/data";
-import { PlayerTable } from "@/components/players/player-table";
+import { PlayerDirectory } from "@/components/players/player-directory";
 import { getIsAdmin } from "@/lib/auth";
 
 export const metadata = {
@@ -91,7 +91,7 @@ export default async function PlayersPage() {
         </div>
       </div>
 
-      <PlayerTable players={enrichedPlayers} isAdmin={isAdmin} />
+      <PlayerDirectory players={enrichedPlayers} isAdmin={isAdmin} />
     </div>
   );
 }
