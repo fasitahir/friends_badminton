@@ -45,11 +45,11 @@ export default function WinRateChart({ data }: WinRateChartProps) {
         />
         <Bar dataKey="winRate" radius={0}>
           {data.map((entry, index) => {
-            const isElite = entry.winRate >= 65;
+            const isTop = index === 0;
             return (
               <Cell
                 key={`cell-${index}`}
-                fill={isElite ? "var(--aviation-red)" : "var(--foreground)"}
+                fill={isTop ? "var(--aviation-red)" : "var(--foreground)"}
               />
             );
           })}
