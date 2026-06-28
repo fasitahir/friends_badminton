@@ -53,7 +53,7 @@ function getNextTierProgress(elo: number) {
   if (elo >= 700) return null; // Max tier
   if (elo >= 650) return { nextLabel: "Elite", nextElo: 700, prevElo: 650, current: elo };
   if (elo >= 600) return { nextLabel: "Advanced", nextElo: 650, prevElo: 600, current: elo };
-  return { nextLabel: "Intermediate", nextElo: 600, prevElo: 0, current: elo };
+  return { nextLabel: "Intermediate", nextElo: 600, prevElo: 500, current: elo };
 }
 
 export default async function PlayerProfilePage({
