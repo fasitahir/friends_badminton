@@ -22,9 +22,14 @@ export function LeaderboardTabs({
   return (
     <Tabs defaultValue="winrate" className="w-full">
       <div className="flex items-center justify-between mb-4">
-        <TabsList>
-          <TabsTrigger value="winrate">Monthly Win Rate</TabsTrigger>
-          <TabsTrigger value="elo">All-Time Elo</TabsTrigger>
+        <TabsList className="gap-2 p-1">
+          <TabsTrigger value="winrate">🔥 Hot Streaks</TabsTrigger>
+          <TabsTrigger 
+            value="elo"
+            className="relative overflow-hidden border border-yellow-500/50 text-yellow-700 dark:text-yellow-400 data-[state=active]:bg-yellow-500/10 data-[state=active]:text-yellow-800 dark:data-[state=active]:text-yellow-400 drop-shadow-sm dark:shadow-[0_0_15px_rgba(234,179,8,0.3)] animate-pulse hover:animate-none hover:drop-shadow-md dark:hover:shadow-[0_0_20px_rgba(234,179,8,0.5)] transition-all duration-500"
+          >
+            👑 Power Ranking
+          </TabsTrigger>
         </TabsList>
       </div>
 

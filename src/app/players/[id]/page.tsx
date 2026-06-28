@@ -49,6 +49,13 @@ function getEloTier(elo: number) {
   return { label: "Beginner", emoji: "🎯", color: "text-muted-foreground", bg: "bg-muted/50 border-border/50" };
 }
 
+function getNextTierProgress(elo: number) {
+  if (elo >= 700) return null; // Max tier
+  if (elo >= 650) return { nextLabel: "Elite", nextElo: 700, prevElo: 650, current: elo };
+  if (elo >= 600) return { nextLabel: "Advanced", nextElo: 650, prevElo: 600, current: elo };
+  return { nextLabel: "Intermediate", nextElo: 600, prevElo: 0, current: elo };
+}
+
 export default async function PlayerProfilePage({
   params,
 }: {
@@ -112,6 +119,29 @@ export default async function PlayerProfilePage({
     return won ? streak + 1 : streak;
   }, 0);
 
+  const currentElo = player.elo_rating ?? 600;
+  let peakElo = currentElo;
+  let tempElo = currentElo;
+  for (const m of matches) {
+    for (const g of m.games || []) {
+      const isP1 = g.pair1?.player1_id === id || g.pair1?.player2_id === id;
+      const isP2 = g.pair2?.player1_id === id || g.pair2?.player2_id === id;
+      if (isP1 || isP2) {
+        if (tempElo > peakElo) peakElo = tempElo;
+        const eloChange = isP1 ? g.pair1_elo_change : g.pair2_elo_change;
+        if (eloChange != null) {
+          tempElo -= eloChange;
+        } else {
+          const wonSet = g.winning_pair_id === (isP1 ? g.pair1_id : g.pair2_id);
+          tempElo -= wonSet ? 15 : -15;
+        }
+      }
+    }
+  }
+  if (tempElo > peakElo) peakElo = tempElo;
+
+  const tierProgress = getNextTierProgress(currentElo);
+
   return (
     <div className="flex flex-col gap-6">
       {/* Hero Header */}
@@ -151,6 +181,13 @@ export default async function PlayerProfilePage({
                   <span className="text-xs text-muted-foreground">ELO</span>
                 </div>
               )}
+              {peakElo > 0 && peakElo >= currentElo && (
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-muted/40 border border-border/50">
+                  <TrendingUp className="size-3.5 text-yellow-500" />
+                  <span className="text-sm font-mono font-bold text-yellow-500">{peakElo}</span>
+                  <span className="text-xs text-muted-foreground">PEAK ELO</span>
+                </div>
+              )}
               {stats.setsPlayed > 0 && (
                 <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-muted/40 border border-border/50">
                   <span className="text-sm font-mono font-bold">{stats.winRate.toFixed(0)}%</span>
@@ -165,6 +202,21 @@ export default async function PlayerProfilePage({
                 </div>
               )}
             </div>
+
+            {tierProgress && (
+              <div className="mt-4 max-w-sm">
+                <div className="flex items-center justify-between text-xs font-mono mb-1.5">
+                  <span className="text-muted-foreground uppercase">{currentElo} / {tierProgress.nextElo} ELO</span>
+                  <span className="text-primary font-bold uppercase">{tierProgress.nextLabel} TIER</span>
+                </div>
+                <div className="h-1.5 w-full bg-muted/50 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-primary transition-all duration-700 rounded-full" 
+                    style={{ width: `${Math.min(100, Math.max(0, ((currentElo - tierProgress.prevElo) / (tierProgress.nextElo - tierProgress.prevElo)) * 100))}%` }} 
+                  />
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -346,6 +398,14 @@ export default async function PlayerProfilePage({
                   won = set.pair2?.player1_id === id || set.pair2?.player2_id === id;
                 }
 
+                let eloChange = null;
+                if (set.pair1?.player1_id === id || set.pair1?.player2_id === id) {
+                  eloChange = set.pair1_elo_change ?? (won ? 15 : -15);
+                } else {
+                  eloChange = set.pair2_elo_change ?? (won ? 15 : -15);
+                }
+                const eloChangeText = eloChange > 0 ? `+${eloChange}` : `${eloChange}`;
+
                 return (
                   <div
                     key={idx}
@@ -373,6 +433,13 @@ export default async function PlayerProfilePage({
                         </span>
                       </p>
                     </div>
+                    
+                    <div className={`flex items-center gap-1.5 shrink-0 px-2 py-1 rounded-lg font-mono text-xs font-bold ${
+                      won ? "bg-win/10 text-win" : "bg-loss/10 text-loss"
+                    }`}>
+                      {eloChangeText} ELO
+                    </div>
+
                     <div className={`flex items-center gap-1.5 shrink-0 px-2.5 py-1 rounded-lg font-mono font-bold text-sm ${
                       won ? "bg-win/20 text-win" : "bg-loss/20 text-loss"
                     }`}>

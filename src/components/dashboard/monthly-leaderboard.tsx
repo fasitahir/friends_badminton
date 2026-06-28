@@ -15,7 +15,7 @@ interface MonthlyEntry {
   sets_won: number;
   sets_lost: number;
   win_rate: number;
-  player: { id: string; name: string; nickname: string | null };
+  player: { id: string; name: string; nickname: string | null; elo_rating?: number | null };
 }
 
 interface AllTimeEntry {
@@ -24,6 +24,7 @@ interface AllTimeEntry {
   played: number;
   won: number;
   winRate: number;
+  elo?: number | null;
 }
 
 interface MonthlyLeaderboardProps {
@@ -39,6 +40,14 @@ function formatMonthLabel(ym: string) {
     month: "long",
     year: "numeric",
   });
+}
+
+function getEloTier(elo: number | null | undefined) {
+  if (!elo) return { label: "UNRANKED", color: "text-muted-foreground border-muted-foreground/30 bg-muted-foreground/5" };
+  if (elo >= 700) return { label: "ELITE", color: "text-aviation-red border-aviation-red/30 bg-aviation-red/5 font-bold" };
+  if (elo >= 650) return { label: "ADVANCED", color: "text-foreground border-foreground/30 bg-foreground/5" };
+  if (elo >= 600) return { label: "INTERMEDIATE", color: "text-muted-foreground border-muted-foreground/50 bg-muted/5" };
+  return { label: "BEGINNER", color: "text-muted-foreground border-muted-foreground/30 bg-muted/3" };
 }
 
 function getRankStyle(idx: number) {
@@ -122,6 +131,7 @@ export function MonthlyLeaderboard({
           // If allTime is available, we can use streaks. If not, default to false.
           const isOnFire = allTime ? (allTime as any).winStreak >= 3 : false;
           const isCold = allTime ? ((allTime as any).lossStreak >= 3 && (allTime as any).totalSets > 0 && idx !== 0) : false;
+          const tier = getEloTier(entry.player?.elo_rating);
 
           return (
             <Link
@@ -140,10 +150,13 @@ export function MonthlyLeaderboard({
 
               {/* Name + win bar */}
               <div className="flex-1 min-w-0 flex flex-col justify-center">
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <p className={`text-base truncate ${isRankOne ? 'font-bold font-heading text-xl tracking-tight text-foreground' : isElite ? 'font-bold font-heading text-lg tracking-tight' : 'font-medium'}`}>
                     {entry.player?.name ?? entry.player_id}
                   </p>
+                  <span className={`text-[9px] font-mono tracking-wider border px-1.5 py-0.5 rounded-none uppercase ${tier.color}`}>
+                    {tier.label}
+                  </span>
                   {isOnFire && allTime && (
                     <span className="inline-flex items-center gap-0.5 text-aviation-red font-bold text-xs shrink-0">
                       <Flame className="size-3.5 fill-aviation-red animate-pulse" />

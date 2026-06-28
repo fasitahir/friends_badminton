@@ -58,6 +58,7 @@ export async function GET(req: NextRequest) {
             id: player.id,
             name: player.name,
             nickname: player.nickname || null,
+            elo_rating: player.elo_rating,
           },
         };
       })

@@ -109,6 +109,7 @@ export default async function DashboardPage() {
         winStreak: player.winStreak,
         lossStreak: player.lossStreak,
         totalSets: player.totalSets,
+        elo: player.elo_rating,
       };
     })
     .sort((a, b) => b.winRate - a.winRate || b.won - a.won);
@@ -156,6 +157,7 @@ export default async function DashboardPage() {
           id: player.id,
           name: player.name,
           nickname: player.nickname || null,
+          elo_rating: player.elo_rating,
         },
       };
     })
@@ -167,8 +169,10 @@ export default async function DashboardPage() {
 
   const eligiblePlayers = allTimeStats.filter(p => p.played >= 5);
   const topWinRatePlayer = eligiblePlayers.length > 0
-    ? eligiblePlayers.sort((a, b) => b.winRate - a.winRate)[0]
-    : allTimeStats.sort((a, b) => b.winRate - a.winRate)[0];
+    ? [...eligiblePlayers].sort((a, b) => b.winRate - a.winRate)[0]
+    : [...allTimeStats].sort((a, b) => b.winRate - a.winRate)[0];
+
+  const topEloPlayer = [...allTimeStats].sort((a, b) => (b.elo || 0) - (a.elo || 0))[0];
 
   const statCards = [
     {
@@ -187,6 +191,12 @@ export default async function DashboardPage() {
       label: "Top Win Rate",
       value: topWinRatePlayer ? `${topWinRatePlayer.winRate.toFixed(1)}%` : "—",
       subValue: topWinRatePlayer ? topWinRatePlayer.name : null,
+    },
+    {
+      label: "Final Boss",
+      value: topEloPlayer ? Math.round(topEloPlayer.elo || 0) : "—",
+      subValue: topEloPlayer ? topEloPlayer.name : null,
+      highlight: true,
     },
   ];
 
@@ -212,14 +222,14 @@ export default async function DashboardPage() {
             key={stat.label} 
             className="flex flex-col flex-1 min-w-[140px] px-4 sm:px-8 border-r border-border last:border-r-0"
           >
-            <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-[0.2em] mb-2">
+            <span className={`text-[10px] font-mono uppercase tracking-[0.2em] mb-2 ${stat.highlight ? "text-yellow-600 dark:text-yellow-500" : "text-muted-foreground"}`}>
               {stat.label}
             </span>
-            <div className="font-mono text-3xl sm:text-4xl text-foreground">
+            <div className={`font-mono text-3xl sm:text-4xl ${stat.highlight ? "text-yellow-600 dark:text-yellow-500 drop-shadow-sm dark:drop-shadow-[0_0_8px_rgba(234,179,8,0.5)]" : "text-foreground"}`}>
               {stat.value}
             </div>
             {stat.subValue && (
-              <div className="text-xs font-mono text-muted-foreground mt-1 uppercase">
+              <div className={`text-xs font-mono uppercase mt-1 ${stat.highlight ? "text-yellow-600/80 dark:text-yellow-500/80" : "text-muted-foreground"}`}>
                 {stat.subValue}
               </div>
             )}
