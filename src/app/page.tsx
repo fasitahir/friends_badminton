@@ -191,7 +191,7 @@ export default async function DashboardPage() {
   ];
 
   return (
-    <div className="flex flex-col gap-10">
+    <div className="flex flex-col gap-8">
       {/* Header Panel (Bridged to Stats) */}
       <div className="flex flex-col">
         <h1 className="text-3xl sm:text-4xl font-heading tracking-tight uppercase mb-1">
@@ -227,7 +227,7 @@ export default async function DashboardPage() {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 sm:gap-16">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         <div className="lg:col-span-8">
           <LeaderboardTabs 
             players={enrichedPlayers}
@@ -241,7 +241,7 @@ export default async function DashboardPage() {
         {/* Recent Sessions */}
         <div className="lg:col-span-4 flex flex-col">
           <div className="pb-4 mb-2 border-b border-border">
-            <h2 className="text-sm font-mono uppercase tracking-[0.2em] text-muted-foreground">
+            <h2 className="text-sm font-mono uppercase tracking-[0.2em] text-foreground font-semibold">
               Recent Log
             </h2>
           </div>

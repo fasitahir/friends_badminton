@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Space_Grotesk } from "next/font/google";
 import { Sidebar, MobileNav } from "@/components/layout/sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/layout/theme-provider";
+import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { getIsAdmin } from "@/lib/auth";
 import "./globals.css";
 
@@ -66,7 +67,8 @@ export default async function RootLayout({
           <TooltipProvider>
             <Sidebar isAdmin={isAdmin} />
             <main className="flex-1 min-w-0 min-h-screen pb-20 md:pb-0">
-              <div className="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8 py-10 sm:py-16">
+              <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+                <Breadcrumbs />
                 {children}
               </div>
             </main>

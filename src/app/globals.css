@@ -106,8 +106,8 @@
   --accent: #E61919;
   --accent-foreground: #FFFFFF;
   
-  --destructive: #FEE2E2;
-  --destructive-foreground: #991B1B;
+  --destructive: #E61919;
+  --destructive-foreground: #FFFFFF;
   
   --border: #E0E0E0;
   --input: #E0E0E0;
@@ -157,8 +157,8 @@
   --accent: #E61919;
   --accent-foreground: #FFFFFF;
   
-  --destructive: #331111;
-  --destructive-foreground: #8A8A8A;
+  --destructive: #EF4444;
+  --destructive-foreground: #FFFFFF;
   
   --border: #222222;
   --input: #222222;

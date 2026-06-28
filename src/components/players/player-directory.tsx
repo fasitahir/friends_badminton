@@ -320,11 +320,11 @@ export function PlayerDirectory({ players, isAdmin }: { players: EnrichedPlayer[
                     </Button>
                     <AlertDialog>
                       <AlertDialogTrigger render={
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-7 w-12 rounded-none border border-red-900/30 bg-transparent text-red-500/80 hover:bg-red-950/20 hover:text-red-400 hover:border-red-500/50 transition-colors font-mono text-[9px] uppercase cursor-pointer"
-                        >
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 w-12 rounded-none border border-destructive bg-transparent text-destructive hover:bg-destructive hover:text-destructive-foreground transition-colors font-mono text-[9px] uppercase cursor-pointer"
+                          >
                           DEL
                         </Button>
                       } />
@@ -343,7 +343,7 @@ export function PlayerDirectory({ players, isAdmin }: { players: EnrichedPlayer[
                           </AlertDialogCancel>
                           <AlertDialogAction
                             onClick={() => deletePlayer(player.id)}
-                            className="rounded-none bg-red-950/20 border border-red-900/30 text-red-500/80 hover:bg-red-950/40 hover:text-red-400 hover:border-red-500/50 transition-colors font-mono text-xs uppercase cursor-pointer"
+                            className="rounded-none bg-destructive border border-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors font-mono text-xs uppercase cursor-pointer"
                           >
                             Delete Player
                           </AlertDialogAction>
