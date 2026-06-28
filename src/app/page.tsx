@@ -175,10 +175,10 @@ export default async function DashboardPage() {
   const topEloPlayer = [...allTimeStats].sort((a, b) => (b.elo || 0) - (a.elo || 0))[0];
 
   const statCards = [
-    {
-      label: "Total Players",
-      value: playerCount ?? 0,
-    },
+    // {
+    //   label: "Total Players",
+    //   value: playerCount ?? 0,
+    // },
     {
       label: "Sessions",
       value: sessionCount ?? 0,

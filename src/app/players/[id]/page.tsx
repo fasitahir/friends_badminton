@@ -209,7 +209,7 @@ export default async function PlayerProfilePage({
                   <span className="text-muted-foreground uppercase">{currentElo} / {tierProgress.nextElo} ELO</span>
                   <span className="text-primary font-bold uppercase">{tierProgress.nextLabel} TIER</span>
                 </div>
-                <div className="h-1.5 w-full bg-muted/50 rounded-full overflow-hidden">
+                <div className="h-2 w-full bg-primary/20 rounded-full overflow-hidden">
                   <div 
                     className="h-full bg-primary transition-all duration-700 rounded-full" 
                     style={{ width: `${Math.min(100, Math.max(0, ((currentElo - tierProgress.prevElo) / (tierProgress.nextElo - tierProgress.prevElo)) * 100))}%` }} 
