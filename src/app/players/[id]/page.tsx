@@ -8,6 +8,7 @@ import {
   computeBestPartners,
   computeToughestOpponents,
 } from "@/lib/analytics";
+import { getEloTier, getNextTierProgress } from "@/lib/elo";
 import Link from "next/link";
 import { TrendingUp, TrendingDown, Minus, Trophy, Target, Zap, Shield } from "lucide-react";
 
@@ -42,19 +43,6 @@ function getAvatarColor(name: string) {
   return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
 }
 
-function getEloTier(elo: number) {
-  if (elo >= 700) return { label: "Elite", emoji: "🔥", color: "text-yellow-400", bg: "bg-yellow-500/15 border-yellow-500/30" };
-  if (elo >= 650) return { label: "Advanced", emoji: "⚡", color: "text-primary", bg: "bg-primary/15 border-primary/30" };
-  if (elo >= 600) return { label: "Intermediate", emoji: "🌟", color: "text-blue-400", bg: "bg-blue-500/15 border-blue-500/30" };
-  return { label: "Beginner", emoji: "🎯", color: "text-muted-foreground", bg: "bg-muted/50 border-border/50" };
-}
-
-function getNextTierProgress(elo: number) {
-  if (elo >= 700) return null; // Max tier
-  if (elo >= 650) return { nextLabel: "Elite", nextElo: 700, prevElo: 650, current: elo };
-  if (elo >= 600) return { nextLabel: "Advanced", nextElo: 650, prevElo: 600, current: elo };
-  return { nextLabel: "Intermediate", nextElo: 600, prevElo: 500, current: elo };
-}
 
 export default async function PlayerProfilePage({
   params,

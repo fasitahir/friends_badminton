@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/select";
 import Link from "next/link";
 import { Flame, Minus, Snowflake } from "lucide-react";
+import { getEloTier } from "@/lib/elo";
 
 interface MonthlyEntry {
   player_id: string;
@@ -42,13 +43,7 @@ function formatMonthLabel(ym: string) {
   });
 }
 
-function getEloTier(elo: number | null | undefined) {
-  if (!elo) return { label: "UNRANKED", color: "text-muted-foreground border-muted-foreground/30 bg-muted-foreground/5" };
-  if (elo >= 700) return { label: "ELITE", color: "text-aviation-red border-aviation-red/30 bg-aviation-red/5 font-bold" };
-  if (elo >= 650) return { label: "ADVANCED", color: "text-foreground border-foreground/30 bg-foreground/5" };
-  if (elo >= 600) return { label: "INTERMEDIATE", color: "text-muted-foreground border-muted-foreground/50 bg-muted/5" };
-  return { label: "BEGINNER", color: "text-muted-foreground border-muted-foreground/30 bg-muted/3" };
-}
+
 
 function getRankStyle(idx: number) {
   if (idx === 0) return "font-heading text-4xl";
@@ -154,7 +149,7 @@ export function MonthlyLeaderboard({
                   <p className={`text-base truncate ${isRankOne ? 'font-bold font-heading text-xl tracking-tight text-foreground' : isElite ? 'font-bold font-heading text-lg tracking-tight' : 'font-medium'}`}>
                     {entry.player?.name ?? entry.player_id}
                   </p>
-                  <span className={`text-[9px] font-mono tracking-wider border px-1.5 py-0.5 rounded-none uppercase ${tier.color}`}>
+                  <span className={`text-[9px] font-mono tracking-wider border border-current/30 px-1.5 py-0.5 rounded-none uppercase ${tier.color}`}>
                     {tier.label}
                   </span>
                   {isOnFire && allTime && (

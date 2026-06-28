@@ -11,6 +11,7 @@ import {
 import { EloTrend } from "./elo-trend";
 import { Sparkline } from "./sparkline";
 import { Flame, TrendingDown, Minus, Snowflake } from "lucide-react";
+import { getEloTier } from "@/lib/elo";
 
 function getRankStyle(idx: number) {
   if (idx === 0) return "font-heading text-4xl";
@@ -115,6 +116,9 @@ export function LiveLeaderboard({ players }: { players: any[] }) {
                   <p className={`text-base truncate ${isRankOne ? 'font-bold font-heading text-xl tracking-tight text-foreground' : isElite ? 'font-bold font-heading text-lg tracking-tight' : 'font-medium'}`}>
                     {player.name}
                   </p>
+                  <span className={`text-[9px] font-mono tracking-wider border border-current/30 px-1.5 py-0.5 rounded-none uppercase ${getEloTier(player.elo_rating).color}`}>
+                    {getEloTier(player.elo_rating).label}
+                  </span>
                   {isOnFire && (
                     <span className="inline-flex items-center gap-0.5 text-aviation-red font-bold text-xs shrink-0">
                       <Flame className="size-3.5 fill-aviation-red animate-pulse" />

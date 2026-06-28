@@ -29,6 +29,7 @@ import { Minus, Flame, Search, Snowflake } from "lucide-react";
 import { EloTrend } from "@/components/dashboard/elo-trend";
 import { Sparkline } from "@/components/dashboard/sparkline";
 import { cn } from "@/lib/utils";
+import { getEloTier } from "@/lib/elo";
 
 interface EnrichedPlayer extends Player {
   winStreak: number;
@@ -40,13 +41,7 @@ interface EnrichedPlayer extends Player {
   sparkline: number[];
 }
 
-function getEloTier(elo: number | null | undefined) {
-  if (!elo) return { label: "UNRANKED", color: "text-muted-foreground border-muted-foreground/30 bg-muted-foreground/5" };
-  if (elo >= 700) return { label: "ELITE", color: "text-aviation-red border-aviation-red/30 bg-aviation-red/5 font-bold" };
-  if (elo >= 650) return { label: "ADVANCED", color: "text-foreground border-foreground/30 bg-foreground/5" };
-  if (elo >= 600) return { label: "INTERMEDIATE", color: "text-muted-foreground border-muted-foreground/50 bg-muted/5" };
-  return { label: "BEGINNER", color: "text-muted-foreground border-muted-foreground/30 bg-muted/3" };
-}
+
 
 function PlayerForm({
   player,
@@ -263,8 +258,8 @@ export function PlayerDirectory({ players, isAdmin }: { players: EnrichedPlayer[
 
                 {/* Status Badges */}
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className={cn("text-[9px] font-mono tracking-wider border px-1.5 py-0.5 rounded-none uppercase", tier.color)}>
-                    {tier.label}
+                  <span className={cn("text-[9px] font-mono tracking-wider border px-1.5 py-0.5 rounded-none uppercase", tier.color, tier.bg)}>
+                    {tier.emoji} {tier.label}
                   </span>
                   {(player as any).is_temporary && (
                     <span className="text-[9px] font-mono text-orange-400 uppercase tracking-wider border border-orange-400/30 bg-orange-500/5 px-1.5 py-0.5">
