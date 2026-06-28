@@ -362,6 +362,7 @@ export async function createMatch(data: {
 
   revalidatePath(`/sessions/${data.session_id}`);
   revalidatePath("/analytics");
+  revalidatePath("/players");
   revalidatePath("/");
   return { success: true, matchId: matchId };
 }
@@ -381,6 +382,7 @@ export async function deleteMatch(matchId: string, sessionId: string) {
 
   revalidatePath(`/sessions/${sessionId}`);
   revalidatePath("/analytics");
+  revalidatePath("/players");
   revalidatePath("/");
   return { success: true };
 }
@@ -429,6 +431,7 @@ export async function updateMatch(
 
   revalidatePath(`/sessions/${data.session_id}`);
   revalidatePath("/analytics");
+  revalidatePath("/players");
   revalidatePath("/");
   return { success: true };
 }
