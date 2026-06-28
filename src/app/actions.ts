@@ -59,6 +59,7 @@ export async function createPlayer(formData: FormData) {
   const parsed = playerSchema.safeParse({
     name: formData.get("name"),
     nickname: formData.get("nickname") || null,
+    is_temporary: formData.get("is_temporary") === "on",
   });
 
   if (!parsed.success) {
@@ -84,6 +85,7 @@ export async function updatePlayer(id: string, formData: FormData) {
   const parsed = playerSchema.safeParse({
     name: formData.get("name"),
     nickname: formData.get("nickname") || null,
+    is_temporary: formData.get("is_temporary") === "on",
   });
 
   if (!parsed.success) {
@@ -188,7 +190,9 @@ export async function deleteSession(id: string) {
 
   const supabase = await createClient();
 
-  const { error } = await supabase.from("sessions").delete().eq("id", id);
+  const { error } = await supabase.rpc("delete_session_with_elo", {
+    p_session_id: id,
+  });
 
   if (error) {
     return { error: error.message };
@@ -197,6 +201,7 @@ export async function deleteSession(id: string) {
   revalidatePath("/sessions");
   revalidatePath("/");
   revalidatePath("/analytics");
+  revalidatePath("/players");
   return { success: true };
 }
 

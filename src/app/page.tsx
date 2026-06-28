@@ -80,6 +80,7 @@ export default async function DashboardPage() {
 
   // 1. Calculate all-time player stats for comparison total badge
   const allTimeStats = enrichedPlayers
+    .filter((player: any) => !player.is_temporary)
     .map((player) => {
       let played = 0;
       let won = 0;
@@ -118,6 +119,7 @@ export default async function DashboardPage() {
 
   // 3. Compute live current month leaderboard dynamically
   const initialEntries = enrichedPlayers
+    .filter((player: any) => !player.is_temporary)
     .map((player) => {
       let played = 0;
       let won = 0;

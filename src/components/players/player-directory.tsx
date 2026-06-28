@@ -99,6 +99,18 @@ function PlayerForm({
           className="bg-transparent border border-border rounded-none focus:border-foreground focus:ring-0 text-sm font-mono uppercase h-10 px-3"
         />
       </div>
+      <div className="flex items-center gap-2 mt-1">
+        <input
+          type="checkbox"
+          id="is_temporary"
+          name="is_temporary"
+          defaultChecked={(player as any)?.is_temporary}
+          className="rounded-none border-border bg-transparent text-foreground focus:ring-0 size-4"
+        />
+        <Label htmlFor="is_temporary" className="font-mono text-xs uppercase text-muted-foreground cursor-pointer">
+          Temporary / Guest Player (Hide from Leaderboard)
+        </Label>
+      </div>
       {error && (
         <p className="text-xs font-mono text-red-500 bg-red-950/20 border border-red-900/30 px-3 py-2 rounded-none uppercase">{error}</p>
       )}
@@ -254,6 +266,11 @@ export function PlayerDirectory({ players, isAdmin }: { players: EnrichedPlayer[
                   <span className={cn("text-[9px] font-mono tracking-wider border px-1.5 py-0.5 rounded-none uppercase", tier.color)}>
                     {tier.label}
                   </span>
+                  {(player as any).is_temporary && (
+                    <span className="text-[9px] font-mono text-orange-400 uppercase tracking-wider border border-orange-400/30 bg-orange-500/5 px-1.5 py-0.5">
+                      GUEST
+                    </span>
+                  )}
                   {isOnFire && (
                     <span className="text-[9px] font-mono text-aviation-red uppercase tracking-wider border border-aviation-red/20 bg-aviation-red/5 px-1.5 py-0.5">
                       On Fire

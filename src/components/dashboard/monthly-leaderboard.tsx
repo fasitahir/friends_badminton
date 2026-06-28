@@ -74,7 +74,7 @@ export function MonthlyLeaderboard({
     }
   }
 
-  const displayedStats = loading ? [] : entries.slice(0, 10);
+  const displayedStats = loading ? [] : entries.filter((e) => !(e.player as any)?.is_temporary).slice(0, 10);
 
   return (
     <div className="flex flex-col">
