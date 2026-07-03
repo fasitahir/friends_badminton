@@ -167,10 +167,12 @@ export default async function DashboardPage() {
   // 4. Combine months for dropdown (ensure currentMonth is at top and unique)
   const availableMonths = Array.from(new Set([currentMonth, ...savedMonths]));
 
-  const eligiblePlayers = allTimeStats.filter(p => p.played >= 5);
-  const topWinRatePlayer = eligiblePlayers.length > 0
-    ? [...eligiblePlayers].sort((a, b) => b.winRate - a.winRate)[0]
-    : [...allTimeStats].sort((a, b) => b.winRate - a.winRate)[0];
+  const eligibleMonthlyPlayers = initialEntries.filter(p => p.sets_played >= 5);
+  const topWinRateEntry = eligibleMonthlyPlayers.length > 0
+    ? eligibleMonthlyPlayers[0]
+    : initialEntries.length > 0
+      ? initialEntries[0]
+      : null;
 
   const topEloPlayer = [...allTimeStats].sort((a, b) => (b.elo || 0) - (a.elo || 0))[0];
 
@@ -189,8 +191,8 @@ export default async function DashboardPage() {
     },
     {
       label: "Top Win Rate",
-      value: topWinRatePlayer ? `${topWinRatePlayer.winRate.toFixed(1)}%` : "—",
-      subValue: topWinRatePlayer ? topWinRatePlayer.name : null,
+      value: topWinRateEntry ? `${topWinRateEntry.win_rate.toFixed(1)}%` : "—",
+      subValue: topWinRateEntry ? topWinRateEntry.player.name : null,
     },
     {
       label: "Final Boss",
