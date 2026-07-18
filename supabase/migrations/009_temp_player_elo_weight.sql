@@ -221,6 +221,56 @@ BEGIN
     PERFORM force_recalculate_deferred_elo();
   END IF;
 
-  -- Delete all monthly snapshots so they can be regenerated if necessary
+  -- Re-generate all monthly snapshots
   DELETE FROM monthly_snapshots;
+
+  DECLARE
+    v_month_rec RECORD;
+    v_month_start DATE;
+    v_month_end DATE;
+  BEGIN
+    FOR v_month_rec IN
+      SELECT DISTINCT date_trunc('month', created_at)::date AS month_start
+      FROM matches
+      ORDER BY 1
+    LOOP
+      v_month_start := v_month_rec.month_start;
+      v_month_end   := (v_month_start + interval '1 month')::date;
+
+      INSERT INTO monthly_snapshots (month, player_id, sets_played, sets_won, sets_lost, win_rate)
+      SELECT
+        v_month_start                                             AS month,
+        p.player_id,
+        SUM(mg.weight)                                            AS sets_played,
+        SUM(CASE WHEN ((mg.pair1_id = p.pair_id AND mg.winning_pair_id = mg.pair1_id)
+             OR (mg.pair2_id = p.pair_id AND mg.winning_pair_id = mg.pair2_id)) THEN mg.weight ELSE 0 END) AS sets_won,
+        SUM(CASE WHEN ((mg.pair1_id = p.pair_id AND mg.winning_pair_id <> mg.pair1_id)
+             OR (mg.pair2_id = p.pair_id AND mg.winning_pair_id <> mg.pair2_id)) THEN mg.weight ELSE 0 END) AS sets_lost,
+        ROUND(
+          (SUM(CASE WHEN ((mg.pair1_id = p.pair_id AND mg.winning_pair_id = mg.pair1_id)
+             OR (mg.pair2_id = p.pair_id AND mg.winning_pair_id = mg.pair2_id)) THEN mg.weight ELSE 0 END)
+          / NULLIF(SUM(mg.weight), 0)) * 100,
+          2
+        )                                                         AS win_rate
+      FROM (
+        SELECT mg_inner.*,
+          (CASE WHEN EXISTS (
+            SELECT 1 FROM pairs p1 
+            JOIN players pl1 ON pl1.id IN (p1.player1_id, p1.player2_id)
+            WHERE p1.id IN (mg_inner.pair1_id, mg_inner.pair2_id) AND pl1.is_temporary = true
+          ) THEN 0.5 ELSE 1.0 END) AS weight
+        FROM match_games mg_inner
+      ) mg
+      JOIN matches m ON m.id = mg.match_id
+      JOIN (
+        SELECT id AS pair_id, player1_id AS player_id FROM pairs
+        UNION ALL
+        SELECT id AS pair_id, player2_id AS player_id FROM pairs
+      ) p ON p.pair_id IN (mg.pair1_id, mg.pair2_id)
+      WHERE mg.winning_pair_id IS NOT NULL                        
+        AND m.created_at >= v_month_start
+        AND m.created_at <  v_month_end
+      GROUP BY p.player_id;
+    END LOOP;
+  END;
 END $$;

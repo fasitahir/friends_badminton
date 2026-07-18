@@ -235,3 +235,27 @@ export const getSavedMonths = cache(cachedFetchSavedMonths);
 
 /** Ranked leaderboard for a specific month (YYYY-MM). */
 export const getMonthlyLeaderboard = cache(cachedFetchMonthlyLeaderboard);
+
+// ─── Session Schedule ─────────────────────────────────────────────────────────
+
+/**
+ * Fetch the planned match schedule for a session, ordered by match_order.
+ * Returns an empty array if no schedule has been saved for this session.
+ */
+export async function getSessionSchedule(sessionId: string) {
+  const supabase = createCacheClient();
+  const { data } = await supabase
+    .from("session_schedule")
+    .select(
+      `*,
+       t1_player1:players!session_schedule_t1_player1_id_fkey(*),
+       t1_player2:players!session_schedule_t1_player2_id_fkey(*),
+       t2_player1:players!session_schedule_t2_player1_id_fkey(*),
+       t2_player2:players!session_schedule_t2_player2_id_fkey(*),
+       sitting_out:players!session_schedule_sitting_out_player_id_fkey(*)`
+    )
+    .eq("session_id", sessionId)
+    .order("match_order", { ascending: true });
+  return data ?? [];
+}
+

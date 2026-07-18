@@ -58,6 +58,7 @@ const navItems = [
       </svg>
     ),
   },
+
 ];
 
 export function Sidebar({ isAdmin }: { isAdmin?: boolean }) {

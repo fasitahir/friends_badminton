@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useTransition } from "react";
 import type { Player } from "@/lib/supabase/types";
 import {
   createTeam,
@@ -10,7 +10,12 @@ import {
   createMatch,
   deleteMatch,
   updateMatch,
+  deleteSessionSchedule,
+  saveSessionSchedule,
 } from "@/app/actions";
+import { getEloTier } from "@/lib/elo";
+import { extendSchedule } from "@/lib/scheduler";
+import { InSessionScheduler } from "@/components/scheduler/in-session-scheduler";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -53,6 +58,8 @@ interface SessionDetailProps {
   matches: any[];
   allPlayers: Player[];
   isAdmin?: boolean;
+  /** Planned match schedule rows from session_schedule table */
+  schedule?: any[];
 }
 
 export function SessionDetail({
@@ -62,7 +69,22 @@ export function SessionDetail({
   matches,
   allPlayers,
   isAdmin,
+  schedule = [],
 }: SessionDetailProps) {
+  // Controlled tab + cross-tab prefill for "Play" from schedule
+  const [activeTab, setActiveTab] = useState<string>(
+    schedule.length > 0 ? "schedule" : "matches"
+  );
+  const [prefilledPair1Id, setPrefilledPair1Id] = useState<string | null>(null);
+  const [prefilledPair2Id, setPrefilledPair2Id] = useState<string | null>(null);
+
+  /** Called from Schedule tab — switches to Matches and pre-fills the form */
+  const handlePlayMatch = (p1Id: string | null, p2Id: string | null) => {
+    setPrefilledPair1Id(p1Id);
+    setPrefilledPair2Id(p2Id);
+    setActiveTab("matches");
+  };
+
   return (
     <div className="flex flex-col gap-4 sm:gap-6">
       {/* Header */}
@@ -86,12 +108,30 @@ export function SessionDetail({
         )}
       </div>
 
-      <Tabs defaultValue="matches" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="schedule" className="text-xs sm:text-sm relative">
+            Schedule
+            {schedule.length > 0 && (
+              <span className="absolute -top-1 -right-1 size-2 rounded-full bg-primary" />
+            )}
+          </TabsTrigger>
           <TabsTrigger value="matches" className="text-xs sm:text-sm">Matches</TabsTrigger>
           <TabsTrigger value="pairs" className="text-xs sm:text-sm">Pairs</TabsTrigger>
           <TabsTrigger value="teams" className="text-xs sm:text-sm">Teams</TabsTrigger>
         </TabsList>
+
+        {/* ==================== SCHEDULE TAB ==================== */}
+        <TabsContent value="schedule" className="mt-4 sm:mt-6">
+          <ScheduleTab
+            sessionId={session.id}
+            schedule={schedule}
+            allPlayers={allPlayers}
+            pairs={pairs}
+            isAdmin={isAdmin}
+            onPlayMatch={handlePlayMatch}
+          />
+        </TabsContent>
 
         {/* ==================== MATCHES TAB ==================== */}
         <TabsContent value="matches" className="mt-4 sm:mt-6">
@@ -101,6 +141,12 @@ export function SessionDetail({
             pairs={pairs}
             allPlayers={allPlayers}
             isAdmin={isAdmin}
+            prefilledPair1Id={prefilledPair1Id}
+            prefilledPair2Id={prefilledPair2Id}
+            onPrefilledConsumed={() => {
+              setPrefilledPair1Id(null);
+              setPrefilledPair2Id(null);
+            }}
           />
         </TabsContent>
 
@@ -283,21 +329,42 @@ function MatchesTab({
   pairs,
   allPlayers,
   isAdmin,
+  prefilledPair1Id,
+  prefilledPair2Id,
+  onPrefilledConsumed,
 }: {
   sessionId: string;
   matches: any[];
   pairs: any[];
   allPlayers: Player[];
   isAdmin?: boolean;
+  /** When set, auto-opens the Record Match dialog with these pairs pre-selected */
+  prefilledPair1Id?: string | null;
+  prefilledPair2Id?: string | null;
+  onPrefilledConsumed?: () => void;
 }) {
   const [createOpen, setCreateOpen] = useState(false);
+
+  // Auto-open match dialog when navigated here via Play button from schedule
+  const [consumedPrefill, setConsumedPrefill] = useState(false);
+  if (prefilledPair1Id && !consumedPrefill && !createOpen) {
+    setCreateOpen(true);
+    setConsumedPrefill(true);
+  }
+  // Reset consumed flag when prefill is cleared
+  if (!prefilledPair1Id && consumedPrefill) {
+    setConsumedPrefill(false);
+  }
 
   return (
     <div className="flex flex-col gap-3 sm:gap-4">
       <div className="flex justify-between items-center">
         <h2 className="text-base sm:text-lg font-semibold">Match History</h2>
         {isAdmin && (
-          <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+          <Dialog open={createOpen} onOpenChange={(o) => {
+            setCreateOpen(o);
+            if (!o) onPrefilledConsumed?.();
+          }}>
             <DialogTrigger render={<Button size="sm" className="h-9 touch-target" />}>
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-4 mr-1.5"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
               Record Match
@@ -310,7 +377,12 @@ function MatchesTab({
                 sessionId={sessionId}
                 pairs={pairs}
                 allPlayers={allPlayers}
-                onClose={() => setCreateOpen(false)}
+                onClose={() => {
+                  setCreateOpen(false);
+                  onPrefilledConsumed?.();
+                }}
+                initialPair1Id={prefilledPair1Id ?? undefined}
+                initialPair2Id={prefilledPair2Id ?? undefined}
               />
             </DialogContent>
           </Dialog>
@@ -497,12 +569,17 @@ function MatchForm({
   allPlayers,
   onClose,
   initialMatch,
+  initialPair1Id,
+  initialPair2Id,
 }: {
   sessionId: string;
   pairs: any[];
   allPlayers: Player[];
   onClose: () => void;
   initialMatch?: any;
+  /** Pre-select pair IDs when opening from the schedule */
+  initialPair1Id?: string;
+  initialPair2Id?: string;
 }) {
   const [bestOf, setBestOf] = useState(initialMatch ? initialMatch.best_of.toString() : "1");
   const [error, setError] = useState("");
@@ -515,9 +592,25 @@ function MatchForm({
       pair1_score: g.pair1_score.toString(),
       pair2_score: g.pair2_score.toString(),
     })) || [
-      { pair1_id: "", pair2_id: "", pair1_score: "", pair2_score: "" }
+      {
+        pair1_id: initialPair1Id || "",
+        pair2_id: initialPair2Id || "",
+        pair1_score: "",
+        pair2_score: "",
+      },
     ]
   );
+
+  useEffect(() => {
+    if (!initialMatch && (initialPair1Id || initialPair2Id)) {
+      setGames((prev) => {
+        const newGames = [...prev];
+        if (initialPair1Id) newGames[0].pair1_id = initialPair1Id;
+        if (initialPair2Id) newGames[0].pair2_id = initialPair2Id;
+        return newGames;
+      });
+    }
+  }, [initialPair1Id, initialPair2Id, initialMatch]);
 
   const addGame = () => {
     // Pre-fill with the last set's pair selections for speed
@@ -1111,5 +1204,285 @@ function TeamForm({
         {loading ? "Creating..." : "Create Team"}
       </Button>
     </form>
+  );
+}
+
+// ==================== SCHEDULE TAB ====================
+
+function ScheduleTab({
+  sessionId,
+  schedule: initialSchedule,
+  allPlayers,
+  pairs,
+  isAdmin,
+  onPlayMatch,
+}: {
+  sessionId: string;
+  schedule: any[];
+  allPlayers: any[];
+  /** All session pairs — used to resolve scheduled player IDs to pair IDs */
+  pairs: any[];
+  isAdmin?: boolean;
+  /** Jump to Matches tab with these pair IDs pre-selected */
+  onPlayMatch?: (pair1Id: string | null, pair2Id: string | null) => void;
+}) {
+  const [isPending, startTransition] = useTransition();
+  const [schedule, setSchedule] = useState<any[]>(initialSchedule);
+  const [showGenerator, setShowGenerator] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleDelete = () => {
+    startTransition(async () => {
+      const result = await deleteSessionSchedule(sessionId);
+      if (result.error) {
+        setError(result.error);
+      } else {
+        setSchedule([]);
+        setShowGenerator(false);
+      }
+    });
+  };
+
+  const handleAddMoreMatches = () => {
+    startTransition(async () => {
+      setError(null);
+      // Generate extra matches using existing DB rows
+      const extended = extendSchedule(schedule);
+      if (extended.matches.length === 0) return;
+
+      // Transform new matches into DB input shape
+      const newMatchesInput = extended.matches.map((m) => ({
+        match_order: m.matchNumber,
+        t1_player1_id: m.pair1.player1.id,
+        t1_player2_id: m.pair1.player2.id,
+        t2_player1_id: m.pair2.player1.id,
+        t2_player2_id: m.pair2.player2.id,
+        sitting_out_player_id: m.sittingOut?.id ?? null,
+      }));
+
+      // Combine existing with new
+      const allMatchesInput = [
+        ...schedule.map((row) => ({
+          match_order: row.match_order,
+          t1_player1_id: row.t1_player1_id,
+          t1_player2_id: row.t1_player2_id,
+          t2_player1_id: row.t2_player1_id,
+          t2_player2_id: row.t2_player2_id,
+          sitting_out_player_id: row.sitting_out_player_id ?? null,
+        })),
+        ...newMatchesInput,
+      ];
+
+      const result = await saveSessionSchedule(sessionId, allMatchesInput);
+      if (result.error) {
+        setError(result.error);
+      } else {
+        window.location.reload();
+      }
+    });
+  };
+
+  // Inline generator shown when there's no schedule (or user clicked Generate)
+  if (showGenerator || schedule.length === 0) {
+    return (
+      <div className="flex flex-col gap-4">
+        {schedule.length === 0 && !showGenerator && (
+          <div className="flex flex-col items-center gap-3 py-8 text-center">
+            <span className="text-4xl">📋</span>
+            <div>
+              <p className="text-base font-semibold">No Schedule Yet</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                Generate a fair, ELO-balanced match schedule for this session.
+              </p>
+            </div>
+            {isAdmin && (
+              <Button size="sm" onClick={() => setShowGenerator(true)}>
+                ⚡ Generate Schedule
+              </Button>
+            )}
+          </div>
+        )}
+
+        {isAdmin && showGenerator && (
+          <InSessionScheduler
+            sessionId={sessionId}
+            allPlayers={allPlayers}
+            onSaved={() => {
+              // Schedule saved — reload page to pick up new rows from DB
+              window.location.reload();
+            }}
+            onCancel={() => setShowGenerator(false)}
+          />
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-4">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm font-semibold">
+            {schedule.length} planned match{schedule.length !== 1 ? "es" : ""}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            ELO-balanced · generated by Session Scheduler
+          </p>
+        </div>
+        {isAdmin && (
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-xs border-primary/30 text-primary hover:bg-primary/10"
+              disabled={isPending}
+              onClick={handleAddMoreMatches}
+            >
+              {isPending ? "Generating…" : "➕ Add More"}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-xs"
+              onClick={() => setShowGenerator(true)}
+            >
+              🔀 Regenerate
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-xs text-destructive border-destructive/30 hover:bg-destructive/10"
+              disabled={isPending}
+              onClick={handleDelete}
+            >
+              {isPending ? "Clearing…" : "Clear"}
+            </Button>
+          </div>
+        )}
+      </div>
+
+      {error && <p className="text-sm text-destructive">{error}</p>}
+
+      {/* Inline regenerator */}
+      {showGenerator && (
+        <div className="border border-primary/20 rounded-xl p-4 bg-primary/5">
+          <InSessionScheduler
+            sessionId={sessionId}
+            allPlayers={allPlayers}
+            onSaved={() => window.location.reload()}
+            onCancel={() => setShowGenerator(false)}
+          />
+        </div>
+      )}
+
+      {/* Match list */}
+      <div className="flex flex-col gap-3">
+        {schedule.map((row: any) => {
+          const t1p1 = row.t1_player1;
+          const t1p2 = row.t1_player2;
+          const t2p1 = row.t2_player1;
+          const t2p2 = row.t2_player2;
+          const sittingOut = row.sitting_out;
+
+          const t1Elo = (t1p1?.elo_rating ?? 600) + (t1p2?.elo_rating ?? 600);
+          const t2Elo = (t2p1?.elo_rating ?? 600) + (t2p2?.elo_rating ?? 600);
+          const eloDiff = Math.abs(t1Elo - t2Elo);
+          const fairness =
+            eloDiff < 100 ? "Very Fair" : eloDiff < 200 ? "Fair" : "Slight Mismatch";
+          const fairnessColor =
+            eloDiff < 100
+              ? "text-emerald-400"
+              : eloDiff < 200
+              ? "text-yellow-400"
+              : "text-orange-400";
+
+          return (
+            <Card key={row.id} className="border-border/60 bg-card/50">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <Badge variant="outline" className="text-[10px] font-bold tabular-nums">
+                    #{row.match_order}
+                  </Badge>
+                  <span className={`text-[10px] font-medium ${fairnessColor}`}>
+                    ⚖️ {fairness}
+                  </span>
+                  {isAdmin && onPlayMatch && (
+                    <Button
+                      size="sm"
+                      className="ml-auto h-7 px-3 text-[11px] font-semibold"
+                      onClick={() => {
+                        // Resolve player IDs to pair IDs using the pairs array
+                        const findPairId = (aId: string, bId: string) => {
+                          const [s1, s2] = [aId, bId].sort();
+                          return pairs.find(
+                            (p) =>
+                              [p.player1_id, p.player2_id].sort().join() === [s1, s2].join() ||
+                              (p.player1?.id && [p.player1.id, p.player2?.id].sort().join() === [s1, s2].join())
+                          )?.id ?? null;
+                        };
+                        const p1Id = findPairId(t1p1?.id, t1p2?.id);
+                        const p2Id = findPairId(t2p1?.id, t2p2?.id);
+                        onPlayMatch(p1Id, p2Id);
+                      }}
+                    >
+                      ▶ Add Score
+                    </Button>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+                  {/* Team 1 */}
+                  <div className="flex flex-col gap-1">
+                    <div className="text-[10px] text-muted-foreground font-medium">
+                      Combined: {t1Elo}
+                    </div>
+                    {[t1p1, t1p2].map((p: any) =>
+                      p ? (
+                        <div key={p.id} className="flex items-center gap-1">
+                          <span className="text-[11px]">{getEloTier(p.elo_rating).emoji}</span>
+                          {/* Show name, not nickname */}
+                          <span className="text-xs font-medium truncate">{p.name}</span>
+                        </div>
+                      ) : null
+                    )}
+                  </div>
+
+                  {/* VS */}
+                  <div className="text-base font-black text-muted-foreground/40 text-center">
+                    VS
+                  </div>
+
+                  {/* Team 2 */}
+                  <div className="flex flex-col gap-1 items-end">
+                    <div className="text-[10px] text-muted-foreground font-medium">
+                      Combined: {t2Elo}
+                    </div>
+                    {[t2p1, t2p2].map((p: any) =>
+                      p ? (
+                        <div key={p.id} className="flex items-center gap-1">
+                          {/* Show name, not nickname */}
+                          <span className="text-xs font-medium truncate">{p.name}</span>
+                          <span className="text-[11px]">{getEloTier(p.elo_rating).emoji}</span>
+                        </div>
+                      ) : null
+                    )}
+                  </div>
+                </div>
+
+                {sittingOut && (
+                  <div className="mt-2 pt-2 border-t border-border/40 text-center">
+                    <span className="text-[10px] text-muted-foreground">
+                      🪑 Sitting out:{" "}
+                      <span className="font-medium">{sittingOut.name}</span>
+                    </span>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+    </div>
   );
 }

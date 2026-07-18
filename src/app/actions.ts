@@ -583,3 +583,99 @@ export async function deleteMonthlySnapshot(month: string) {
   revalidatePath("/");
   return { success: true };
 }
+
+// ==================== SESSION SCHEDULE ACTIONS ====================
+
+export type ScheduleMatchInput = {
+  match_order: number;
+  t1_player1_id: string;
+  t1_player2_id: string;
+  t2_player1_id: string;
+  t2_player2_id: string;
+  sitting_out_player_id: string | null;
+};
+
+/**
+ * Replace the planned schedule for a session.
+ * Deletes any existing schedule rows then inserts the new ones atomically.
+ */
+export async function saveSessionSchedule(
+  sessionId: string,
+  matches: ScheduleMatchInput[]
+) {
+  if (!(await getIsAdmin())) return { error: "Unauthorized" };
+
+  const supabase = await createClient();
+
+  // Delete existing schedule for this session
+  const { error: delErr } = await supabase
+    .from("session_schedule")
+    .delete()
+    .eq("session_id", sessionId);
+
+  if (delErr) return { error: delErr.message };
+
+  if (matches.length === 0) {
+    revalidatePath(`/sessions/${sessionId}`);
+    return { success: true };
+  }
+
+  const rows = matches.map((m) => ({
+    session_id: sessionId,
+    match_order: m.match_order,
+    t1_player1_id: m.t1_player1_id,
+    t1_player2_id: m.t1_player2_id,
+    t2_player1_id: m.t2_player1_id,
+    t2_player2_id: m.t2_player2_id,
+    sitting_out_player_id: m.sitting_out_player_id,
+  }));
+
+  const { error: insErr } = await supabase.from("session_schedule").insert(rows);
+  if (insErr) return { error: insErr.message };
+
+  // ── Auto-create pairs in the pairs table ──────────────────────────────────
+  // Collect all unique player pairs from the schedule (normalise order so A+B
+  // and B+A are the same row), then upsert — ignore conflicts so we don't
+  // overwrite pairs that were already recorded in earlier matches.
+  const pairSet = new Set<string>();
+  const pairRows: { session_id: string; player1_id: string; player2_id: string }[] = [];
+
+  for (const m of matches) {
+    const addPair = (a: string, b: string) => {
+      const [p1, p2] = [a, b].sort();
+      const key = `${p1}|${p2}`;
+      if (!pairSet.has(key)) {
+        pairSet.add(key);
+        pairRows.push({ session_id: sessionId, player1_id: p1, player2_id: p2 });
+      }
+    };
+    addPair(m.t1_player1_id, m.t1_player2_id);
+    addPair(m.t2_player1_id, m.t2_player2_id);
+  }
+
+  if (pairRows.length > 0) {
+    const { error: pairErr } = await supabase
+      .from("pairs")
+      .upsert(pairRows, { onConflict: "player1_id,player2_id,session_id", ignoreDuplicates: true });
+    if (pairErr) return { error: pairErr.message };
+  }
+
+  revalidatePath(`/sessions/${sessionId}`);
+  return { success: true };
+}
+
+/** Remove the planned schedule from a session (admin action). */
+export async function deleteSessionSchedule(sessionId: string) {
+  if (!(await getIsAdmin())) return { error: "Unauthorized" };
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("session_schedule")
+    .delete()
+    .eq("session_id", sessionId);
+
+  if (error) return { error: error.message };
+
+  revalidatePath(`/sessions/${sessionId}`);
+  return { success: true };
+}

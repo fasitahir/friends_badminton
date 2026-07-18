@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import { SessionDetail } from "@/components/sessions/session-detail";
 import { getIsAdmin } from "@/lib/auth";
+import { getSessionSchedule } from "@/lib/data";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -58,6 +59,7 @@ export default async function SessionDetailPage({
     { data: pairs },
     { data: allPlayers },
     { data: matchGames },
+    schedule,
   ] = await Promise.all([
     teamIds.length > 0
       ? supabase
@@ -82,6 +84,7 @@ export default async function SessionDetailPage({
           .in("match_id", matchIds)
           .order("game_number")
       : Promise.resolve({ data: [] as any[] }),
+    getSessionSchedule(id),
   ]);
 
   // Group team members by team
@@ -106,6 +109,8 @@ export default async function SessionDetailPage({
       matches={matchesWithGames}
       allPlayers={allPlayers || []}
       isAdmin={isAdmin}
+      schedule={schedule}
     />
   );
 }
+
