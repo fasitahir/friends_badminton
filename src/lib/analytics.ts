@@ -33,6 +33,21 @@ function getAllSets(matches: MatchWithDetails[]): MatchGameWithPairs[] {
 }
 
 /**
+ * Get match weight: 0.5 if any player is temporary, 1.0 otherwise
+ */
+function getMatchWeight(set: MatchGameWithPairs): number {
+  if (
+    set.pair1.player1.is_temporary ||
+    set.pair1.player2.is_temporary ||
+    set.pair2.player1.is_temporary ||
+    set.pair2.player2.is_temporary
+  ) {
+    return 0.5;
+  }
+  return 1.0;
+}
+
+/**
  * Compute stats for a single player across all matches
  */
 export function computePlayerStats(
@@ -49,9 +64,10 @@ export function computePlayerStats(
     const isPair2 = isPlayerInPair(player.id, set.pair2);
     
     if (isPair1 || isPair2) {
-      setsPlayed++;
+      const weight = getMatchWeight(set);
+      setsPlayed += weight;
       const won = set.winning_pair_id === (isPair1 ? set.pair1.id : set.pair2.id);
-      if (won) setsWon++;
+      if (won) setsWon += weight;
     }
   }
 
@@ -98,16 +114,17 @@ export function computeHeadToHead(
     // They faced each other if one is in pair1 and the other in pair2
     if ((aIn1 && bIn2) || (aIn2 && bIn1)) {
       relevantSets.push(set);
+      const weight = getMatchWeight(set);
       const aWon = set.winning_pair_id === (aIn1 ? set.pair1.id : set.pair2.id);
       if (aWon) {
-        playerAWins++;
+        playerAWins += weight;
       } else {
-        playerBWins++;
+        playerBWins += weight;
       }
     }
   }
 
-  const timesFaced = relevantSets.length;
+  const timesFaced = playerAWins + playerBWins;
 
   return {
     playerA,
@@ -163,12 +180,13 @@ export function computeAllPairStats(
       });
     }
 
+    const weight = getMatchWeight(set);
     if (set.winning_pair_id === set.pair1.id) {
-      pairMap.get(p1Key)!.wins++;
-      pairMap.get(p2Key)!.losses++;
+      pairMap.get(p1Key)!.wins += weight;
+      pairMap.get(p2Key)!.losses += weight;
     } else {
-      pairMap.get(p2Key)!.wins++;
-      pairMap.get(p1Key)!.losses++;
+      pairMap.get(p2Key)!.wins += weight;
+      pairMap.get(p1Key)!.losses += weight;
     }
   }
 
@@ -210,11 +228,13 @@ export function computePairVsPair(
       isPlayerInPair(pair1Player1.id, set.pair2) && isPlayerInPair(pair1Player2.id, set.pair2);
 
     if (p1In1 && p2In2) {
-      if (set.winning_pair_id === set.pair1.id) pair1Wins++;
-      else pair2Wins++;
+      const weight = getMatchWeight(set);
+      if (set.winning_pair_id === set.pair1.id) pair1Wins += weight;
+      else pair2Wins += weight;
     } else if (p2In1 && p1In2) {
-      if (set.winning_pair_id === set.pair2.id) pair2Wins++;
-      else pair1Wins++;
+      const weight = getMatchWeight(set);
+      if (set.winning_pair_id === set.pair2.id) pair2Wins += weight;
+      else pair1Wins += weight;
     }
   }
 
@@ -245,15 +265,16 @@ export function computeBestPartners(
     const isPair2 = isPlayerInPair(playerId, set.pair2);
 
     if (isPair1 || isPair2) {
+      const weight = getMatchWeight(set);
       const pair = isPair1 ? set.pair1 : set.pair2;
       const partnerId = getPartnerId(playerId, pair);
       const won = set.winning_pair_id === pair.id;
 
       if (!partnerMap.has(partnerId)) partnerMap.set(partnerId, { wins: 0, losses: 0 });
       if (won) {
-        partnerMap.get(partnerId)!.wins++;
+        partnerMap.get(partnerId)!.wins += weight;
       } else {
-        partnerMap.get(partnerId)!.losses++;
+        partnerMap.get(partnerId)!.losses += weight;
       }
     }
   }
@@ -290,6 +311,7 @@ export function computeToughestOpponents(
     const isPair2 = isPlayerInPair(playerId, set.pair2);
 
     if (isPair1 || isPair2) {
+      const weight = getMatchWeight(set);
       const myPair = isPair1 ? set.pair1 : set.pair2;
       const oppPair = isPair1 ? set.pair2 : set.pair1;
       const won = set.winning_pair_id === myPair.id;
@@ -297,9 +319,9 @@ export function computeToughestOpponents(
       for (const oppId of [oppPair.player1_id, oppPair.player2_id]) {
         if (!opponentMap.has(oppId)) opponentMap.set(oppId, { wins: 0, losses: 0 });
         if (won) {
-          opponentMap.get(oppId)!.wins++;
+          opponentMap.get(oppId)!.wins += weight;
         } else {
-          opponentMap.get(oppId)!.losses++;
+          opponentMap.get(oppId)!.losses += weight;
         }
       }
     }

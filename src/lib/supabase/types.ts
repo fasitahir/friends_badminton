@@ -3,6 +3,7 @@ export type Player = {
   name: string;
   nickname: string | null;
   elo_rating: number;
+  is_temporary: boolean;
   created_at: string;
 };
 

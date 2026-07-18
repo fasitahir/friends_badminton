@@ -36,13 +36,22 @@ export async function GET(req: NextRequest) {
                 g.pair2?.player1_id === player.id ||
                 g.pair2?.player2_id === player.id;
               if (inP1 || inP2) {
-                played++;
+                let weight = 1.0;
+                if (
+                  g.pair1?.player1?.is_temporary ||
+                  g.pair1?.player2?.is_temporary ||
+                  g.pair2?.player1?.is_temporary ||
+                  g.pair2?.player2?.is_temporary
+                ) {
+                  weight = 0.5;
+                }
+                played += weight;
                 const wonSet =
                   g.winning_pair_id === (inP1 ? g.pair1_id : g.pair2_id);
                 if (wonSet) {
-                  won++;
+                  won += weight;
                 } else {
-                  lost++;
+                  lost += weight;
                 }
               }
             }
