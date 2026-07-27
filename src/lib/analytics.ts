@@ -21,7 +21,7 @@ function isPlayerInPair(playerId: string, pair: PairWithPlayers): boolean {
 /**
  * Get the partner ID from a pair
  */
-function getPartnerId(playerId: string, pair: PairWithPlayers): string {
+function getPartnerId(playerId: string, pair: PairWithPlayers): string | null {
   return pair.player1_id === playerId ? pair.player2_id : pair.player1_id;
 }
 
@@ -37,10 +37,10 @@ function getAllSets(matches: MatchWithDetails[]): MatchGameWithPairs[] {
  */
 function getMatchWeight(set: MatchGameWithPairs): number {
   if (
-    set.pair1.player1.is_temporary ||
-    set.pair1.player2.is_temporary ||
-    set.pair2.player1.is_temporary ||
-    set.pair2.player2.is_temporary
+    set.pair1.player1?.is_temporary ||
+    set.pair1.player2?.is_temporary ||
+    set.pair2.player1?.is_temporary ||
+    set.pair2.player2?.is_temporary
   ) {
     return 0.5;
   }
@@ -160,6 +160,9 @@ export function computeAllPairStats(
   const playerMap = new Map(players.map((p) => [p.id, p]));
 
   for (const set of sets) {
+    // Skip singles matches in Pair stats
+    if (!set.pair1.player2_id || !set.pair2.player2_id) continue;
+
     const p1Key = getPairKey(set.pair1.player1_id, set.pair1.player2_id);
     const p2Key = getPairKey(set.pair2.player1_id, set.pair2.player2_id);
     
@@ -268,6 +271,8 @@ export function computeBestPartners(
       const weight = getMatchWeight(set);
       const pair = isPair1 ? set.pair1 : set.pair2;
       const partnerId = getPartnerId(playerId, pair);
+      if (!partnerId) continue; // Skip singles matches
+      
       const won = set.winning_pair_id === pair.id;
 
       if (!partnerMap.has(partnerId)) partnerMap.set(partnerId, { wins: 0, losses: 0 });

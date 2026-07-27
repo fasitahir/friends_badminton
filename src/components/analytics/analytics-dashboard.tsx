@@ -345,7 +345,7 @@ function HeadToHeadTab({ players, matches }: { players: Player[]; matches: Match
                           {aWon ? `${result.playerA.name} W` : `${result.playerB.name} W`}
                         </Badge>
                         <span className="text-muted-foreground">
-                          {s.winning_pair?.player1?.name} & {s.winning_pair?.player2?.name} beat {losing_pair.player1?.name} & {losing_pair.player2?.name}
+                          {s.winning_pair?.player1?.name}{s.winning_pair?.player2 ? ` & ${s.winning_pair.player2.name}` : ''} beat {losing_pair.player1?.name}{losing_pair.player2 ? ` & ${losing_pair.player2.name}` : ''}
                         </span>
                       </div>
                     );

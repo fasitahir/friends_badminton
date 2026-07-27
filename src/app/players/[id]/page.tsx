@@ -413,11 +413,11 @@ export default async function PlayerProfilePage({
                     <div className="flex-1 min-w-0">
                       <p className="text-xs sm:text-sm truncate">
                         <span className="font-medium">
-                          {set.pair1?.player1?.name} & {set.pair1?.player2?.name}
+                          {set.pair1?.player1?.name}{set.pair1?.player2 ? ` & ${set.pair1.player2.name}` : ''}
                         </span>{" "}
                         <span className="text-muted-foreground text-xs">vs</span>{" "}
                         <span className="font-medium">
-                          {set.pair2?.player1?.name} & {set.pair2?.player2?.name}
+                          {set.pair2?.player1?.name}{set.pair2?.player2 ? ` & ${set.pair2.player2.name}` : ''}
                         </span>
                       </p>
                     </div>
