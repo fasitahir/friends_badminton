@@ -271,7 +271,7 @@ function MatchCard({
                     Set {game.game_number}
                   </div>
                   <div className={`flex-1 text-right ${p1won ? 'font-bold text-win' : 'text-muted-foreground'}`}>
-                    {game.pair1?.player1?.name} & {game.pair1?.player2?.name}
+                    {game.pair1?.player1?.name}{game.pair1?.player2 ? ` & ${game.pair1.player2.name}` : ''}
                     {game.pair1_elo_change !== undefined && (
                       <span className={`ml-2 text-[10px] font-mono ${game.pair1_elo_change > 0 ? 'text-green-500' : 'text-red-500'}`}>
                         {game.pair1_elo_change > 0 ? '+' : ''}{game.pair1_elo_change}
@@ -287,7 +287,7 @@ function MatchCard({
                         {game.pair2_elo_change > 0 ? '+' : ''}{game.pair2_elo_change}
                       </span>
                     )}
-                    {game.pair2?.player1?.name} & {game.pair2?.player2?.name}
+                    {game.pair2?.player1?.name}{game.pair2?.player2 ? ` & ${game.pair2.player2.name}` : ''}
                   </div>
                 </div>
                 {/* Mobile layout */}
@@ -297,7 +297,7 @@ function MatchCard({
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className={`text-xs truncate ${p1won ? 'font-bold text-win' : 'text-muted-foreground'}`}>
-                      {game.pair1?.player1?.name?.split(' ')[0]} & {game.pair1?.player2?.name?.split(' ')[0]}
+                      {game.pair1?.player1?.name?.split(' ')[0]}{game.pair1?.player2 ? ` & ${game.pair1.player2.name?.split(' ')[0]}` : ''}
                       {game.pair1_elo_change !== undefined && (
                         <span className={`ml-1 text-[9px] font-mono ${game.pair1_elo_change > 0 ? 'text-green-500' : 'text-red-500'}`}>
                           {game.pair1_elo_change > 0 ? '+' : ''}{game.pair1_elo_change}
@@ -315,7 +315,7 @@ function MatchCard({
                           {game.pair2_elo_change > 0 ? '+' : ''}{game.pair2_elo_change}
                         </span>
                       )}
-                      {game.pair2?.player1?.name?.split(' ')[0]} & {game.pair2?.player2?.name?.split(' ')[0]}
+                      {game.pair2?.player1?.name?.split(' ')[0]}{game.pair2?.player2 ? ` & ${game.pair2.player2.name?.split(' ')[0]}` : ''}
                     </div>
                   </div>
                 </div>
@@ -732,7 +732,7 @@ function MatchForm({
   }
 
   const pairLabel = (pair: any) =>
-    `${pair.player1?.name || "?"} & ${pair.player2?.name || "?"}`;
+    pair.player2 ? `${pair.player1?.name || "?"} & ${pair.player2.name}` : pair.player1?.name || "?";
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-3 sm:gap-4 overflow-y-auto px-4 pb-4 sm:px-1 sm:pb-1 flex-1">
