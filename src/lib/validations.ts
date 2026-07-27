@@ -15,10 +15,10 @@ export const sessionSchema = z.object({
 export const pairSchema = z
   .object({
     player1_id: z.string().uuid("Invalid player"),
-    player2_id: z.string().uuid("Invalid player"),
+    player2_id: z.string().uuid("Invalid player").nullable().optional(),
     session_id: z.string().uuid("Invalid session"),
   })
-  .refine((data) => data.player1_id !== data.player2_id, {
+  .refine((data) => !data.player2_id || data.player1_id !== data.player2_id, {
     message: "A player cannot be paired with themselves",
     path: ["player2_id"],
   });
@@ -26,6 +26,8 @@ export const pairSchema = z
 export const matchSchema = z
   .object({
     session_id: z.string().uuid("Invalid session"),
+    match_type: z.enum(["singles", "doubles"]).default("doubles").optional(),
+    is_ranked: z.boolean().default(true).optional(),
     team1_id: z.string().uuid("Invalid team").nullable().optional(),
     team2_id: z.string().uuid("Invalid team").nullable().optional(),
     best_of: z.coerce.number().refine((v) => [1, 3, 5, 7, 9, 11, 13, 15].includes(v), {

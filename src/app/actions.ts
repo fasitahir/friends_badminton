@@ -265,18 +265,22 @@ export async function deleteTeam(teamId: string, sessionId: string) {
 export async function createPair(
   sessionId: string,
   player1Id: string,
-  player2Id: string
+  player2Id?: string | null
 ) {
   if (!(await getIsAdmin())) return { error: "Unauthorized" };
 
   const supabase = await createClient();
 
-  if (player1Id === player2Id) {
+  if (player2Id && player1Id === player2Id) {
     return { error: "A player cannot be paired with themselves" };
   }
 
   // Normalize order for consistency
-  const [p1, p2] = [player1Id, player2Id].sort();
+  let p1 = player1Id;
+  let p2 = player2Id || null;
+  if (p2) {
+    [p1, p2] = [player1Id, p2].sort() as [string, string];
+  }
 
   const { data, error } = await supabase
     .from("pairs")
@@ -328,6 +332,8 @@ export async function deletePair(pairId: string, sessionId: string) {
 
 export async function createMatch(data: {
   session_id: string;
+  match_type?: "singles" | "doubles";
+  is_ranked?: boolean;
   best_of: number;
   team1_id?: string | null;
   team2_id?: string | null;
@@ -359,6 +365,8 @@ export async function createMatch(data: {
     p_team2_id: parsed.data.team2_id || null,
     p_winning_team_id: parsed.data.winning_team_id || null,
     p_games: data.games || [],
+    p_match_type: parsed.data.match_type || "doubles",
+    p_is_ranked: parsed.data.is_ranked ?? true,
   });
 
   if (matchError) {
@@ -396,6 +404,8 @@ export async function updateMatch(
   matchId: string,
   data: {
     session_id: string;
+    match_type?: "singles" | "doubles";
+    is_ranked?: boolean;
     best_of: number;
     team1_id?: string | null;
     team2_id?: string | null;
@@ -428,6 +438,8 @@ export async function updateMatch(
     p_team2_id: parsed.data.team2_id || null,
     p_winning_team_id: parsed.data.winning_team_id || null,
     p_games: data.games || [],
+    p_match_type: parsed.data.match_type || "doubles",
+    p_is_ranked: parsed.data.is_ranked ?? true,
   });
 
   if (matchError) {

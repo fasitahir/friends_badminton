@@ -194,9 +194,17 @@ function MatchCard({
     <Card className="group relative">
       <CardContent className="py-3 sm:py-4">
         <div className="flex items-center justify-between mb-2 sm:mb-3 border-b border-border pb-2 sm:pb-3">
-          <Badge variant="outline" className="text-[10px] sm:text-xs">
-            {match.games?.length || 0} Sets • Bo{match.best_of}
-          </Badge>
+          <div className="flex items-center gap-2 flex-wrap">
+            <Badge variant="outline" className="text-[10px] sm:text-xs">
+              {match.games?.length || 0} Sets • Bo{match.best_of}
+            </Badge>
+            <Badge variant={match.match_type === "singles" ? "secondary" : "default"} className="text-[10px] sm:text-xs">
+              {match.match_type === "singles" ? "Singles" : "Doubles"}
+            </Badge>
+            {!match.is_ranked && (
+              <Badge variant="destructive" className="text-[10px] sm:text-xs">Unranked</Badge>
+            )}
+          </div>
           {isAdmin && (
             <div className="flex items-center gap-1 sm:gap-2">
               <Dialog open={editOpen} onOpenChange={setEditOpen}>
@@ -417,12 +425,14 @@ function MatchesTab({
 function InlineQuickPair({
   sessionId,
   allPlayers,
+  matchType,
   onCreated,
   onCancel,
 }: {
   sessionId: string;
   allPlayers: Player[];
-  onCreated: (pairId: string, p1Id: string, p2Id: string) => void;
+  matchType: "singles" | "doubles";
+  onCreated: (pairId: string, p1Id: string, p2Id?: string | null) => void;
   onCancel: () => void;
 }) {
   const [p1, setP1] = useState("");
@@ -431,22 +441,25 @@ function InlineQuickPair({
   const [error, setError] = useState("");
 
   async function handleQuickCreate() {
-    if (!p1 || !p2) return;
+    if (!p1) return;
+    if (matchType === "doubles" && !p2) return;
     setLoading(true);
     setError("");
-    const result = await createPair(sessionId, p1, p2);
+    const result = await createPair(sessionId, p1, matchType === "doubles" ? p2 : null);
     if (result.error) {
       setError(result.error);
       setLoading(false);
     } else {
-      onCreated(result.pairId!, p1, p2);
+      onCreated(result.pairId!, p1, matchType === "doubles" ? p2 : null);
     }
   }
 
   return (
     <div className="p-3 rounded-lg border-2 border-dashed border-primary/30 bg-primary/5 flex flex-col gap-2">
       <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold text-primary">Quick Add Pair</span>
+        <span className="text-xs font-semibold text-primary">
+          {matchType === "singles" ? "Quick Add Player" : "Quick Add Pair"}
+        </span>
         <Button type="button" variant="ghost" size="sm" onClick={onCancel} className="h-6 px-2 text-xs text-muted-foreground">
           Cancel
         </Button>
@@ -454,7 +467,7 @@ function InlineQuickPair({
       <div className="flex flex-col gap-2">
         <Select value={p1} onValueChange={(v) => setP1(v || "")}>
           <SelectTrigger className="h-9 text-xs w-full">
-            <SelectValue placeholder="Player 1">
+            <SelectValue placeholder={matchType === "singles" ? "Player" : "Player 1"}>
               {allPlayers.find((p) => p.id === p1)?.name}
             </SelectValue>
           </SelectTrigger>
@@ -466,22 +479,24 @@ function InlineQuickPair({
             ))}
           </SelectContent>
         </Select>
-        <Select value={p2} onValueChange={(v) => setP2(v || "")}>
-          <SelectTrigger className="h-9 text-xs w-full">
-            <SelectValue placeholder="Player 2">
-              {allPlayers.find((p) => p.id === p2)?.name}
-            </SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            {allPlayers
-              .filter((p) => p.id !== p1)
-              .map((p) => (
-                <SelectItem key={p.id} value={p.id} className="text-xs">
-                  {p.name}
-                </SelectItem>
-              ))}
-          </SelectContent>
-        </Select>
+        {matchType === "doubles" && (
+          <Select value={p2} onValueChange={(v) => setP2(v || "")}>
+            <SelectTrigger className="h-9 text-xs w-full">
+              <SelectValue placeholder="Player 2">
+                {allPlayers.find((p) => p.id === p2)?.name}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              {allPlayers
+                .filter((p) => p.id !== p1)
+                .map((p) => (
+                  <SelectItem key={p.id} value={p.id} className="text-xs">
+                    {p.name}
+                  </SelectItem>
+                ))}
+            </SelectContent>
+          </Select>
+        )}
       </div>
       {error && <p className="text-xs text-destructive">{error}</p>}
       <Button
@@ -489,7 +504,7 @@ function InlineQuickPair({
         size="sm"
         className="h-8 text-xs w-full"
         onClick={handleQuickCreate}
-        disabled={loading || !p1 || !p2 || p1 === p2}
+        disabled={loading || !p1 || (matchType === "doubles" && (!p2 || p1 === p2))}
       >
         {loading ? "Creating..." : "Create & Select"}
       </Button>
@@ -503,6 +518,7 @@ function PairSelector({
   pairs,
   allPlayers,
   sessionId,
+  matchType,
   placeholder,
   onValueChange,
   onPairCreated,
@@ -511,20 +527,26 @@ function PairSelector({
   pairs: any[];
   allPlayers: Player[];
   sessionId: string;
+  matchType: "singles" | "doubles";
   placeholder: string;
   onValueChange: (v: string) => void;
-  onPairCreated: (pairId: string, p1Id: string, p2Id: string) => void;
+  onPairCreated: (pairId: string, p1Id: string, p2Id?: string | null) => void;
 }) {
   const [showQuickAdd, setShowQuickAdd] = useState(false);
 
-  const pairLabel = (pair: any) =>
-    `${pair.player1?.name || "?"} & ${pair.player2?.name || "?"}`;
+  const pairLabel = (pair: any) => {
+    if (matchType === "singles") return pair?.player1?.name || "?";
+    return `${pair?.player1?.name || "?"} & ${pair?.player2?.name || "?"}`;
+  };
+
+  const filteredPairs = matchType === "singles" ? pairs.filter((p) => !p.player2) : pairs.filter((p) => p.player2);
 
   if (showQuickAdd) {
     return (
       <InlineQuickPair
         sessionId={sessionId}
         allPlayers={allPlayers}
+        matchType={matchType}
         onCreated={(pairId, p1Id, p2Id) => {
           setShowQuickAdd(false);
           onPairCreated(pairId, p1Id, p2Id);
@@ -539,11 +561,11 @@ function PairSelector({
       <Select value={value} onValueChange={(v) => onValueChange(v || "")}>
         <SelectTrigger className="h-10 text-xs sm:text-sm">
           <SelectValue placeholder={placeholder}>
-            {value ? pairLabel(pairs.find((p) => p.id === value) || { player1: { name: "New" }, player2: { name: "Pair" } }) : undefined}
+            {value ? pairLabel(filteredPairs.find((p) => p.id === value) || { player1: { name: "New" }, player2: { name: "Pair" } }) : undefined}
           </SelectValue>
         </SelectTrigger>
         <SelectContent>
-          {pairs.map((p) => (
+          {filteredPairs.map((p) => (
             <SelectItem key={p.id} value={p.id} className="text-xs sm:text-sm">
               {pairLabel(p)}
             </SelectItem>
@@ -556,7 +578,7 @@ function PairSelector({
         className="text-[11px] text-primary hover:text-primary/80 font-medium text-left flex items-center gap-1 py-0.5"
       >
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="size-3"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
-        New pair
+        New {matchType === "singles" ? "player" : "pair"}
       </button>
     </div>
   );
@@ -582,6 +604,8 @@ function MatchForm({
   initialPair2Id?: string;
 }) {
   const [bestOf, setBestOf] = useState(initialMatch ? initialMatch.best_of.toString() : "1");
+  const [matchType, setMatchType] = useState<"singles" | "doubles">(initialMatch ? initialMatch.match_type : "doubles");
+  const [isRanked, setIsRanked] = useState<boolean>(initialMatch ? initialMatch.is_ranked : true);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [pairs, setPairs] = useState(initialPairs);
@@ -628,7 +652,7 @@ function MatchForm({
   };
 
   // When a new pair is created inline, refresh the local pairs list
-  const handlePairCreated = (pairId: string, idx: number, side: "pair1" | "pair2", p1Id: string, p2Id: string) => {
+  const handlePairCreated = (pairId: string, idx: number, side: "pair1" | "pair2", p1Id: string, p2Id?: string | null) => {
     // We need to refetch pairs, but since this is a server action result,
     // the page will revalidate. For now, we add the pair optimistically.
     // The pairId is returned from the server action.
@@ -643,11 +667,11 @@ function MatchForm({
     const existingPair = pairs.find(p => p.id === pairId);
     if (!existingPair) {
       const p1Obj = allPlayers.find(p => p.id === p1Id);
-      const p2Obj = allPlayers.find(p => p.id === p2Id);
+      const p2Obj = p2Id ? allPlayers.find(p => p.id === p2Id) : null;
       setPairs(prev => [...prev, {
         id: pairId,
         player1: { name: p1Obj?.name || "New" },
-        player2: { name: p2Obj?.name || "Pair" }
+        player2: p2Obj ? { name: p2Obj.name } : null
       }]);
     }
   };
@@ -686,12 +710,16 @@ function MatchForm({
         session_id: sessionId,
         best_of: parseInt(bestOf),
         games: matchGames,
+        match_type: matchType,
+        is_ranked: isRanked,
       });
     } else {
       result = await createMatch({
         session_id: sessionId,
         best_of: parseInt(bestOf),
         games: matchGames,
+        match_type: matchType,
+        is_ranked: isRanked,
       });
     }
 
@@ -708,23 +736,53 @@ function MatchForm({
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-3 sm:gap-4 overflow-y-auto px-4 pb-4 sm:px-1 sm:pb-1 flex-1">
-      {/* Format selector */}
-      <div className="flex items-center gap-3">
-        <Label className="text-sm shrink-0">Format</Label>
-        <Select value={bestOf} onValueChange={(v) => setBestOf(v || "")}>
-          <SelectTrigger className="h-10 flex-1">
-            <SelectValue>
-              {bestOf === "1" ? "1 Set" : `Best of ${bestOf}`}
-            </SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="1">1 Set</SelectItem>
-            <SelectItem value="3">Best of 3</SelectItem>
-            <SelectItem value="5">Best of 5</SelectItem>
-            <SelectItem value="7">Best of 7</SelectItem>
-            <SelectItem value="9">Best of 9</SelectItem>
-          </SelectContent>
-        </Select>
+      {/* Settings row */}
+      <div className="flex flex-col gap-3">
+        <div className="grid grid-cols-3 gap-3">
+          <div className="flex flex-col gap-1.5">
+            <Label className="text-xs">Type</Label>
+            <Select value={matchType} onValueChange={(v: "singles" | "doubles") => {
+              setMatchType(v);
+              // Clear game selections when changing type since pair requirements change
+              setGames(games.map(g => ({ ...g, pair1_id: "", pair2_id: "" })));
+            }}>
+              <SelectTrigger className="h-9 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="doubles">Doubles</SelectItem>
+                <SelectItem value="singles">Singles</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label className="text-xs">Ranked</Label>
+            <Select value={isRanked ? "yes" : "no"} onValueChange={(v) => setIsRanked(v === "yes")}>
+              <SelectTrigger className="h-9 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="yes">Ranked</SelectItem>
+                <SelectItem value="no">Unranked</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label className="text-xs">Format</Label>
+            <Select value={bestOf} onValueChange={(v) => setBestOf(v || "")}>
+              <SelectTrigger className="h-9 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="1">1 Set</SelectItem>
+                <SelectItem value="3">Best of 3</SelectItem>
+                <SelectItem value="5">Best of 5</SelectItem>
+                <SelectItem value="7">Best of 7</SelectItem>
+                <SelectItem value="9">Best of 9</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
       </div>
 
       <Separator />
@@ -758,7 +816,8 @@ function MatchForm({
                     pairs={pairs}
                     allPlayers={allPlayers}
                     sessionId={sessionId}
-                    placeholder="Pair 1"
+                    matchType={matchType}
+                    placeholder={matchType === "singles" ? "Player 1" : "Pair 1"}
                     onValueChange={(v) => {
                       const newGames = [...games];
                       newGames[idx].pair1_id = v;
@@ -808,7 +867,8 @@ function MatchForm({
                     pairs={pairs}
                     allPlayers={allPlayers}
                     sessionId={sessionId}
-                    placeholder="Pair 2"
+                    matchType={matchType}
+                    placeholder={matchType === "singles" ? "Player 2" : "Pair 2"}
                     onValueChange={(v) => {
                       const newGames = [...games];
                       newGames[idx].pair2_id = v;
