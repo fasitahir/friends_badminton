@@ -741,8 +741,8 @@ function MatchForm({
         <div className="grid grid-cols-3 gap-3">
           <div className="flex flex-col gap-1.5">
             <Label className="text-xs">Type</Label>
-            <Select value={matchType} onValueChange={(v: "singles" | "doubles") => {
-              setMatchType(v);
+            <Select value={matchType} onValueChange={(v) => {
+              setMatchType(v as "singles" | "doubles");
               // Clear game selections when changing type since pair requirements change
               setGames(games.map(g => ({ ...g, pair1_id: "", pair2_id: "" })));
             }}>
