@@ -214,7 +214,7 @@ export default async function PlayerProfilePage({
         {[
           {
             label: "Sets Played",
-            value: stats.setsPlayed,
+            value: Math.ceil(stats.setsPlayed),
             emoji: "🎯",
             gradient: "from-blue-500/20 via-blue-500/8 to-transparent",
             color: "text-blue-400",
@@ -222,7 +222,7 @@ export default async function PlayerProfilePage({
           },
           {
             label: "Wins",
-            value: stats.setsWon,
+            value: Math.ceil(stats.setsWon),
             emoji: "🏆",
             gradient: "from-win/20 via-win/8 to-transparent",
             color: "text-win",
@@ -230,7 +230,7 @@ export default async function PlayerProfilePage({
           },
           {
             label: "Losses",
-            value: stats.setsLost,
+            value: Math.ceil(stats.setsLost),
             emoji: "💔",
             gradient: "from-loss/20 via-loss/8 to-transparent",
             color: "text-loss",

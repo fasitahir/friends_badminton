@@ -176,7 +176,7 @@ function OverviewTab({
             <p className="text-xs text-muted-foreground uppercase tracking-wider">Most Sets</p>
             <p className="text-3xl font-bold font-mono tabular-nums mt-1">
               {stats.length > 0
-                ? Math.max(...stats.map((s) => s.setsPlayed))
+                ? Math.ceil(Math.max(...stats.map((s) => s.setsPlayed)))
                 : 0}
             </p>
           </CardContent>
@@ -240,9 +240,9 @@ function OverviewTab({
                         </span>
                       </div>
                     </td>
-                    <td className="py-3 px-2 text-center font-mono tabular-nums">{s.setsPlayed}</td>
-                    <td className="py-3 px-2 text-center font-mono tabular-nums text-win">{s.setsWon}</td>
-                    <td className="py-3 px-2 text-center font-mono tabular-nums text-loss">{s.setsLost}</td>
+                    <td className="py-3 px-2 text-center font-mono tabular-nums">{Math.ceil(s.setsPlayed)}</td>
+                    <td className="py-3 px-2 text-center font-mono tabular-nums text-win">{Math.ceil(s.setsWon)}</td>
+                    <td className="py-3 px-2 text-center font-mono tabular-nums text-loss">{Math.ceil(s.setsLost)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -309,21 +309,21 @@ function HeadToHeadTab({ players, matches }: { players: Player[]; matches: Match
               <div className="text-center flex-1 min-w-0">
                 <p className="text-base sm:text-2xl font-bold truncate">{result.playerA.name}</p>
                 <p className="text-2xl sm:text-4xl font-bold font-mono tabular-nums text-win mt-2">
-                  {result.playerAWins}
+                  {Math.ceil(result.playerAWins)}
                 </p>
                 <p className="text-xs sm:text-sm text-muted-foreground">set wins</p>
               </div>
               <div className="text-center px-3 sm:px-6 shrink-0">
                 <p className="text-xs sm:text-sm text-muted-foreground">faced</p>
                 <p className="text-2xl sm:text-3xl font-bold font-mono tabular-nums">
-                  {result.timesFaced}
+                  {Math.ceil(result.timesFaced)}
                 </p>
                 <p className="text-xs sm:text-sm text-muted-foreground">sets</p>
               </div>
               <div className="text-center flex-1 min-w-0">
                 <p className="text-base sm:text-2xl font-bold truncate">{result.playerB.name}</p>
                 <p className="text-2xl sm:text-4xl font-bold font-mono tabular-nums text-loss mt-2">
-                  {result.playerBWins}
+                  {Math.ceil(result.playerBWins)}
                 </p>
                 <p className="text-xs sm:text-sm text-muted-foreground">set wins</p>
               </div>
@@ -397,9 +397,9 @@ function PairsTab({ stats }: { stats: ReturnType<typeof computeAllPairStats> }) 
                       <span className="font-mono tabular-nums text-xs w-10 text-right">{s.winRate.toFixed(0)}%</span>
                     </div>
                   </td>
-                  <td className="py-3 px-2 text-center font-mono tabular-nums">{s.setsPlayed}</td>
-                  <td className="py-3 px-2 text-center font-mono tabular-nums text-win">{s.wins}</td>
-                  <td className="py-3 px-2 text-center font-mono tabular-nums text-loss">{s.losses}</td>
+                  <td className="py-3 px-2 text-center font-mono tabular-nums">{Math.ceil(s.setsPlayed)}</td>
+                  <td className="py-3 px-2 text-center font-mono tabular-nums text-win">{Math.ceil(s.wins)}</td>
+                  <td className="py-3 px-2 text-center font-mono tabular-nums text-loss">{Math.ceil(s.losses)}</td>
                 </tr>
               ))}
             </tbody>
