@@ -13,11 +13,20 @@ import {
 
 interface WinRateChartProps {
   data: { name: string; winRate: number; played: number }[];
+  height?: number;
 }
 
-export default function WinRateChart({ data }: WinRateChartProps) {
+export default function WinRateChart({ data, height }: WinRateChartProps) {
+  if (!data || data.length === 0) return null;
+
   return (
-    <ResponsiveContainer width="99%" height="100%" minHeight={1}>
+    <ResponsiveContainer
+      width="100%"
+      height={height ?? "100%"}
+      minWidth={0}
+      minHeight={height ?? 260}
+      initialDimension={{ width: 500, height: height ?? 260 }}
+    >
       <BarChart data={data} layout="vertical" margin={{ left: 20 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
         <XAxis

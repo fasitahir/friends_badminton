@@ -34,88 +34,157 @@ export const CACHE_TAGS = {
 const DEFAULT_REVALIDATE = 60;
 
 /**
+ * Check if Supabase environment variables are configured.
+ */
+export function isSupabaseConfigured(): boolean {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  return Boolean(url && key && url.startsWith("http") && !url.includes("placeholder"));
+}
+
+/**
  * Create a lightweight Supabase client for cached queries.
  * Uses the anon key — safe inside unstable_cache because it doesn't
  * touch cookies() or any other dynamic data source.
+ * Returns null if Supabase environment variables are not configured.
  */
 function createCacheClient() {
-  return createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !key || !url.startsWith("http") || url.includes("placeholder")) {
+    return null;
+  }
+  try {
+    return createBrowserClient(url, key);
+  } catch (err) {
+    console.error("Failed to initialize Supabase cache client:", err);
+    return null;
+  }
 }
 
 // ─── Raw Supabase fetchers (called inside unstable_cache) ────────────────────
 
 async function _fetchPlayers() {
   const supabase = createCacheClient();
-  const { data } = await supabase
-    .from("players")
-    .select("*")
-    .order("name");
-  return data ?? [];
+  if (!supabase) return [];
+  try {
+    const { data } = await supabase
+      .from("players")
+      .select("*")
+      .order("name");
+    return data ?? [];
+  } catch (err) {
+    console.error("Failed to fetch players:", err);
+    return [];
+  }
 }
 
 async function _fetchSessions() {
   const supabase = createCacheClient();
-  const { data } = await supabase
-    .from("sessions")
-    .select("*")
-    .order("date", { ascending: false });
-  return data ?? [];
+  if (!supabase) return [];
+  try {
+    const { data } = await supabase
+      .from("sessions")
+      .select("*")
+      .order("date", { ascending: false });
+    return data ?? [];
+  } catch (err) {
+    console.error("Failed to fetch sessions:", err);
+    return [];
+  }
 }
 
 async function _fetchRecentSessions() {
   const supabase = createCacheClient();
-  const { data } = await supabase
-    .from("sessions")
-    .select("*")
-    .order("date", { ascending: false })
-    .limit(5);
-  return data ?? [];
+  if (!supabase) return [];
+  try {
+    const { data } = await supabase
+      .from("sessions")
+      .select("*")
+      .order("date", { ascending: false })
+      .limit(5);
+    return data ?? [];
+  } catch (err) {
+    console.error("Failed to fetch recent sessions:", err);
+    return [];
+  }
 }
 
 async function _fetchMatchCounts() {
   const supabase = createCacheClient();
-  const { data } = await supabase.from("matches").select("session_id");
-  return data ?? [];
+  if (!supabase) return [];
+  try {
+    const { data } = await supabase.from("matches").select("session_id");
+    return data ?? [];
+  } catch (err) {
+    console.error("Failed to fetch match counts:", err);
+    return [];
+  }
 }
 
 async function _fetchCounts() {
   const supabase = createCacheClient();
-  const [{ count: playerCount }, { count: sessionCount }, { count: matchCount }] =
-    await Promise.all([
-      supabase.from("players").select("*", { count: "exact", head: true }),
-      supabase.from("sessions").select("*", { count: "exact", head: true }),
-      supabase.from("matches").select("*", { count: "exact", head: true }),
-    ]);
-  return {
-    playerCount: playerCount ?? 0,
-    sessionCount: sessionCount ?? 0,
-    matchCount: matchCount ?? 0,
-  };
+  if (!supabase) {
+    return {
+      playerCount: 0,
+      sessionCount: 0,
+      matchCount: 0,
+    };
+  }
+  try {
+    const [{ count: playerCount }, { count: sessionCount }, { count: matchCount }] =
+      await Promise.all([
+        supabase.from("players").select("*", { count: "exact", head: true }),
+        supabase.from("sessions").select("*", { count: "exact", head: true }),
+        supabase.from("matches").select("*", { count: "exact", head: true }),
+      ]);
+    return {
+      playerCount: playerCount ?? 0,
+      sessionCount: sessionCount ?? 0,
+      matchCount: matchCount ?? 0,
+    };
+  } catch (err) {
+    console.error("Failed to fetch aggregate counts:", err);
+    return {
+      playerCount: 0,
+      sessionCount: 0,
+      matchCount: 0,
+    };
+  }
 }
 
 async function _fetchMatchesWithDetails() {
   const supabase = createCacheClient();
-  const { data } = await supabase
-    .from("matches")
-    .select(
-      `*, games:match_games(*, pair1:pairs!match_games_pair1_id_fkey(*, player1:players!pairs_player1_id_fkey(*), player2:players!pairs_player2_id_fkey(*)), pair2:pairs!match_games_pair2_id_fkey(*, player1:players!pairs_player1_id_fkey(*), player2:players!pairs_player2_id_fkey(*)))`
-    )
-    .order("created_at", { ascending: false });
-  return data ?? [];
+  if (!supabase) return [];
+  try {
+    const { data } = await supabase
+      .from("matches")
+      .select(
+        `*, games:match_games(*, pair1:pairs!match_games_pair1_id_fkey(*, player1:players!pairs_player1_id_fkey(*), player2:players!pairs_player2_id_fkey(*)), pair2:pairs!match_games_pair2_id_fkey(*, player1:players!pairs_player1_id_fkey(*), player2:players!pairs_player2_id_fkey(*)))`
+      )
+      .order("created_at", { ascending: false });
+    return data ?? [];
+  } catch (err) {
+    console.error("Failed to fetch matches with details:", err);
+    return [];
+  }
 }
 
 async function _fetchAnalyticsMatches() {
   const supabase = createCacheClient();
-  const { data } = await supabase
-    .from("matches")
-    .select(
-      `*, team1:teams!matches_team1_id_fkey(*), team2:teams!matches_team2_id_fkey(*), winning_team:teams!matches_winning_team_id_fkey(*), games:match_games(*, pair1:pairs!match_games_pair1_id_fkey(*, player1:players!pairs_player1_id_fkey(*), player2:players!pairs_player2_id_fkey(*)), pair2:pairs!match_games_pair2_id_fkey(*, player1:players!pairs_player1_id_fkey(*), player2:players!pairs_player2_id_fkey(*)), winning_pair:pairs!match_games_winning_pair_id_fkey(*, player1:players!pairs_player1_id_fkey(*), player2:players!pairs_player2_id_fkey(*)))`
-    )
-    .order("created_at", { ascending: false });
-  return data ?? [];
+  if (!supabase) return [];
+  try {
+    const { data } = await supabase
+      .from("matches")
+      .select(
+        `*, team1:teams!matches_team1_id_fkey(*), team2:teams!matches_team2_id_fkey(*), winning_team:teams!matches_winning_team_id_fkey(*), games:match_games(*, pair1:pairs!match_games_pair1_id_fkey(*, player1:players!pairs_player1_id_fkey(*), player2:players!pairs_player2_id_fkey(*)), pair2:pairs!match_games_pair2_id_fkey(*, player1:players!pairs_player1_id_fkey(*), player2:players!pairs_player2_id_fkey(*)), winning_pair:pairs!match_games_winning_pair_id_fkey(*, player1:players!pairs_player1_id_fkey(*), player2:players!pairs_player2_id_fkey(*)))`
+      )
+      .order("created_at", { ascending: false });
+    return data ?? [];
+  } catch (err) {
+    console.error("Failed to fetch analytics matches:", err);
+    return [];
+  }
 }
 
 // ─── Cached versions (server-side LRU, 60 s TTL) ─────────────────────────────
@@ -193,29 +262,41 @@ export const getAnalyticsMatches = cache(cachedFetchAnalyticsMatches);
 /** Returns list of saved month strings ['2026-06', '2026-05', ...] */
 async function _fetchSavedMonths() {
   const supabase = createCacheClient();
-  const { data } = await supabase
-    .from("monthly_snapshots")
-    .select("month")
-    .order("month", { ascending: false });
-  if (!data) return [] as string[];
-  // Deduplicate months and format as YYYY-MM
-  const seen = new Set<string>();
-  for (const row of data) {
-    seen.add((row.month as string).slice(0, 7));
+  if (!supabase) return [] as string[];
+  try {
+    const { data } = await supabase
+      .from("monthly_snapshots")
+      .select("month")
+      .order("month", { ascending: false });
+    if (!data) return [] as string[];
+    // Deduplicate months and format as YYYY-MM
+    const seen = new Set<string>();
+    for (const row of data) {
+      seen.add((row.month as string).slice(0, 7));
+    }
+    return Array.from(seen);
+  } catch (err) {
+    console.error("Failed to fetch saved months:", err);
+    return [] as string[];
   }
-  return Array.from(seen);
 }
 
 /** Returns ranked leaderboard rows for a given month (YYYY-MM). */
 async function _fetchMonthlyLeaderboard(yearMonth: string) {
   const supabase = createCacheClient();
-  const monthDate = `${yearMonth}-01`;
-  const { data } = await supabase
-    .from("monthly_snapshots")
-    .select("*, player:players(*)")
-    .eq("month", monthDate)
-    .order("win_rate", { ascending: false });
-  return (data ?? []) as any[];
+  if (!supabase) return [] as any[];
+  try {
+    const monthDate = `${yearMonth}-01`;
+    const { data } = await supabase
+      .from("monthly_snapshots")
+      .select("*, player:players(*)")
+      .eq("month", monthDate)
+      .order("win_rate", { ascending: false });
+    return (data ?? []) as any[];
+  } catch (err) {
+    console.error("Failed to fetch monthly leaderboard:", err);
+    return [] as any[];
+  }
 }
 
 const cachedFetchSavedMonths = unstable_cache(
@@ -244,18 +325,24 @@ export const getMonthlyLeaderboard = cache(cachedFetchMonthlyLeaderboard);
  */
 export async function getSessionSchedule(sessionId: string) {
   const supabase = createCacheClient();
-  const { data } = await supabase
-    .from("session_schedule")
-    .select(
-      `*,
-       t1_player1:players!session_schedule_t1_player1_id_fkey(*),
-       t1_player2:players!session_schedule_t1_player2_id_fkey(*),
-       t2_player1:players!session_schedule_t2_player1_id_fkey(*),
-       t2_player2:players!session_schedule_t2_player2_id_fkey(*),
-       sitting_out:players!session_schedule_sitting_out_player_id_fkey(*)`
-    )
-    .eq("session_id", sessionId)
-    .order("match_order", { ascending: true });
-  return data ?? [];
+  if (!supabase) return [];
+  try {
+    const { data } = await supabase
+      .from("session_schedule")
+      .select(
+        `*,
+         t1_player1:players!session_schedule_t1_player1_id_fkey(*),
+         t1_player2:players!session_schedule_t1_player2_id_fkey(*),
+         t2_player1:players!session_schedule_t2_player1_id_fkey(*),
+         t2_player2:players!session_schedule_t2_player2_id_fkey(*),
+         sitting_out:players!session_schedule_sitting_out_player_id_fkey(*)`
+      )
+      .eq("session_id", sessionId)
+      .order("match_order", { ascending: true });
+    return data ?? [];
+  } catch (err) {
+    console.error("Failed to fetch session schedule:", err);
+    return [];
+  }
 }
 

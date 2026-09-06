@@ -44,7 +44,14 @@ export default async function RootLayout({
 }>) {
   const isAdmin = await getIsAdmin();
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseHostname = supabaseUrl ? new URL(supabaseUrl).hostname : null;
+  let supabaseHostname: string | null = null;
+  if (supabaseUrl) {
+    try {
+      supabaseHostname = new URL(supabaseUrl).hostname;
+    } catch {
+      supabaseHostname = null;
+    }
+  }
 
   return (
     <html
@@ -61,7 +68,7 @@ export default async function RootLayout({
           </>
         )}
       </head>
-      <body className="min-h-full flex relative font-sans">
+      <body className="min-h-full flex relative font-sans" suppressHydrationWarning>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <TooltipProvider>
             <Sidebar isAdmin={isAdmin} />

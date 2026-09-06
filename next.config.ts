@@ -1,8 +1,14 @@
 import type { NextConfig } from "next";
 
-const supabaseHostname = process.env.NEXT_PUBLIC_SUPABASE_URL
-  ? new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).hostname
-  : "";
+const supabaseHostname = (() => {
+  try {
+    return process.env.NEXT_PUBLIC_SUPABASE_URL
+      ? new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).hostname
+      : "";
+  } catch {
+    return "";
+  }
+})();
 
 const nextConfig: NextConfig = {
   // React Compiler (Forget) — memoises components automatically
@@ -28,17 +34,8 @@ const nextConfig: NextConfig = {
     if (process.env.NODE_ENV === "development") {
       return [];
     }
-    return [
-      {
-        // Immutable cache for hashed static assets (JS, CSS, fonts, images)
-        source: "/_next/static/:path*",
-        headers: [
-          {
-            key: "Cache-Control",
-            value: "public, max-age=31536000, immutable",
-          },
-        ],
-      },
+
+    const rules = [
       {
         // Cache favicons for a week
         source: "/favicon.ico",
@@ -49,19 +46,22 @@ const nextConfig: NextConfig = {
           },
         ],
       },
-      {
+    ];
+
+    if (supabaseHostname) {
+      rules.push({
         // Preconnect to Supabase for all page responses
         source: "/(.*)",
-        headers: supabaseHostname
-          ? [
-              {
-                key: "Link",
-                value: `<https://${supabaseHostname}>; rel=preconnect, <https://${supabaseHostname}>; rel=dns-prefetch`,
-              },
-            ]
-          : [],
-      },
-    ];
+        headers: [
+          {
+            key: "Link",
+            value: `<https://${supabaseHostname}>; rel=preconnect, <https://${supabaseHostname}>; rel=dns-prefetch`,
+          },
+        ],
+      });
+    }
+
+    return rules;
   },
 };
 

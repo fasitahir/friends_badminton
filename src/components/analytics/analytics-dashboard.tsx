@@ -24,7 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Eye, EyeOff } from "lucide-react";
 
 // Lazy-load win rate chart (~200KB recharts) — only loaded when analytics page is visited
 const WinRateChart = dynamic(
@@ -43,21 +43,48 @@ interface AnalyticsDashboardProps {
 }
 
 export function AnalyticsDashboard({ players, matches }: AnalyticsDashboardProps) {
+  // --- Temp player toggle ---
+  const [showTemp, setShowTemp] = useState(false);
+
+  const tempCount = useMemo(
+    () => players.filter((p) => (p as any).is_temporary).length,
+    [players]
+  );
+
+  // Filter players & matches based on toggle
+  const filteredPlayers = useMemo(
+    () => (showTemp ? players : players.filter((p) => !(p as any).is_temporary)),
+    [players, showTemp]
+  );
+
+  const filteredMatches = useMemo(() => {
+    if (showTemp) return matches;
+    const permIds = new Set(players.filter((p) => !(p as any).is_temporary).map((p) => p.id));
+    return matches.filter((m) => {
+      const allPlayerIds = m.games.flatMap((g) => [
+        g.pair1?.player1_id,
+        g.pair1?.player2_id,
+        g.pair2?.player1_id,
+        g.pair2?.player2_id,
+      ]);
+      return allPlayerIds.every((id) => !id || permIds.has(id));
+    });
+  }, [matches, players, showTemp]);
+
   const allPlayerStats = useMemo(
-    () => computeAllPlayerStats(players, matches),
-    [players, matches]
+    () => computeAllPlayerStats(filteredPlayers, filteredMatches),
+    [filteredPlayers, filteredMatches]
   );
 
   const allPairStats = useMemo(
-    () => computeAllPairStats(players, matches),
-    [players, matches]
+    () => computeAllPairStats(filteredPlayers, filteredMatches),
+    [filteredPlayers, filteredMatches]
   );
-
 
   // A helper to get the total number of sets played across all matches
   const totalSetsPlayed = useMemo(() => {
-    return matches.reduce((acc, m) => acc + m.games.filter(g => g.winning_pair_id).length, 0);
-  }, [matches]);
+    return filteredMatches.reduce((acc, m) => acc + m.games.filter(g => g.winning_pair_id).length, 0);
+  }, [filteredMatches]);
 
   if (players.length === 0) {
     return (
@@ -73,21 +100,52 @@ export function AnalyticsDashboard({ players, matches }: AnalyticsDashboardProps
 
   return (
     <Tabs defaultValue="overview" className="w-full">
-      <div className="relative w-full">
-        <div className="overflow-x-auto -mx-3 sm:mx-0 px-3 sm:px-0 scrollbar-none">
-          <TabsList className="flex !h-auto w-max sm:w-full sm:flex-wrap justify-start gap-1 p-1 bg-muted/50">
-            <TabsTrigger value="overview" className="h-8 text-xs sm:text-sm shrink-0">Overview</TabsTrigger>
-            <TabsTrigger value="head-to-head" className="h-8 text-xs sm:text-sm shrink-0">Head-to-Head</TabsTrigger>
-            <TabsTrigger value="pairs" className="h-8 text-xs sm:text-sm shrink-0">Pairs</TabsTrigger>
-            <TabsTrigger value="pair-vs-pair" className="h-8 text-xs sm:text-sm shrink-0">Pair vs Pair</TabsTrigger>
-            <TabsTrigger value="partners" className="h-8 text-xs sm:text-sm shrink-0">Best Partners</TabsTrigger>
-            <TabsTrigger value="opponents" className="h-8 text-xs sm:text-sm shrink-0">Toughest Opponents</TabsTrigger>
-          </TabsList>
+      {/* Toolbar: tab strip + temp player toggle */}
+      <div className="flex flex-col sm:flex-row sm:items-start gap-3 mb-1">
+        <div className="relative flex-1 min-w-0">
+          <div className="overflow-x-auto -mx-3 sm:mx-0 px-3 sm:px-0 scrollbar-none">
+            <TabsList className="flex !h-auto w-max sm:w-full sm:flex-wrap justify-start gap-1 p-1 bg-muted/50">
+              <TabsTrigger value="overview" className="h-8 text-xs sm:text-sm shrink-0">Overview</TabsTrigger>
+              <TabsTrigger value="head-to-head" className="h-8 text-xs sm:text-sm shrink-0">Head-to-Head</TabsTrigger>
+              <TabsTrigger value="pairs" className="h-8 text-xs sm:text-sm shrink-0">Pairs</TabsTrigger>
+              <TabsTrigger value="pair-vs-pair" className="h-8 text-xs sm:text-sm shrink-0">Pair vs Pair</TabsTrigger>
+              <TabsTrigger value="partners" className="h-8 text-xs sm:text-sm shrink-0">Best Partners</TabsTrigger>
+              <TabsTrigger value="opponents" className="h-8 text-xs sm:text-sm shrink-0">Toughest Opponents</TabsTrigger>
+            </TabsList>
+          </div>
+          {/* C5 fix: removed animate-pulse (no reduced-motion guard). Replaced with a
+              static pointer icon that's always visible; pulse is too distracting for a static page. */}
+          <div className="sm:hidden absolute right-0 top-1/2 -translate-y-1/2 flex items-center justify-center h-8 w-8 bg-gradient-to-l from-background to-transparent pointer-events-none pr-1">
+            <ChevronRight className="size-4 text-muted-foreground/80" />
+          </div>
         </div>
-        {/* Mobile scroll-right indicator */}
-        <div className="sm:hidden absolute right-0 top-1/2 -translate-y-1/2 flex items-center justify-center h-8 w-8 bg-gradient-to-l from-background to-transparent pointer-events-none pr-1">
-          <ChevronRight className="size-4 text-muted-foreground/80 animate-pulse" />
-        </div>
+
+        {/* Temp player toggle — only shown when temp players exist */}
+        {tempCount > 0 && (
+          <button
+            id="analytics-temp-player-toggle"
+            type="button"
+            onClick={() => setShowTemp((v) => !v)}
+            className="flex items-center gap-2 px-3 h-8 border font-mono text-xs uppercase tracking-wider transition-colors duration-150 shrink-0"
+            style={{
+              borderColor: showTemp ? "var(--color-temp)" : "var(--border)",
+              color: showTemp ? "var(--color-temp)" : "var(--muted-foreground)",
+              background: showTemp ? "color-mix(in oklch, var(--color-temp) 10%, transparent)" : "transparent",
+            }}
+            aria-pressed={showTemp}
+            aria-label={showTemp ? "Hide temporary players" : "Show temporary players"}
+          >
+            {showTemp ? (
+              <Eye className="size-3.5 shrink-0" strokeWidth={1.5} />
+            ) : (
+              <EyeOff className="size-3.5 shrink-0" strokeWidth={1.5} />
+            )}
+            <span className="whitespace-nowrap">
+              {showTemp ? "Incl. Temp" : "Excl. Temp"}
+              <span className="ml-1.5 opacity-60">({tempCount})</span>
+            </span>
+          </button>
+        )}
       </div>
 
       {/* ==================== OVERVIEW ==================== */}
@@ -97,7 +155,7 @@ export function AnalyticsDashboard({ players, matches }: AnalyticsDashboardProps
 
       {/* ==================== HEAD-TO-HEAD ==================== */}
       <TabsContent value="head-to-head" className="mt-6">
-        <HeadToHeadTab players={players} matches={matches} />
+        <HeadToHeadTab players={filteredPlayers} matches={filteredMatches} />
       </TabsContent>
 
       {/* ==================== PAIRS ==================== */}
@@ -107,17 +165,17 @@ export function AnalyticsDashboard({ players, matches }: AnalyticsDashboardProps
 
       {/* ==================== PAIR VS PAIR ==================== */}
       <TabsContent value="pair-vs-pair" className="mt-6">
-        <PairVsPairTab players={players} matches={matches} />
+        <PairVsPairTab players={filteredPlayers} matches={filteredMatches} />
       </TabsContent>
 
       {/* ==================== BEST PARTNERS ==================== */}
       <TabsContent value="partners" className="mt-6">
-        <BestPartnersTab players={players} matches={matches} />
+        <BestPartnersTab players={filteredPlayers} matches={filteredMatches} />
       </TabsContent>
 
       {/* ==================== TOUGHEST OPPONENTS ==================== */}
       <TabsContent value="opponents" className="mt-6">
-        <ToughestOpponentsTab players={players} matches={matches} />
+        <ToughestOpponentsTab players={filteredPlayers} matches={filteredMatches} />
       </TabsContent>
 
     </Tabs>
@@ -190,8 +248,11 @@ function OverviewTab({
             <CardTitle>Win Rate by Player</CardTitle>
           </CardHeader>
           <CardContent>
-            <div style={{ height: `${Math.max(260, chartData.length * 30)}px` }} className="w-full text-foreground">
-              <WinRateChart data={chartData} />
+            <div
+              style={{ minHeight: `${Math.max(260, chartData.length * 30)}px`, height: `${Math.max(260, chartData.length * 30)}px` }}
+              className="w-full min-w-0 text-foreground"
+            >
+              <WinRateChart data={chartData} height={Math.max(260, chartData.length * 30)} />
             </div>
           </CardContent>
         </Card>

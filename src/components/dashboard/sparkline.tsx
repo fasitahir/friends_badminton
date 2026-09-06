@@ -1,13 +1,13 @@
 "use client";
 
-import { LineChart, Line, ResponsiveContainer, YAxis } from "recharts";
+import { LineChart, Line, YAxis } from "recharts";
 
 interface SparklineProps {
   data: number[];
 }
 
 export function Sparkline({ data }: SparklineProps) {
-  if (!data || data.length < 2) return <div className="w-16 h-6" />;
+  if (!data || data.length < 2) return <div className="w-16 h-8" />;
 
   const chartData = data.map((val, i) => ({ index: i, value: val }));
   
@@ -17,20 +17,23 @@ export function Sparkline({ data }: SparklineProps) {
   const padding = (max - min) * 0.1 || 10;
 
   return (
-    <div className="w-16 h-8 opacity-60 grayscale hover:grayscale-0 hover:opacity-100 transition-all">
-      <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={chartData}>
-          <YAxis domain={[min - padding, max + padding]} hide />
-          <Line
-            type="monotone"
-            dataKey="value"
-            stroke="currentColor"
-            strokeWidth={1.5}
-            dot={false}
-            isAnimationActive={false}
-          />
-        </LineChart>
-      </ResponsiveContainer>
+    <div className="w-16 h-8 opacity-60 grayscale hover:grayscale-0 hover:opacity-100 transition-all shrink-0 flex items-center justify-center">
+      <LineChart
+        width={64}
+        height={32}
+        data={chartData}
+        margin={{ top: 2, right: 2, bottom: 2, left: 2 }}
+      >
+        <YAxis domain={[min - padding, max + padding]} hide />
+        <Line
+          type="monotone"
+          dataKey="value"
+          stroke="currentColor"
+          strokeWidth={1.5}
+          dot={false}
+          isAnimationActive={false}
+        />
+      </LineChart>
     </div>
   );
 }

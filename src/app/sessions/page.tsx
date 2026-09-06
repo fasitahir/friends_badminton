@@ -29,17 +29,15 @@ export default async function SessionsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-start justify-between">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-2xl">📅</span>
-            <h1 className="text-2xl sm:text-3xl font-heading font-bold tracking-tight gradient-text">
-              Sessions
-            </h1>
-          </div>
-          <p className="text-muted-foreground text-sm">
-            Track your badminton gatherings & matches · {sessionsWithCounts.length} sessions
+      <div className="flex flex-col">
+        <h1 className="text-3xl sm:text-4xl font-heading tracking-tight uppercase mb-1">
+          Sessions
+        </h1>
+        <div className="flex items-center gap-4">
+          <p className="text-muted-foreground font-mono text-xs tracking-widest uppercase">
+            {sessionsWithCounts.length} sessions recorded
           </p>
+          <div className="flex-1 h-px bg-border hidden sm:block" />
         </div>
       </div>
       <SessionList sessions={sessionsWithCounts} isAdmin={isAdmin} />

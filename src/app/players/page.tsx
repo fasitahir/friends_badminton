@@ -84,8 +84,8 @@ export default async function PlayersPage() {
           Players
         </h1>
         <div className="flex items-center gap-4">
-          <p className="text-muted-foreground font-mono text-sm tracking-widest uppercase">
-            [Squad Registry: {enrichedPlayers.length} Active]
+          <p className="text-muted-foreground font-mono text-xs tracking-widest uppercase">
+            Squad Registry &mdash; {enrichedPlayers.length} Active
           </p>
           <div className="flex-1 h-px bg-border hidden sm:block" />
         </div>

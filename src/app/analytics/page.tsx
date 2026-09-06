@@ -18,16 +18,16 @@ export default async function AnalyticsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <div className="flex items-center gap-2 mb-1">
-          <span className="text-2xl">📊</span>
-          <h1 className="text-2xl sm:text-3xl font-heading font-bold tracking-tight gradient-text">
-            Analytics
-          </h1>
+      <div className="flex flex-col">
+        <h1 className="text-3xl sm:text-4xl font-heading tracking-tight uppercase mb-1">
+          Analytics
+        </h1>
+        <div className="flex items-center gap-4">
+          <p className="text-muted-foreground font-mono text-xs tracking-widest uppercase">
+            Performance, partnerships &amp; rivalries
+          </p>
+          <div className="flex-1 h-px bg-border hidden sm:block" />
         </div>
-        <p className="text-muted-foreground text-sm">
-          Deep dive into performance, partnerships & rivalries ⚡
-        </p>
       </div>
       <AnalyticsDashboard
         players={(players || []) as Player[]}

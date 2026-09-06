@@ -4,6 +4,7 @@ import {
   getPlayers,
   getMatchesWithDetails,
   getSavedMonths,
+  isSupabaseConfigured,
 } from "@/lib/data";
 import Link from "next/link";
 import { LeaderboardTabs } from "@/components/dashboard/leaderboard-tabs";
@@ -202,6 +203,8 @@ export default async function DashboardPage() {
     },
   ];
 
+  const isConfigured = isSupabaseConfigured();
+
   return (
     <div className="flex flex-col gap-8">
       {/* Header Panel (Bridged to Stats) */}
@@ -210,28 +213,62 @@ export default async function DashboardPage() {
           Badminton Log
         </h1>
         <div className="flex items-center gap-4">
-          <p className="text-muted-foreground font-mono text-sm tracking-widest uppercase">
-            [System Status: Active]
+          <p className="text-muted-foreground font-mono text-xs tracking-widest uppercase">
+            System Status: {isConfigured ? "Active" : "Unconnected (Demo Mode)"}
           </p>
           <div className="flex-1 h-px bg-border hidden sm:block" />
         </div>
       </div>
 
-      {/* Stat Blocks (Instrument Cluster) */}
-      <div className="flex flex-row flex-wrap items-center border-y border-border py-6 bg-muted/5">
+      {!isConfigured && (
+        <div className="border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <span className="font-mono text-amber-600 dark:text-amber-400 font-bold uppercase text-xs tracking-wider">
+              [ Setup Notice ]
+            </span>
+            <span className="text-foreground/80 text-xs font-mono">
+              Supabase is not configured. Add your credentials to <code className="text-foreground bg-muted px-1.5 py-0.5 font-mono rounded">.env.local</code> to connect your live data.
+            </span>
+          </div>
+          <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider whitespace-nowrap">
+            Showing empty state
+          </span>
+        </div>
+      )}
+
+      {/* Stat Blocks (Instrument Cluster) — C2 fix: grid kills 320px overflow */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 border-y border-border bg-muted/5">
         {statCards.map((stat, i) => (
-          <div 
-            key={stat.label} 
-            className="flex flex-col flex-1 min-w-[140px] px-4 sm:px-8 border-r border-border last:border-r-0"
+          <div
+            key={stat.label}
+            className="flex flex-col px-4 py-6 sm:px-8 border-r border-border last:border-r-0 [&:nth-child(2)]:border-r-0 sm:[&:nth-child(2)]:border-r"
           >
-            <span className={`text-[10px] font-mono uppercase tracking-[0.2em] mb-2 ${stat.highlight ? "text-yellow-600 dark:text-yellow-500" : "text-muted-foreground"}`}>
+            {/* m2 fix: --color-elo token replaces raw yellow-* */}
+            <span
+              className="text-[10px] font-mono uppercase tracking-[0.2em] mb-2 text-muted-foreground"
+              style={stat.highlight ? { color: "var(--color-elo)" } : undefined}
+            >
               {stat.label}
             </span>
-            <div className={`font-mono text-3xl sm:text-4xl ${stat.highlight ? "text-yellow-600 dark:text-yellow-500 drop-shadow-sm dark:drop-shadow-[0_0_8px_rgba(234,179,8,0.5)]" : "text-foreground"}`}>
+            <div
+              className="font-mono text-3xl sm:text-4xl text-foreground"
+              style={
+                stat.highlight
+                  ? {
+                      color: "var(--color-elo)",
+                      /* m1 fix: glow uses named token, no raw rgba */
+                      filter: "drop-shadow(0 0 8px var(--color-elo-glow))",
+                    }
+                  : undefined
+              }
+            >
               {stat.value}
             </div>
             {stat.subValue && (
-              <div className={`text-xs font-mono uppercase mt-1 ${stat.highlight ? "text-yellow-600/80 dark:text-yellow-500/80" : "text-muted-foreground"}`}>
+              <div
+                className="text-xs font-mono uppercase mt-1 text-muted-foreground"
+                style={stat.highlight ? { color: "var(--color-elo)" } : undefined}
+              >
                 {stat.subValue}
               </div>
             )}
@@ -239,8 +276,9 @@ export default async function DashboardPage() {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        <div className="lg:col-span-8">
+      {/* M5 fix: md breakpoint added — tablet no longer stacks both columns full-width */}
+      <div className="grid grid-cols-1 md:grid-cols-5 lg:grid-cols-12 gap-8">
+        <div className="md:col-span-3 lg:col-span-8">
           <LeaderboardTabs 
             players={enrichedPlayers.filter((p: any) => !p.is_temporary)}
             availableMonths={availableMonths}
@@ -251,7 +289,7 @@ export default async function DashboardPage() {
         </div>
 
         {/* Recent Sessions */}
-        <div className="lg:col-span-4 flex flex-col">
+        <div className="md:col-span-2 lg:col-span-4 flex flex-col">
           <div className="pb-4 mb-2 border-b border-border">
             <h2 className="text-sm font-mono uppercase tracking-[0.2em] text-foreground font-semibold">
               Recent Log

@@ -1,0 +1,80 @@
+/*
+ * tokens.css — Hallmark portable token export
+ * Project: friends_badminton
+ * Genre: atmospheric · Theme: custom (dark sports telemetry)
+ * Generated: 2026-09-06
+ *
+ * Import this file anywhere to re-use this design system.
+ * All values are OKLCH for perceptual uniformity.
+ */
+
+:root {
+
+  /* ─── Paper & Surfaces ────────────────────────────────────────── */
+  --color-paper:      oklch(97% 0.006 60);   /* base surface, light mode */
+  --color-paper-2:    oklch(93% 0.007 50);   /* raised surface */
+  --color-paper-dark: oklch(11% 0.008 27);   /* base surface, dark mode */
+  --color-paper-dark-2: oklch(15% 0.008 27); /* raised surface, dark */
+
+  /* ─── Ink ─────────────────────────────────────────────────────── */
+  --color-ink:        oklch(16% 0.010 30);   /* primary text, light */
+  --color-ink-dark:   oklch(92% 0.006 60);   /* primary text, dark */
+  --color-muted:      oklch(44% 0.008 40);   /* secondary text, light */
+  --color-muted-dark: oklch(56% 0.008 40);   /* secondary text, dark */
+
+  /* ─── Accent ──────────────────────────────────────────────────── */
+  --color-accent:       oklch(50% 0.22 27);  /* aviation red, light mode */
+  --color-accent-dark:  oklch(56% 0.22 27);  /* aviation red, dark mode */
+  --color-accent-ink:   oklch(97% 0.004 27); /* text on accent surfaces */
+
+  /* ─── Win / Loss ──────────────────────────────────────────────── */
+  --color-win:          oklch(56% 0.18 145); /* light mode */
+  --color-loss:         oklch(54% 0.20 27);  /* light mode (same as accent) */
+  --color-win-dark:     oklch(62% 0.18 145);
+  --color-loss-dark:    oklch(60% 0.20 27);
+
+  /* ─── Rule & Focus ────────────────────────────────────────────── */
+  --color-rule:         oklch(84% 0.008 50); /* border, light */
+  --color-rule-dark:    oklch(22% 0.008 30); /* border, dark */
+  --color-focus:        oklch(70% 0.010 40); /* focus ring, light */
+  --color-focus-dark:   oklch(38% 0.010 30); /* focus ring, dark */
+
+  /* ─── Cold stripe (leaderboard) ───────────────────────────────── */
+  --color-cold-stripe:      oklch(62% 0.17 220);
+  --color-cold-stripe-dark: oklch(65% 0.17 220);
+
+  /* ─── Glow ambients ───────────────────────────────────────────── */
+  --color-fire-glow:        oklch(70% 0.15 50 / 0.10);
+  --color-fire-glow-strong: oklch(70% 0.15 50 / 0.20);
+  --color-cold-glow:        oklch(62% 0.17 220 / 0.15);
+  --color-cold-glow-strong: oklch(62% 0.17 220 / 0.35);
+
+  /* ─── Typography ──────────────────────────────────────────────── */
+  --font-display: "Space Grotesk", system-ui, sans-serif;
+  --font-body:    "Geist", "GeistSans", system-ui, sans-serif;
+  --font-outlier: "Geist Mono", "GeistMono", ui-monospace, monospace;
+
+  /* ─── Spacing (4pt scale) ─────────────────────────────────────── */
+  --space-3xs: 0.25rem;   /*  4px */
+  --space-2xs: 0.5rem;    /*  8px */
+  --space-xs:  0.75rem;   /* 12px */
+  --space-sm:  1rem;      /* 16px */
+  --space-md:  1.5rem;    /* 24px */
+  --space-lg:  2rem;      /* 32px */
+  --space-xl:  3rem;      /* 48px */
+  --space-2xl: 4.5rem;    /* 72px */
+  --space-3xl: 7rem;      /* 112px */
+
+  /* ─── Easings ─────────────────────────────────────────────────── */
+  --ease-out:    cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in:     cubic-bezier(0.7, 0, 0.84, 0);
+  --ease-in-out: cubic-bezier(0.45, 0, 0.55, 1);
+  --dur-short:   180ms;
+  --dur-med:     300ms;
+
+  /* ─── Radii ───────────────────────────────────────────────────── */
+  --radius-card:  0px;   /* sharp — zero-radius telemetry aesthetic */
+  --radius-pill:  9999px;
+  --radius-input: 0px;
+
+}

@@ -4,91 +4,64 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { logout } from "@/app/actions";
-import { LogIn, LogOut } from "lucide-react";
+import {
+  LayoutDashboard,
+  Users,
+  CalendarDays,
+  BarChart2,
+  LogIn,
+  LogOut,
+} from "lucide-react";
 import { ThemeToggle } from "./theme-toggle";
 
 const navItems = [
   {
     label: "Dashboard",
     href: "/",
-    emoji: "🏠",
-    icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-4">
-        <rect width="7" height="9" x="3" y="3" rx="1" />
-        <rect width="7" height="5" x="14" y="3" rx="1" />
-        <rect width="7" height="9" x="14" y="12" rx="1" />
-        <rect width="7" height="5" x="3" y="16" rx="1" />
-      </svg>
-    ),
+    Icon: LayoutDashboard,
+    shortLabel: "Home",
   },
   {
     label: "Players",
     href: "/players",
-    emoji: "🏸",
-    icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-4">
-        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-        <circle cx="9" cy="7" r="4" />
-        <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-      </svg>
-    ),
+    Icon: Users,
+    shortLabel: "Players",
   },
   {
     label: "Sessions",
     href: "/sessions",
-    emoji: "📅",
-    icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-4">
-        <path d="M8 2v4" />
-        <path d="M16 2v4" />
-        <rect width="18" height="18" x="3" y="4" rx="2" />
-        <path d="M3 10h18" />
-      </svg>
-    ),
+    Icon: CalendarDays,
+    shortLabel: "Sessions",
   },
   {
     label: "Analytics",
     href: "/analytics",
-    emoji: "📊",
-    icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-4">
-        <path d="M3 3v18h18" />
-        <path d="m19 9-5 5-4-4-3 3" />
-      </svg>
-    ),
+    Icon: BarChart2,
+    shortLabel: "Stats",
   },
-
 ];
 
 export function Sidebar({ isAdmin }: { isAdmin?: boolean }) {
   const pathname = usePathname();
 
   return (
-    <aside className="hidden md:flex md:flex-col md:w-64 border-r border-sidebar-border bg-sidebar min-h-screen relative overflow-hidden">
-      {/* Background court pattern */}
-      <div className="absolute inset-0 court-bg pointer-events-none opacity-50" />
-
-      {/* Logo */}
-      <div className="relative flex items-center gap-3 px-5 py-5 border-b border-sidebar-border">
-        <div className="size-10 rounded-xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center neon-glow-sm shrink-0">
-          <span className="text-xl leading-none">🏸</span>
-        </div>
-        <div className="flex-1 min-w-0">
-          <h1 className="font-heading font-bold text-base tracking-tight text-sidebar-foreground truncate">
+    <aside className="hidden md:flex md:flex-col md:w-56 border-r border-sidebar-border bg-sidebar min-h-screen relative">
+      {/* Wordmark — M6 fix: was h1, causing double-h1 across every page */}
+      <div className="flex items-center justify-between px-5 py-5 border-b border-sidebar-border">
+        <div className="flex flex-col gap-0.5">
+          <span className="font-heading font-semibold text-sm tracking-tight text-sidebar-foreground leading-none">
             Shuttle Stats
-          </h1>
-          <p className="text-[10px] text-primary/70 font-medium uppercase tracking-widest truncate">Badminton Analytics</p>
+          </span>
+          <p className="text-[10px] text-muted-foreground font-mono uppercase tracking-widest leading-none">
+            Badminton Analytics
+          </p>
         </div>
-        <div className="shrink-0">
-          <ThemeToggle />
-        </div>
+        <ThemeToggle />
       </div>
 
       {/* Navigation */}
-      <nav className="relative flex-1 px-3 py-4">
-        <p className="px-3 mb-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/50">Menu</p>
-        <ul className="flex flex-col gap-1">
+      <nav className="flex-1 px-3 py-4">
+        <ul className="flex flex-col gap-0.5">
           {navItems.map((item) => {
             const isActive =
               item.href === "/"
@@ -100,22 +73,24 @@ export function Sidebar({ isAdmin }: { isAdmin?: boolean }) {
                 <Link
                   href={item.href}
                   className={cn(
-                    "relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200",
+                    "relative flex items-center gap-2.5 px-3 py-2 text-sm font-medium transition-colors duration-150",
                     isActive
-                      ? "bg-primary/15 text-primary neon-glow-sm"
-                      : "text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+                      ? "text-foreground bg-muted/60"
+                      : "text-muted-foreground hover:bg-muted/40 hover:text-foreground"
                   )}
                 >
+                  {/* Active hairline rule — absolute within this relative link */}
                   {isActive && (
-                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 rounded-r-full bg-primary" />
+                    <span className="absolute left-0 inset-y-1 w-0.5 bg-aviation-red" />
                   )}
-                  <span className="text-base leading-none">{item.emoji}</span>
-                  <span className="flex items-center gap-2">
-                    {item.label}
-                  </span>
-                  {isActive && (
-                    <div className="ml-auto size-1.5 rounded-full bg-primary animate-pulse" />
-                  )}
+                  <item.Icon
+                    className={cn(
+                      "size-4 shrink-0",
+                      isActive ? "text-foreground" : "text-muted-foreground"
+                    )}
+                    strokeWidth={isActive ? 2 : 1.5}
+                  />
+                  <span>{item.label}</span>
                 </Link>
               </li>
             );
@@ -124,24 +99,29 @@ export function Sidebar({ isAdmin }: { isAdmin?: boolean }) {
       </nav>
 
       {/* Footer */}
-      <div className="relative px-5 py-4 border-t border-sidebar-border flex flex-col gap-3">
+      <div className="px-3 py-4 border-t border-sidebar-border flex flex-col gap-1">
         {isAdmin ? (
           <form action={logout}>
-            <button type="submit" className="w-full text-sm text-muted-foreground hover:text-foreground flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-sidebar-accent transition-colors">
-              <LogOut className="size-4" />
+            <button
+              type="submit"
+              className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors duration-150"
+            >
+              <LogOut className="size-4 shrink-0" strokeWidth={1.5} />
               Logout
             </button>
           </form>
         ) : (
-          <Link href="/login" className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-sidebar-accent transition-colors">
-            <LogIn className="size-4" />
+          <Link
+            href="/login"
+            className="flex items-center gap-2.5 px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors duration-150"
+          >
+            <LogIn className="size-4 shrink-0" strokeWidth={1.5} />
             Admin Login
           </Link>
         )}
-        <div className="flex items-center gap-2 px-3">
-          <div className="size-1.5 rounded-full bg-primary animate-pulse" />
-          <p className="text-[10px] text-muted-foreground/50">v1.0 · Personal Use</p>
-        </div>
+        <p className="px-3 text-[10px] font-mono text-muted-foreground/40 uppercase tracking-widest mt-1">
+          v1.0 · Personal Use
+        </p>
       </div>
     </aside>
   );
@@ -151,7 +131,10 @@ export function MobileNav({ isAdmin }: { isAdmin?: boolean }) {
   const pathname = usePathname();
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-sidebar/95 backdrop-blur-xl border-t border-sidebar-border pb-[max(env(safe-area-inset-bottom),8px)]">
+    <nav
+      className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-sidebar/95 backdrop-blur-xl border-t border-sidebar-border"
+      style={{ paddingBottom: "max(env(safe-area-inset-bottom), 8px)" }}
+    >
       <ul className="flex w-full py-1">
         {navItems.map((item) => {
           const isActive =
@@ -161,39 +144,70 @@ export function MobileNav({ isAdmin }: { isAdmin?: boolean }) {
 
           return (
             <li key={item.href} className="flex-1">
+              {/* C1 fix: `relative` added so the absolute indicator is positioned inside the Link */}
               <Link
                 href={item.href}
                 className={cn(
-                  "flex flex-col items-center gap-0.5 px-1 py-2 text-xs font-medium transition-all duration-200 touch-target relative",
+                  "relative flex flex-col items-center gap-0.5 px-1 py-2.5 transition-colors duration-150 min-h-[52px] justify-center",
                   isActive
-                    ? "text-primary"
-                    : "text-muted-foreground"
+                    ? "text-foreground"
+                    : "text-muted-foreground hover:text-foreground"
                 )}
               >
+                {/* Active top indicator — correctly inside the relative Link */}
                 {isActive && (
-                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-b-full bg-primary" />
+                  <span className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-aviation-red" />
                 )}
-                <span className={cn("text-xl leading-none transition-transform duration-200", isActive && "scale-110")}>{item.emoji}</span>
-                <span className={cn("truncate max-w-full text-[10px]", isActive && "font-semibold")}>{item.label}</span>
+                <item.Icon
+                  className={cn(
+                    "size-5 shrink-0",
+                    isActive ? "text-foreground" : "text-muted-foreground"
+                  )}
+                  strokeWidth={isActive ? 2 : 1.5}
+                />
+                {/* M1 fix: shorter labels + smaller text to survive 320px */}
+                <span
+                  className={cn(
+                    "text-[9px] leading-none tracking-wide",
+                    isActive && "font-semibold"
+                  )}
+                >
+                  {item.shortLabel}
+                </span>
               </Link>
             </li>
           );
         })}
-        <li className="flex flex-col items-center justify-center">
-          <ThemeToggle />
+
+        {/* M2 fix: ThemeToggle stays but gets a proper labelled slot */}
+        <li className="flex-1">
+          <div className="flex flex-col items-center gap-0.5 px-1 py-2.5 min-h-[52px] justify-center">
+            <ThemeToggle />
+            <span className="text-[9px] leading-none tracking-wide text-muted-foreground mt-0.5">
+              Theme
+            </span>
+          </div>
         </li>
+
+        {/* Auth slot */}
         <li className="flex-1">
           {isAdmin ? (
-            <form action={logout} className="m-0 p-0">
-              <button type="submit" className="flex flex-col items-center gap-0.5 px-1 py-2 text-xs font-medium transition-colors touch-target text-muted-foreground hover:text-foreground w-full">
-                <span className="text-xl leading-none">🚪</span>
-                <span className="truncate max-w-full text-[10px]">Logout</span>
+            <form action={logout} className="m-0 p-0 h-full">
+              <button
+                type="submit"
+                className="flex flex-col items-center gap-0.5 px-1 py-2.5 text-muted-foreground hover:text-foreground transition-colors duration-150 w-full min-h-[52px] justify-center"
+              >
+                <LogOut className="size-5 shrink-0" strokeWidth={1.5} />
+                <span className="text-[9px] leading-none tracking-wide">Logout</span>
               </button>
             </form>
           ) : (
-            <Link href="/login" className="flex flex-col items-center gap-0.5 px-1 py-2 text-xs font-medium transition-colors touch-target text-muted-foreground hover:text-foreground">
-              <span className="text-xl leading-none">🔐</span>
-              <span className="truncate max-w-full text-[10px]">Login</span>
+            <Link
+              href="/login"
+              className="flex flex-col items-center gap-0.5 px-1 py-2.5 text-muted-foreground hover:text-foreground transition-colors duration-150 min-h-[52px] justify-center"
+            >
+              <LogIn className="size-5 shrink-0" strokeWidth={1.5} />
+              <span className="text-[9px] leading-none tracking-wide">Login</span>
             </Link>
           )}
         </li>

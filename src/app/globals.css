@@ -1,3 +1,9 @@
+/* Hallmark · genre: atmospheric · macrostructure: Workbench (app family) · theme: custom
+ * paper-band: dark · display-style: grotesk-sans · accent-hue: warm (red 27°)
+ * design-system: design.md · designed-as-app
+ * custom: "dark sports telemetry, aviation red, mono data voice"
+ * paper oklch(11% 0.008 27) · accent oklch(52% 0.22 27) · Space Grotesk + Geist + Geist Mono
+ */
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
@@ -35,8 +41,8 @@
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
   --color-aviation-red: var(--aviation-red);
-  --color-win: #22C55E;
-  --color-loss: #EF4444;
+  --color-win: var(--color-win);
+  --color-loss: var(--color-loss);
   --radius-sm: var(--radius);
   --radius-md: var(--radius);
   --radius-lg: var(--radius);
@@ -59,10 +65,10 @@
 }
 @keyframes glow-cold {
   0%, 100% {
-    box-shadow: inset 2px 0 0 0 #0EA5E9, 0 0 8px 2px var(--cold-glow);
+    box-shadow: inset 2px 0 0 0 var(--cold-stripe), 0 0 8px 2px var(--cold-glow);
   }
   50% {
-    box-shadow: inset 2px 0 0 0 #0EA5E9, 0 0 20px 6px var(--cold-glow-strong);
+    box-shadow: inset 2px 0 0 0 var(--cold-stripe), 0 0 20px 6px var(--cold-glow-strong);
   }
 }
 
@@ -84,108 +90,155 @@
 }
 
 :root {
-  /* Light Mode */
-  --background: #FBFBFA;
-  --foreground: #111111;
-  
-  --card: #FBFBFA;
-  --card-foreground: #111111;
-  
-  --popover: #FBFBFA;
-  --popover-foreground: #111111;
-  
-  --primary: #111111;
-  --primary-foreground: #FBFBFA;
-  
-  --secondary: #F0F0F0;
-  --secondary-foreground: #111111;
-  
-  --muted: #F0F0F0;
-  --muted-foreground: #737373; /* WCAG AA contrast */
-  
-  --accent: #E61919;
-  --accent-foreground: #FFFFFF;
-  
-  --destructive: #E61919;
-  --destructive-foreground: #FFFFFF;
-  
-  --border: #E0E0E0;
-  --input: #E0E0E0;
-  --ring: #CCCCCC;
+  /* Hallmark — Light Mode (warm-parchment paper, red accent hue 27°) */
 
-  --aviation-red: #E61919;
+  /* Paper & surfaces */
+  --background: oklch(97% 0.006 60);
+  --card:        oklch(97% 0.006 60);
+  --popover:     oklch(97% 0.006 60);
+  --secondary:   oklch(93% 0.007 50);
+  --muted:       oklch(93% 0.007 50);
 
-  --fire-glow: rgba(255, 138, 61, 0.1);
-  --fire-glow-strong: rgba(255, 138, 61, 0.2);
-  --cold-glow: rgba(14, 165, 233, 0.15);
-  --cold-glow-strong: rgba(14, 165, 233, 0.35);
+  /* Ink */
+  --foreground:           oklch(16% 0.010 30);
+  --card-foreground:      oklch(16% 0.010 30);
+  --popover-foreground:   oklch(16% 0.010 30);
+  --primary:              oklch(16% 0.010 30);
+  --primary-foreground:   oklch(97% 0.006 60);
+  --secondary-foreground: oklch(16% 0.010 30);
+  --muted-foreground:     oklch(44% 0.008 40);  /* WCAG AA */
+
+  /* Accent — aviation red */
+  --accent:             oklch(50% 0.22 27);
+  --accent-foreground:  oklch(97% 0.004 27);
+  --aviation-red:       oklch(50% 0.22 27);
+  --destructive:        oklch(50% 0.22 27);
+  --destructive-foreground: oklch(97% 0.004 27);
+
+  /* Win / Loss — lifted from inline */
+  --color-win:  oklch(56% 0.18 145);
+  --color-loss: oklch(54% 0.20 27);
+
+  /* Borders & inputs */
+  --border: oklch(84% 0.008 50);
+  --input:  oklch(84% 0.008 50);
+  --ring:   oklch(70% 0.010 40);
+
+  /* Cold stripe (was hardcoded #0EA5E9) */
+  --cold-stripe: oklch(62% 0.17 220);
+
+  /* Glow ambients */
+  --fire-glow:        oklch(70% 0.15 50 / 0.10);
+  --fire-glow-strong: oklch(70% 0.15 50 / 0.20);
+  --cold-glow:        oklch(62% 0.17 220 / 0.15);
+  --cold-glow-strong: oklch(62% 0.17 220 / 0.35);
+
+  /* Elo highlight — "Final Boss" / Power Ranking accent */
+  --color-elo:        oklch(76% 0.18 85);
+  --color-elo-glow:   oklch(76% 0.18 85 / 0.45);
+
+  /* Temp-player pill */
+  --color-temp:       oklch(68% 0.14 50);
+
+  /* Semantic spacing — 4pt scale */
+  --space-3xs: 0.25rem;   /* 4px  */
+  --space-2xs: 0.5rem;    /* 8px  */
+  --space-xs:  0.75rem;   /* 12px */
+  --space-sm:  1rem;      /* 16px */
+  --space-md:  1.5rem;    /* 24px */
+  --space-lg:  2rem;      /* 32px */
+  --space-xl:  3rem;      /* 48px */
+  --space-2xl: 4.5rem;    /* 72px */
+  --space-3xl: 7rem;      /* 112px */
+
+  /* Easings */
+  --ease-out:    cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in:     cubic-bezier(0.7, 0, 0.84, 0);
+  --ease-in-out: cubic-bezier(0.45, 0, 0.55, 1);
+  --dur-short:   180ms;
+  --dur-med:     300ms;
 
   /* Zero border radius */
   --radius: 0px;
-  
-  /* Sidebar uses same exact tokens */
-  --sidebar: #FBFBFA;
-  --sidebar-foreground: #111111;
-  --sidebar-primary: #111111;
-  --sidebar-primary-foreground: #FBFBFA;
-  --sidebar-accent: #F0F0F0;
-  --sidebar-accent-foreground: #111111;
-  --sidebar-border: #E0E0E0;
-  --sidebar-ring: #CCCCCC;
+
+  /* Sidebar — mirrors base tokens */
+  --sidebar:                  oklch(97% 0.006 60);
+  --sidebar-foreground:       oklch(16% 0.010 30);
+  --sidebar-primary:          oklch(16% 0.010 30);
+  --sidebar-primary-foreground: oklch(97% 0.006 60);
+  --sidebar-accent:           oklch(93% 0.007 50);
+  --sidebar-accent-foreground: oklch(16% 0.010 30);
+  --sidebar-border:           oklch(84% 0.008 50);
+  --sidebar-ring:             oklch(70% 0.010 40);
 }
 
 .dark {
-  /* Absolute Dark Mode - Telemetry System */
-  --background: #0A0A0A;
-  --foreground: #EAEAEA;
-  
-  --card: #0A0A0A;
-  --card-foreground: #EAEAEA;
-  
-  --popover: #0A0A0A;
-  --popover-foreground: #EAEAEA;
-  
-  --primary: #EAEAEA;
-  --primary-foreground: #0A0A0A;
-  
-  --secondary: #121212;
-  --secondary-foreground: #EAEAEA;
-  
-  --muted: #121212;
-  --muted-foreground: #8A8A8A;
-  
-  --accent: #E61919;
-  --accent-foreground: #FFFFFF;
-  
-  --destructive: #EF4444;
-  --destructive-foreground: #FFFFFF;
-  
-  --border: #222222;
-  --input: #222222;
-  --ring: #444444;
+  /* Hallmark — Dark Mode (telemetry dark, aviation red) */
 
-  --aviation-red: #E61919;
+  /* Paper & surfaces — tinted toward red anchor hue 27° */
+  --background: oklch(11% 0.008 27);
+  --card:        oklch(11% 0.008 27);
+  --popover:     oklch(11% 0.008 27);
+  --secondary:   oklch(15% 0.008 27);
+  --muted:       oklch(15% 0.008 27);
 
-  /* Zero border radius */
-  --radius: 0px;
-  
-  /* Sidebar uses same exact tokens */
-  --sidebar: #0A0A0A;
-  --sidebar-foreground: #EAEAEA;
-  --sidebar-primary: #EAEAEA;
-  --sidebar-primary-foreground: #0A0A0A;
-  --sidebar-accent: #121212;
-  --sidebar-accent-foreground: #EAEAEA;
-  --sidebar-border: #222222;
-  --sidebar-ring: #444444;
+  /* Ink — warm off-white */
+  --foreground:           oklch(92% 0.006 60);
+  --card-foreground:      oklch(92% 0.006 60);
+  --popover-foreground:   oklch(92% 0.006 60);
+  --primary:              oklch(92% 0.006 60);
+  --primary-foreground:   oklch(11% 0.008 27);
+  --secondary-foreground: oklch(92% 0.006 60);
+  --muted-foreground:     oklch(56% 0.008 40);
 
-  --fire-glow: rgba(255, 138, 61, 0.2);
-  --fire-glow-strong: rgba(255, 138, 61, 0.4);
-  --cold-glow: rgba(14, 165, 233, 0.25);
-  --cold-glow-strong: rgba(14, 165, 233, 0.55);
+  /* Accent — aviation red (slightly lighter in dark mode) */
+  --accent:             oklch(56% 0.22 27);
+  --accent-foreground:  oklch(97% 0.004 27);
+  --aviation-red:       oklch(56% 0.22 27);
+  --destructive:        oklch(60% 0.22 27);
+  --destructive-foreground: oklch(97% 0.004 27);
+
+  /* Win / Loss */
+  --color-win:  oklch(62% 0.18 145);
+  --color-loss: oklch(60% 0.20 27);
+
+  /* Borders & inputs */
+  --border: oklch(22% 0.008 30);
+  --input:  oklch(22% 0.008 30);
+  --ring:   oklch(38% 0.010 30);
+
+  /* Cold stripe */
+  --cold-stripe: oklch(65% 0.17 220);
+
+  /* Glow ambients (stronger in dark) */
+  --fire-glow:        oklch(70% 0.15 50 / 0.20);
+  --fire-glow-strong: oklch(70% 0.15 50 / 0.40);
+  --cold-glow:        oklch(62% 0.17 220 / 0.25);
+  --cold-glow-strong: oklch(62% 0.17 220 / 0.55);
+
+  /* Elo highlight (dark mode — slightly warmer) */
+  --color-elo:        oklch(82% 0.16 85);
+  --color-elo-glow:   oklch(82% 0.16 85 / 0.50);
+
+  /* Temp-player pill (dark) */
+  --color-temp:       oklch(74% 0.13 50);
+
+  /* Sidebar — mirrors dark tokens */
+  --sidebar:                  oklch(11% 0.008 27);
+  --sidebar-foreground:       oklch(92% 0.006 60);
+  --sidebar-primary:          oklch(92% 0.006 60);
+  --sidebar-primary-foreground: oklch(11% 0.008 27);
+  --sidebar-accent:           oklch(15% 0.008 27);
+  --sidebar-accent-foreground: oklch(92% 0.006 60);
+  --sidebar-border:           oklch(22% 0.008 30);
+  --sidebar-ring:             oklch(38% 0.010 30);
 }
 
 @layer base {
+  html, body {
+    /* Prevent horizontal scroll on all breakpoints — Hallmark gate 34 */
+    overflow-x: clip;
+  }
   * {
     @apply border-border outline-ring/50;
     -webkit-tap-highlight-color: transparent;
@@ -195,6 +248,7 @@
   }
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-heading), system-ui, sans-serif;
+    font-style: normal; /* Hallmark gate 38a — headings always roman */
   }
 }
 
@@ -208,7 +262,7 @@
   }
 }
 
-/* Scrollbar style */
+/* Scrollbar style — tokens only, no inline values */
 ::-webkit-scrollbar {
   width: 4px;
   height: 4px;
@@ -217,8 +271,8 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #222222;
+  background: var(--border);
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #444444;
+  background: var(--ring);
 }
