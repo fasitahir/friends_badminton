@@ -1,6 +1,27 @@
 [
   {
     "date": "2026-09-06",
+    "verb": "redesign",
+    "macrostructure": "Workbench (app family)",
+    "theme": "multi-palette",
+    "theme_axes": "dark/grotesk-sans/warm-27° + mid/rounded-sans/cool-185° + light/roman-serif/amber-72°",
+    "vibe": "3 structural palettes: Telemetry · Court Glass · Field Journal; locked in design.md",
+    "enrichment": "none",
+    "scope": "app",
+    "brief": "Hallmark redesign audit fixes: locked design.md, added 8 OKLCH avatar tokens across all palettes, eliminated token improvisation, removed transition-all and hover:scale, added focus-visible rings"
+  },
+  {
+    "date": "2026-09-06",
+    "macrostructure": "Workbench (app family)",
+    "theme": "multi-palette",
+    "theme_axes": "dark/grotesk-sans/warm-27° + mid/rounded-sans/cool-185° + light/roman-serif/amber-72°",
+    "vibe": "3 structural palettes: Telemetry · Court Glass · Field Journal",
+    "enrichment": "none",
+    "scope": "app",
+    "brief": "friends_badminton — added Court Glass (teal) + Field Journal (parchment serif) palettes alongside existing Telemetry theme"
+  },
+  {
+    "date": "2026-09-06",
     "macrostructure": "Workbench (app family)",
     "theme": "custom",
     "theme_axes": "dark / grotesk-sans / warm (red 27°)",

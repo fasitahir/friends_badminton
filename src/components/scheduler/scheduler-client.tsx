@@ -16,6 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { PlayerLeftIcon } from "@/components/players/player-left-icon";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -40,7 +41,7 @@ function StepIndicator({ current }: { current: number }) {
           <div className="flex flex-col items-center gap-1.5">
             <div
               className={cn(
-                "size-8 rounded-full flex items-center justify-center text-sm font-bold border-2 transition-all duration-300",
+                "size-8 rounded-full flex items-center justify-center text-sm font-bold border-2 transition-colors duration-200",
                 current === s.n
                   ? "bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/30"
                   : current > s.n
@@ -62,7 +63,7 @@ function StepIndicator({ current }: { current: number }) {
           {i < steps.length - 1 && (
             <div
               className={cn(
-                "h-0.5 flex-1 mx-2 transition-all duration-500",
+                "h-0.5 flex-1 mx-2 transition-colors duration-300",
                 current > s.n ? "bg-primary/50" : "bg-border"
               )}
             />
@@ -108,7 +109,7 @@ function PlayerCard({
     <button
       onClick={onToggle}
       className={cn(
-        "relative flex flex-col gap-1.5 p-3 rounded-xl border-2 text-left transition-all duration-200 w-full",
+        "relative flex flex-col gap-1.5 p-3 rounded-[var(--radius)] border-2 text-left transition-colors duration-180 w-full",
         selected
           ? "border-primary bg-primary/10 shadow-md shadow-primary/10"
           : "border-border bg-card hover:border-primary/40 hover:bg-muted/50"
@@ -122,14 +123,17 @@ function PlayerCard({
       <div className="flex items-center gap-2">
         <span className="text-base">{tier.emoji}</span>
         <span className="font-semibold text-sm truncate">{displayName}</span>
+        {player.has_left && <PlayerLeftIcon leftAt={player.left_at} size="sm" />}
       </div>
       <div className="flex items-center gap-1.5">
         <EloBadge elo={player.elo_rating ?? 600} />
         <span className={cn("text-[10px]", tier.color)}>{tier.label}</span>
       </div>
-      {player.is_temporary && (
+      {player.has_left ? (
+        <span className="text-[9px] text-destructive font-medium">Departed</span>
+      ) : player.is_temporary ? (
         <span className="text-[9px] text-amber-500 font-medium">Guest</span>
-      )}
+      ) : null}
     </button>
   );
 }

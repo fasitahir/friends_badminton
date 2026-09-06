@@ -25,6 +25,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ChevronRight, Eye, EyeOff } from "lucide-react";
+import { PlayerLeftIcon } from "@/components/players/player-left-icon";
 
 // Lazy-load win rate chart (~200KB recharts) — only loaded when analytics page is visited
 const WinRateChart = dynamic(
@@ -283,6 +284,9 @@ function OverviewTab({
                     <td className="py-3 px-2">
                       <div className="flex items-center gap-2">
                         <span className="font-medium whitespace-nowrap">{s.player.name}</span>
+                        {s.player.has_left && (
+                          <PlayerLeftIcon leftAt={s.player.left_at} size="sm" />
+                        )}
                         <span className="text-xs font-mono text-muted-foreground bg-muted/60 px-1.5 py-0.5 rounded border">
                           {s.player.elo_rating}
                         </span>
@@ -448,7 +452,13 @@ function PairsTab({ stats }: { stats: ReturnType<typeof computeAllPairStats> }) 
               {stats.map((s) => (
                 <tr key={`${s.player1.id}-${s.player2.id}`} className="border-b border-border/50 hover:bg-muted/50 transition-colors">
                   <td className="py-3 px-2 font-medium whitespace-nowrap">
-                    {s.player1.name} & {s.player2.name}
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span>{s.player1.name}</span>
+                      {s.player1.has_left && <PlayerLeftIcon leftAt={s.player1.left_at} size="sm" />}
+                      <span className="text-muted-foreground font-normal">&</span>
+                      <span>{s.player2.name}</span>
+                      {s.player2.has_left && <PlayerLeftIcon leftAt={s.player2.left_at} size="sm" />}
+                    </div>
                   </td>
                   <td className="py-3 px-2 text-right">
                     <div className="flex items-center justify-end gap-2">
@@ -622,7 +632,10 @@ function BestPartnersTab({ players, matches }: { players: Player[]; matches: Mat
                   <span className="size-7 rounded-full bg-muted flex items-center justify-center text-xs font-bold font-mono text-muted-foreground">
                     {idx + 1}
                   </span>
-                  <span className="text-sm font-medium flex-1">{ps.partner.name}</span>
+                  <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                    <span className="text-sm font-medium truncate">{ps.partner.name}</span>
+                    {ps.partner.has_left && <PlayerLeftIcon leftAt={ps.partner.left_at} size="sm" />}
+                  </div>
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-muted-foreground font-mono tabular-nums">
                       {ps.wins}W {ps.losses}L
@@ -689,7 +702,10 @@ function ToughestOpponentsTab({ players, matches }: { players: Player[]; matches
                   <span className="size-7 rounded-full bg-muted flex items-center justify-center text-xs font-bold font-mono text-muted-foreground">
                     {idx + 1}
                   </span>
-                  <span className="text-sm font-medium flex-1">{os.opponent.name}</span>
+                  <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                    <span className="text-sm font-medium truncate">{os.opponent.name}</span>
+                    {os.opponent.has_left && <PlayerLeftIcon leftAt={os.opponent.left_at} size="sm" />}
+                  </div>
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-muted-foreground font-mono tabular-nums">
                       {os.wins}W {os.losses}L

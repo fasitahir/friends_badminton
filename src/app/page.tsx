@@ -111,6 +111,8 @@ export default async function DashboardPage() {
         lossStreak: player.lossStreak,
         totalSets: player.totalSets,
         elo: player.elo_rating,
+        has_left: player.has_left,
+        left_at: player.left_at,
       };
     })
     .sort((a, b) => b.winRate - a.winRate || b.won - a.won);
@@ -119,9 +121,14 @@ export default async function DashboardPage() {
   const now = new Date();
   const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 
-  // 3. Compute live current month leaderboard dynamically
+  // 3. Compute live current month leaderboard dynamically (exclude temporary and departed players)
   const initialEntries = enrichedPlayers
     .filter((player: any) => !player.is_temporary)
+    .filter((player: any) => {
+      if (!player.has_left) return true;
+      const leftMonth = player.left_at ? String(player.left_at).slice(0, 7) : currentMonth;
+      return currentMonth < leftMonth;
+    })
     .map((player) => {
       let played = 0;
       let won = 0;
@@ -159,6 +166,8 @@ export default async function DashboardPage() {
           name: player.name,
           nickname: player.nickname || null,
           elo_rating: player.elo_rating,
+          has_left: player.has_left,
+          left_at: player.left_at,
         },
       };
     })
@@ -175,7 +184,10 @@ export default async function DashboardPage() {
       ? initialEntries[0]
       : null;
 
-  const topEloPlayer = [...allTimeStats].sort((a, b) => (b.elo || 0) - (a.elo || 0))[0];
+  // Final Boss: active players only (exclude departed players)
+  const topEloPlayer = [...allTimeStats]
+    .filter((p: any) => !p.has_left)
+    .sort((a, b) => (b.elo || 0) - (a.elo || 0))[0];
 
   const statCards = [
     // {
@@ -280,7 +292,7 @@ export default async function DashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-5 lg:grid-cols-12 gap-8">
         <div className="md:col-span-3 lg:col-span-8">
           <LeaderboardTabs 
-            players={enrichedPlayers.filter((p: any) => !p.is_temporary)}
+            players={enrichedPlayers.filter((p: any) => !p.is_temporary && !p.has_left)}
             availableMonths={availableMonths}
             initialMonth={currentMonth}
             initialEntries={initialEntries}

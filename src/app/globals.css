@@ -43,6 +43,14 @@
   --color-aviation-red: var(--aviation-red);
   --color-win: var(--color-win);
   --color-loss: var(--color-loss);
+  --color-avatar-a: var(--color-avatar-a);
+  --color-avatar-b: var(--color-avatar-b);
+  --color-avatar-c: var(--color-avatar-c);
+  --color-avatar-d: var(--color-avatar-d);
+  --color-avatar-e: var(--color-avatar-e);
+  --color-avatar-f: var(--color-avatar-f);
+  --color-avatar-g: var(--color-avatar-g);
+  --color-avatar-h: var(--color-avatar-h);
   --radius-sm: var(--radius);
   --radius-md: var(--radius);
   --radius-lg: var(--radius);
@@ -140,6 +148,16 @@
   /* Temp-player pill */
   --color-temp:       oklch(68% 0.14 50);
 
+  /* Avatar hue tokens (8 perceptual OKLCH steps, theme-aware) */
+  --color-avatar-a: oklch(50% 0.20 25);
+  --color-avatar-b: oklch(52% 0.18 65);
+  --color-avatar-c: oklch(50% 0.16 120);
+  --color-avatar-d: oklch(50% 0.18 150);
+  --color-avatar-e: oklch(50% 0.16 195);
+  --color-avatar-f: oklch(50% 0.18 245);
+  --color-avatar-g: oklch(50% 0.18 285);
+  --color-avatar-h: oklch(50% 0.20 330);
+
   /* Semantic spacing — 4pt scale */
   --space-3xs: 0.25rem;   /* 4px  */
   --space-2xs: 0.5rem;    /* 8px  */
@@ -223,6 +241,16 @@
   /* Temp-player pill (dark) */
   --color-temp:       oklch(74% 0.13 50);
 
+  /* Avatar hue tokens */
+  --color-avatar-a: oklch(68% 0.20 25);
+  --color-avatar-b: oklch(72% 0.18 65);
+  --color-avatar-c: oklch(70% 0.16 120);
+  --color-avatar-d: oklch(68% 0.18 150);
+  --color-avatar-e: oklch(70% 0.16 195);
+  --color-avatar-f: oklch(68% 0.18 245);
+  --color-avatar-g: oklch(68% 0.18 285);
+  --color-avatar-h: oklch(68% 0.20 330);
+
   /* Sidebar — mirrors dark tokens */
   --sidebar:                  oklch(11% 0.008 27);
   --sidebar-foreground:       oklch(92% 0.006 60);
@@ -276,3 +304,335 @@
 ::-webkit-scrollbar-thumb:hover {
   background: var(--ring);
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * PALETTE: Court Glass  ·  [data-theme="glass"]
+ * Hallmark axes: mid (L 56%) · rounded-sans (Plus Jakarta Sans) · cool-teal 185°
+ * A translucent glassmorphism court aesthetic — frosted surfaces, teal lanes,
+ * soft-radius cards, clean monospace stats.
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+[data-theme="glass"] {
+  /* Paper & surfaces — light teal-tinted white */
+  --background: oklch(97% 0.008 185);
+  --card:        oklch(97% 0.008 185);
+  --popover:     oklch(97% 0.008 185);
+  --secondary:   oklch(92% 0.012 185);
+  --muted:       oklch(92% 0.012 185);
+
+  /* Ink */
+  --foreground:           oklch(20% 0.018 200);
+  --card-foreground:      oklch(20% 0.018 200);
+  --popover-foreground:   oklch(20% 0.018 200);
+  --primary:              oklch(20% 0.018 200);
+  --primary-foreground:   oklch(97% 0.008 185);
+  --secondary-foreground: oklch(20% 0.018 200);
+  --muted-foreground:     oklch(45% 0.014 195);
+
+  /* Accent — teal court */
+  --accent:             oklch(48% 0.20 185);
+  --accent-foreground:  oklch(97% 0.004 185);
+  --aviation-red:       oklch(48% 0.20 185);  /* mapped so existing nav hairline works */
+  --destructive:        oklch(50% 0.22 27);
+  --destructive-foreground: oklch(97% 0.004 27);
+
+  /* Win / Loss */
+  --color-win:  oklch(52% 0.18 145);
+  --color-loss: oklch(50% 0.22 27);
+
+  /* Borders & inputs */
+  --border: oklch(85% 0.012 185);
+  --input:  oklch(85% 0.012 185);
+  --ring:   oklch(60% 0.016 185);
+
+  /* Cold stripe → teal family */
+  --cold-stripe: oklch(55% 0.20 185);
+
+  /* Glow ambients */
+  --fire-glow:        oklch(55% 0.20 185 / 0.12);
+  --fire-glow-strong: oklch(55% 0.20 185 / 0.25);
+  --cold-glow:        oklch(55% 0.20 185 / 0.15);
+  --cold-glow-strong: oklch(55% 0.20 185 / 0.35);
+
+  /* Elo highlight — warm jade contrast against teal */
+  --color-elo:        oklch(70% 0.16 140);
+  --color-elo-glow:   oklch(70% 0.16 140 / 0.45);
+
+  /* Temp-player pill */
+  --color-temp:       oklch(64% 0.14 195);
+
+  /* Avatar hue tokens (teal court tuned) */
+  --color-avatar-a: oklch(52% 0.18 25);
+  --color-avatar-b: oklch(54% 0.16 65);
+  --color-avatar-c: oklch(50% 0.16 130);
+  --color-avatar-d: oklch(50% 0.18 165);
+  --color-avatar-e: oklch(48% 0.18 185);
+  --color-avatar-f: oklch(50% 0.18 235);
+  --color-avatar-g: oklch(50% 0.16 280);
+  --color-avatar-h: oklch(50% 0.18 320);
+
+  /* Radii — rounded glass aesthetic */
+  --radius: 10px;
+
+  /* Sidebar */
+  --sidebar:                  oklch(97% 0.008 185);
+  --sidebar-foreground:       oklch(20% 0.018 200);
+  --sidebar-primary:          oklch(20% 0.018 200);
+  --sidebar-primary-foreground: oklch(97% 0.008 185);
+  --sidebar-accent:           oklch(92% 0.012 185);
+  --sidebar-accent-foreground: oklch(20% 0.018 200);
+  --sidebar-border:           oklch(85% 0.012 185);
+  --sidebar-ring:             oklch(60% 0.016 185);
+
+  /* Typography — Plus Jakarta Sans for headings */
+  --font-heading-override: var(--font-jakarta, "Plus Jakarta Sans", system-ui, sans-serif);
+}
+
+[data-theme="glass"].dark {
+  /* Paper — deep teal-slate */
+  --background: oklch(16% 0.018 200);
+  --card:        oklch(16% 0.018 200);
+  --popover:     oklch(16% 0.018 200);
+  --secondary:   oklch(21% 0.018 200);
+  --muted:       oklch(21% 0.018 200);
+
+  /* Ink — cool off-white */
+  --foreground:           oklch(92% 0.010 185);
+  --card-foreground:      oklch(92% 0.010 185);
+  --popover-foreground:   oklch(92% 0.010 185);
+  --primary:              oklch(92% 0.010 185);
+  --primary-foreground:   oklch(16% 0.018 200);
+  --secondary-foreground: oklch(92% 0.010 185);
+  --muted-foreground:     oklch(56% 0.014 190);
+
+  /* Accent — brighter teal in dark */
+  --accent:             oklch(60% 0.22 185);
+  --accent-foreground:  oklch(97% 0.004 185);
+  --aviation-red:       oklch(60% 0.22 185);
+  --destructive:        oklch(58% 0.22 27);
+  --destructive-foreground: oklch(97% 0.004 27);
+
+  /* Win / Loss */
+  --color-win:  oklch(60% 0.18 145);
+  --color-loss: oklch(58% 0.22 27);
+
+  /* Borders & inputs */
+  --border: oklch(26% 0.016 200);
+  --input:  oklch(26% 0.016 200);
+  --ring:   oklch(42% 0.016 185);
+
+  /* Cold stripe */
+  --cold-stripe: oklch(62% 0.22 185);
+
+  /* Glow ambients */
+  --fire-glow:        oklch(60% 0.22 185 / 0.20);
+  --fire-glow-strong: oklch(60% 0.22 185 / 0.40);
+  --cold-glow:        oklch(60% 0.22 185 / 0.25);
+  --cold-glow-strong: oklch(60% 0.22 185 / 0.55);
+
+  /* Elo */
+  --color-elo:        oklch(76% 0.14 140);
+  --color-elo-glow:   oklch(76% 0.14 140 / 0.50);
+
+  /* Temp-player */
+  --color-temp:       oklch(70% 0.14 195);
+
+  /* Avatar hue tokens */
+  --color-avatar-a: oklch(68% 0.18 25);
+  --color-avatar-b: oklch(72% 0.16 65);
+  --color-avatar-c: oklch(70% 0.16 130);
+  --color-avatar-d: oklch(68% 0.18 165);
+  --color-avatar-e: oklch(68% 0.20 185);
+  --color-avatar-f: oklch(68% 0.18 235);
+  --color-avatar-g: oklch(68% 0.16 280);
+  --color-avatar-h: oklch(68% 0.18 320);
+
+  /* Sidebar */
+  --sidebar:                  oklch(16% 0.018 200);
+  --sidebar-foreground:       oklch(92% 0.010 185);
+  --sidebar-primary:          oklch(92% 0.010 185);
+  --sidebar-primary-foreground: oklch(16% 0.018 200);
+  --sidebar-accent:           oklch(21% 0.018 200);
+  --sidebar-accent-foreground: oklch(92% 0.010 185);
+  --sidebar-border:           oklch(26% 0.016 200);
+  --sidebar-ring:             oklch(42% 0.016 185);
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * PALETTE: Field Journal  ·  [data-theme="journal"]
+ * Hallmark axes: light (L 96%) · roman-serif (Lora) · neutral-amber 72°
+ * An editorial field-notes aesthetic — warm parchment, serif headlines,
+ * amber ink accents, generous whitespace, a sports reporter's notebook.
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+[data-theme="journal"] {
+  /* Paper — warm parchment */
+  --background: oklch(96% 0.018 72);
+  --card:        oklch(96% 0.018 72);
+  --popover:     oklch(96% 0.018 72);
+  --secondary:   oklch(91% 0.022 70);
+  --muted:       oklch(91% 0.022 70);
+
+  /* Ink — dark warm brown */
+  --foreground:           oklch(22% 0.016 55);
+  --card-foreground:      oklch(22% 0.016 55);
+  --popover-foreground:   oklch(22% 0.016 55);
+  --primary:              oklch(22% 0.016 55);
+  --primary-foreground:   oklch(96% 0.018 72);
+  --secondary-foreground: oklch(22% 0.016 55);
+  --muted-foreground:     oklch(46% 0.012 60);
+
+  /* Accent — amber ink */
+  --accent:             oklch(52% 0.17 72);
+  --accent-foreground:  oklch(97% 0.004 72);
+  --aviation-red:       oklch(52% 0.17 72);  /* maps to accent hairline in nav */
+  --destructive:        oklch(50% 0.22 27);
+  --destructive-foreground: oklch(97% 0.004 27);
+
+  /* Win / Loss */
+  --color-win:  oklch(50% 0.18 145);
+  --color-loss: oklch(50% 0.22 27);
+
+  /* Borders & inputs */
+  --border: oklch(82% 0.020 70);
+  --input:  oklch(82% 0.020 70);
+  --ring:   oklch(65% 0.014 65);
+
+  /* Cold stripe — ink blue for contrast on parchment */
+  --cold-stripe: oklch(48% 0.18 230);
+
+  /* Glow ambients */
+  --fire-glow:        oklch(70% 0.15 72 / 0.10);
+  --fire-glow-strong: oklch(70% 0.15 72 / 0.22);
+  --cold-glow:        oklch(48% 0.18 230 / 0.12);
+  --cold-glow-strong: oklch(48% 0.18 230 / 0.30);
+
+  /* Elo highlight — golden ink on parchment */
+  --color-elo:        oklch(62% 0.20 72);
+  --color-elo-glow:   oklch(62% 0.20 72 / 0.40);
+
+  /* Temp-player pill */
+  --color-temp:       oklch(60% 0.14 72);
+
+  /* Avatar hue tokens (amber parchment tuned) */
+  --color-avatar-a: oklch(48% 0.18 30);
+  --color-avatar-b: oklch(50% 0.17 72);
+  --color-avatar-c: oklch(46% 0.14 110);
+  --color-avatar-d: oklch(46% 0.15 145);
+  --color-avatar-e: oklch(46% 0.14 190);
+  --color-avatar-f: oklch(46% 0.16 230);
+  --color-avatar-g: oklch(46% 0.15 280);
+  --color-avatar-h: oklch(48% 0.16 325);
+
+  /* Radii — slight softness, editorial feel */
+  --radius: 3px;
+
+  /* Sidebar */
+  --sidebar:                  oklch(91% 0.022 70);
+  --sidebar-foreground:       oklch(22% 0.016 55);
+  --sidebar-primary:          oklch(22% 0.016 55);
+  --sidebar-primary-foreground: oklch(96% 0.018 72);
+  --sidebar-accent:           oklch(86% 0.024 70);
+  --sidebar-accent-foreground: oklch(22% 0.016 55);
+  --sidebar-border:           oklch(78% 0.022 70);
+  --sidebar-ring:             oklch(65% 0.014 65);
+
+  /* Typography — Lora (serif) for headings */
+  --font-heading-override: var(--font-lora, "Lora", Georgia, serif);
+}
+
+[data-theme="journal"].dark {
+  /* Paper — dark warm ink */
+  --background: oklch(14% 0.014 55);
+  --card:        oklch(14% 0.014 55);
+  --popover:     oklch(14% 0.014 55);
+  --secondary:   oklch(19% 0.014 55);
+  --muted:       oklch(19% 0.014 55);
+
+  /* Ink — warm cream */
+  --foreground:           oklch(91% 0.014 72);
+  --card-foreground:      oklch(91% 0.014 72);
+  --popover-foreground:   oklch(91% 0.014 72);
+  --primary:              oklch(91% 0.014 72);
+  --primary-foreground:   oklch(14% 0.014 55);
+  --secondary-foreground: oklch(91% 0.014 72);
+  --muted-foreground:     oklch(56% 0.012 65);
+
+  /* Accent — brighter amber in dark */
+  --accent:             oklch(64% 0.18 72);
+  --accent-foreground:  oklch(97% 0.004 72);
+  --aviation-red:       oklch(64% 0.18 72);
+  --destructive:        oklch(58% 0.22 27);
+  --destructive-foreground: oklch(97% 0.004 27);
+
+  /* Win / Loss */
+  --color-win:  oklch(60% 0.18 145);
+  --color-loss: oklch(58% 0.20 27);
+
+  /* Borders & inputs */
+  --border: oklch(24% 0.014 58);
+  --input:  oklch(24% 0.014 58);
+  --ring:   oklch(42% 0.012 60);
+
+  /* Cold stripe — slightly lighter in dark */
+  --cold-stripe: oklch(60% 0.18 230);
+
+  /* Glow ambients */
+  --fire-glow:        oklch(64% 0.18 72 / 0.20);
+  --fire-glow-strong: oklch(64% 0.18 72 / 0.40);
+  --cold-glow:        oklch(60% 0.18 230 / 0.20);
+  --cold-glow-strong: oklch(60% 0.18 230 / 0.45);
+
+  /* Elo */
+  --color-elo:        oklch(76% 0.18 72);
+  --color-elo-glow:   oklch(76% 0.18 72 / 0.50);
+
+  /* Temp-player */
+  --color-temp:       oklch(68% 0.14 72);
+
+  /* Avatar hue tokens */
+  --color-avatar-a: oklch(68% 0.18 30);
+  --color-avatar-b: oklch(72% 0.18 72);
+  --color-avatar-c: oklch(68% 0.14 110);
+  --color-avatar-d: oklch(68% 0.15 145);
+  --color-avatar-e: oklch(68% 0.14 190);
+  --color-avatar-f: oklch(68% 0.16 230);
+  --color-avatar-g: oklch(68% 0.15 280);
+  --color-avatar-h: oklch(68% 0.16 325);
+
+  /* Sidebar */
+  --sidebar:                  oklch(14% 0.014 55);
+  --sidebar-foreground:       oklch(91% 0.014 72);
+  --sidebar-primary:          oklch(91% 0.014 72);
+  --sidebar-primary-foreground: oklch(14% 0.014 55);
+  --sidebar-accent:           oklch(19% 0.014 55);
+  --sidebar-accent-foreground: oklch(91% 0.014 72);
+  --sidebar-border:           oklch(24% 0.014 58);
+  --sidebar-ring:             oklch(42% 0.012 60);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * FONT OVERRIDE — data-theme heading face
+ * Applied by PaletteProvider via data-theme on <html>. Falls back to
+ * --font-heading (Space Grotesk) for the default telemetry theme.
+ * ═══════════════════════════════════════════════════════════════════════════ */
+[data-theme="glass"] h1,
+[data-theme="glass"] h2,
+[data-theme="glass"] h3,
+[data-theme="glass"] h4,
+[data-theme="glass"] h5,
+[data-theme="glass"] h6 {
+  font-family: var(--font-heading-override, var(--font-heading));
+  font-style: normal;
+}
+
+[data-theme="journal"] h1,
+[data-theme="journal"] h2,
+[data-theme="journal"] h3,
+[data-theme="journal"] h4,
+[data-theme="journal"] h5,
+[data-theme="journal"] h6 {
+  font-family: var(--font-heading-override, var(--font-heading));
+  font-style: normal;
+}

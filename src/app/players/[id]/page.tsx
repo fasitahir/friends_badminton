@@ -10,7 +10,8 @@ import {
 } from "@/lib/analytics";
 import { getEloTier, getNextTierProgress } from "@/lib/elo";
 import Link from "next/link";
-import { TrendingUp, TrendingDown, Minus, Trophy, Target, Zap, Shield } from "lucide-react";
+import { TrendingUp, TrendingDown, Minus, Trophy, Target, Zap, Shield, LogOut } from "lucide-react";
+import { PlayerLeftIcon } from "@/components/players/player-left-icon";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -26,21 +27,21 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   };
 }
 
-const AVATAR_COLORS = [
-  "from-green-500 to-emerald-600",
-  "from-blue-500 to-cyan-600",
-  "from-purple-500 to-violet-600",
-  "from-orange-500 to-amber-600",
-  "from-pink-500 to-rose-600",
-  "from-teal-500 to-cyan-600",
-  "from-indigo-500 to-blue-600",
-  "from-yellow-500 to-amber-600",
+const AVATAR_TOKENS = [
+  "var(--color-avatar-a)",
+  "var(--color-avatar-b)",
+  "var(--color-avatar-c)",
+  "var(--color-avatar-d)",
+  "var(--color-avatar-e)",
+  "var(--color-avatar-f)",
+  "var(--color-avatar-g)",
+  "var(--color-avatar-h)",
 ];
 
 function getAvatarColor(name: string) {
   let hash = 0;
   for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
-  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
+  return AVATAR_TOKENS[Math.abs(hash) % AVATAR_TOKENS.length];
 }
 
 
@@ -97,7 +98,7 @@ export default async function PlayerProfilePage({
       s.pair2?.player2_id === id
   ).sort((a, b) => b.game_number - a.game_number).slice(0, 10);
 
-  const avatarGradient = getAvatarColor(player.name);
+  const avatarColor = getAvatarColor(player.name);
   const tier = getEloTier(player.elo_rating ?? 600);
   const winStreak = recentSets.reduce((streak, set, i) => {
     if (i > 0) return streak; // only check most recent
@@ -133,21 +134,26 @@ export default async function PlayerProfilePage({
   return (
     <div className="flex flex-col gap-6">
       {/* Hero Header */}
-      <div className="relative rounded-2xl overflow-hidden border border-border/50 bg-card">
+      <div className="relative rounded-[var(--radius)] overflow-hidden border border-border bg-card">
         <div className="absolute inset-0 court-bg opacity-30" />
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-transparent" />
         
         <div className="relative flex flex-col sm:flex-row items-start sm:items-center gap-4 p-5 sm:p-6">
           {/* Large Avatar */}
-          <div className={`size-20 sm:size-24 rounded-2xl bg-gradient-to-br ${avatarGradient} flex items-center justify-center font-heading font-bold text-4xl sm:text-5xl text-white shrink-0 shadow-lg`}>
+          <div
+            className="size-20 sm:size-24 rounded-[var(--radius)] flex items-center justify-center font-heading font-bold text-4xl sm:text-5xl text-primary-foreground shrink-0 border border-border/40"
+            style={{ backgroundColor: avatarColor }}
+          >
             {player.name.charAt(0).toUpperCase()}
           </div>
 
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <h1 className="text-2xl sm:text-3xl font-heading font-bold tracking-tight">
-                  {player.name}
+                <h1 className="text-2xl sm:text-3xl font-heading font-bold tracking-tight flex items-center gap-2 flex-wrap">
+                  <span>{player.name}</span>
+                  {player.has_left && (
+                    <PlayerLeftIcon showText leftAt={player.left_at} size="lg" />
+                  )}
                 </h1>
                 {player.nickname && (
                   <p className="text-muted-foreground text-sm sm:text-base mt-0.5">
@@ -155,30 +161,36 @@ export default async function PlayerProfilePage({
                   </p>
                 )}
               </div>
-              <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-sm font-semibold ${tier.bg} ${tier.color} shrink-0`}>
+              <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--radius)] border text-sm font-semibold ${tier.bg} ${tier.color} shrink-0`}>
                 <span>{tier.emoji}</span>
                 <span>{tier.label}</span>
               </div>
             </div>
 
             <div className="flex flex-wrap items-center gap-2 mt-3">
+              {player.has_left && (
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--radius)] bg-destructive/10 border border-destructive/30 text-destructive text-xs font-mono font-bold">
+                  <LogOut className="size-3.5" />
+                  <span>DEPARTED PLAYER{player.left_at ? ` (${player.left_at})` : ""}</span>
+                </div>
+              )}
               {player.elo_rating && (
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-muted/40 border border-border/50">
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-[var(--radius)] bg-muted/40 border border-border/50">
                   <Zap className="size-3.5 text-primary" />
-                  <span className="text-sm font-mono font-bold">{player.elo_rating}</span>
+                  <span className="text-sm font-mono font-bold tabular-nums">{player.elo_rating}</span>
                   <span className="text-xs text-muted-foreground">ELO</span>
                 </div>
               )}
               {peakElo > 0 && peakElo >= currentElo && (
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-muted/40 border border-border/50">
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-[var(--radius)] bg-muted/40 border border-border/50">
                   <TrendingUp className="size-3.5 text-yellow-500" />
-                  <span className="text-sm font-mono font-bold text-yellow-500">{peakElo}</span>
+                  <span className="text-sm font-mono font-bold tabular-nums text-yellow-500">{peakElo}</span>
                   <span className="text-xs text-muted-foreground">PEAK ELO</span>
                 </div>
               )}
               {stats.setsPlayed > 0 && (
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-muted/40 border border-border/50">
-                  <span className="text-sm font-mono font-bold">{stats.winRate.toFixed(0)}%</span>
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-[var(--radius)] bg-muted/40 border border-border/50">
+                  <span className="text-sm font-mono font-bold tabular-nums">{stats.winRate.toFixed(0)}%</span>
                   <span className="text-xs text-muted-foreground">win rate</span>
                   {stats.winRate >= 60 ? (
                     <TrendingUp className="size-3.5 text-win" />
@@ -199,7 +211,7 @@ export default async function PlayerProfilePage({
                 </div>
                 <div className="h-2 w-full bg-primary/20 rounded-full overflow-hidden">
                   <div 
-                    className="h-full bg-primary transition-all duration-700 rounded-full" 
+                    className="h-full bg-primary transition-[width] duration-700 rounded-full" 
                     style={{ width: `${Math.min(100, Math.max(0, ((currentElo - tierProgress.prevElo) / (tierProgress.nextElo - tierProgress.prevElo)) * 100))}%` }} 
                   />
                 </div>
@@ -216,15 +228,13 @@ export default async function PlayerProfilePage({
             label: "Sets Played",
             value: Math.ceil(stats.setsPlayed),
             emoji: "🎯",
-            gradient: "from-blue-500/20 via-blue-500/8 to-transparent",
-            color: "text-blue-400",
+            color: "text-accent",
             icon: <Target className="size-4" />,
           },
           {
             label: "Wins",
             value: Math.ceil(stats.setsWon),
             emoji: "🏆",
-            gradient: "from-win/20 via-win/8 to-transparent",
             color: "text-win",
             icon: <Trophy className="size-4" />,
           },
@@ -232,7 +242,6 @@ export default async function PlayerProfilePage({
             label: "Losses",
             value: Math.ceil(stats.setsLost),
             emoji: "💔",
-            gradient: "from-loss/20 via-loss/8 to-transparent",
             color: "text-loss",
             icon: <Shield className="size-4" />,
           },
@@ -240,14 +249,12 @@ export default async function PlayerProfilePage({
             label: "Win Rate",
             value: `${stats.winRate.toFixed(1)}%`,
             emoji: stats.winRate >= 60 ? "🔥" : stats.winRate >= 50 ? "⚡" : "📊",
-            gradient: stats.winRate >= 60 ? "from-yellow-500/20 via-yellow-500/8 to-transparent" : "from-primary/20 via-primary/8 to-transparent",
             color: stats.winRate >= 60 ? "text-yellow-400" : "text-primary",
             icon: <Zap className="size-4" />,
           },
-        ].map((s, i) => (
-          <Card key={s.label} className="relative overflow-hidden border-border/50 hover:border-primary/20 transition-all duration-200">
-            <div className={`absolute inset-0 bg-gradient-to-br ${s.gradient} pointer-events-none`} />
-            <CardContent className="relative pt-4 pb-4 px-4">
+        ].map((s) => (
+          <Card key={s.label} className="relative overflow-hidden border-border/50 hover:border-accent transition-colors duration-150">
+            <CardContent className="pt-4 pb-4 px-4">
               <div className="flex items-center justify-between mb-2">
                 <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium">{s.label}</p>
                 <span className="text-base">{s.emoji}</span>
@@ -273,22 +280,25 @@ export default async function PlayerProfilePage({
             <div className="flex flex-col gap-2">
               {bestPartners.length > 0 ? (
                 bestPartners.slice(0, 6).map((ps, i) => (
-                  <div key={ps.partner.id} className="flex items-center gap-3 p-2 rounded-xl hover:bg-muted/30 transition-colors group">
-                    <div className={`size-7 rounded-lg flex items-center justify-center text-xs font-bold ${
+                  <div key={ps.partner.id} className="flex items-center gap-3 p-2 rounded-[var(--radius)] hover:bg-muted/30 transition-colors group">
+                    <div className={`size-7 rounded-[var(--radius)] flex items-center justify-center text-xs font-bold ${
                       i === 0 ? "bg-yellow-500/20 text-yellow-400" : "bg-primary/10 text-primary"
                     }`}>
                       {ps.partner.name.charAt(0).toUpperCase()}
                     </div>
                     <Link
                       href={`/players/${ps.partner.id}`}
-                      className="text-sm font-medium hover:text-primary transition-colors flex-1 min-w-0 truncate"
+                      className="text-sm font-medium hover:text-primary transition-colors flex-1 min-w-0 truncate flex items-center gap-1.5"
                     >
-                      {ps.partner.name}
+                      <span className="truncate">{ps.partner.name}</span>
+                      {ps.partner.has_left && (
+                        <PlayerLeftIcon leftAt={ps.partner.left_at} size="sm" />
+                      )}
                     </Link>
                     <div className="flex items-center gap-2">
                       <div className="w-16 h-1.5 rounded-full bg-muted/50 overflow-hidden">
                         <div
-                          className="h-full rounded-full bg-win transition-all duration-700"
+                          className="h-full rounded-full bg-win transition-[width] duration-700"
                           style={{ width: `${ps.winRate}%` }}
                         />
                       </div>
@@ -323,22 +333,25 @@ export default async function PlayerProfilePage({
             <div className="flex flex-col gap-2">
               {toughestOpponents.length > 0 ? (
                 toughestOpponents.slice(0, 6).map((os, i) => (
-                  <div key={os.opponent.id} className="flex items-center gap-3 p-2 rounded-xl hover:bg-muted/30 transition-colors group">
-                    <div className={`size-7 rounded-lg flex items-center justify-center text-xs font-bold ${
+                  <div key={os.opponent.id} className="flex items-center gap-3 p-2 rounded-[var(--radius)] hover:bg-muted/30 transition-colors group">
+                    <div className={`size-7 rounded-[var(--radius)] flex items-center justify-center text-xs font-bold ${
                       i === 0 ? "bg-loss/20 text-loss" : "bg-muted/30 text-muted-foreground"
                     }`}>
                       {os.opponent.name.charAt(0).toUpperCase()}
                     </div>
                     <Link
                       href={`/players/${os.opponent.id}`}
-                      className="text-sm font-medium hover:text-primary transition-colors flex-1 min-w-0 truncate"
+                      className="text-sm font-medium hover:text-primary transition-colors flex-1 min-w-0 truncate flex items-center gap-1.5"
                     >
-                      {os.opponent.name}
+                      <span className="truncate">{os.opponent.name}</span>
+                      {os.opponent.has_left && (
+                        <PlayerLeftIcon leftAt={os.opponent.left_at} size="sm" />
+                      )}
                     </Link>
                     <div className="flex items-center gap-2">
                       <div className="w-16 h-1.5 rounded-full bg-muted/50 overflow-hidden">
                         <div
-                          className="h-full rounded-full bg-loss transition-all duration-700"
+                          className="h-full rounded-full bg-loss transition-[width] duration-700"
                           style={{ width: `${100 - os.winRate}%` }}
                         />
                       </div>
@@ -397,13 +410,13 @@ export default async function PlayerProfilePage({
                 return (
                   <div
                     key={idx}
-                    className={`flex items-center gap-2 sm:gap-3 p-3 rounded-xl border transition-colors ${
+                    className={`flex items-center gap-2 sm:gap-3 p-3 rounded-[var(--radius)] border transition-colors ${
                       won
                         ? "bg-win/8 border-win/20 hover:bg-win/12"
                         : "bg-loss/8 border-loss/20 hover:bg-loss/12"
                     }`}
                   >
-                    <div className={`flex items-center justify-center size-8 rounded-lg font-bold text-sm ${
+                    <div className={`flex items-center justify-center size-8 rounded-[var(--radius)] font-bold text-sm ${
                       won
                         ? "bg-win/20 text-win"
                         : "bg-loss/20 text-loss"
@@ -422,13 +435,13 @@ export default async function PlayerProfilePage({
                       </p>
                     </div>
                     
-                    <div className={`flex items-center gap-1.5 shrink-0 px-2 py-1 rounded-lg font-mono text-xs font-bold ${
+                    <div className={`flex items-center gap-1.5 shrink-0 px-2 py-1 rounded-[var(--radius)] font-mono text-xs font-bold tabular-nums ${
                       won ? "bg-win/10 text-win" : "bg-loss/10 text-loss"
                     }`}>
                       {eloChangeText} ELO
                     </div>
 
-                    <div className={`flex items-center gap-1.5 shrink-0 px-2.5 py-1 rounded-lg font-mono font-bold text-sm ${
+                    <div className={`flex items-center gap-1.5 shrink-0 px-2.5 py-1 rounded-[var(--radius)] font-mono font-bold text-sm tabular-nums ${
                       won ? "bg-win/20 text-win" : "bg-loss/20 text-loss"
                     }`}>
                       {set.pair1_score} <span className="text-muted-foreground font-normal text-xs">–</span> {set.pair2_score}

@@ -48,6 +48,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { PlayerLeftIcon } from "@/components/players/player-left-icon";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -323,7 +324,7 @@ function MatchCard({
             );
           })}
           {(!match.games || match.games.length === 0) && (
-            <p className="text-sm text-muted-foreground italic text-center py-2">No sets recorded.</p>
+            <p className="text-sm text-muted-foreground text-center py-2">No sets recorded.</p>
           )}
         </div>
       </CardContent>
@@ -474,7 +475,7 @@ function InlineQuickPair({
           <SelectContent>
             {allPlayers.map((p) => (
               <SelectItem key={p.id} value={p.id} className="text-xs">
-                {p.name}
+                {p.name}{p.has_left ? " (Left)" : ""}
               </SelectItem>
             ))}
           </SelectContent>
@@ -491,7 +492,7 @@ function InlineQuickPair({
                 .filter((p) => p.id !== p1)
                 .map((p) => (
                   <SelectItem key={p.id} value={p.id} className="text-xs">
-                    {p.name}
+                    {p.name}{p.has_left ? " (Left)" : ""}
                   </SelectItem>
                 ))}
             </SelectContent>
@@ -948,6 +949,7 @@ function PairsTab({
                 <span className="text-xs sm:text-sm font-medium truncate">
                   {pair.player1?.name}
                 </span>
+                {pair.player1?.has_left && <PlayerLeftIcon leftAt={pair.player1.left_at} size="sm" />}
                 <span className="text-muted-foreground text-xs shrink-0">&amp;</span>
                 <div className="size-7 sm:size-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-bold shrink-0">
                   {pair.player2?.name?.charAt(0)}
@@ -955,6 +957,7 @@ function PairsTab({
                 <span className="text-xs sm:text-sm font-medium truncate">
                   {pair.player2?.name}
                 </span>
+                {pair.player2?.has_left && <PlayerLeftIcon leftAt={pair.player2.left_at} size="sm" />}
               </div>
               {isAdmin && (
                 <AlertDialog>
@@ -1044,7 +1047,7 @@ function PairForm({
           <SelectContent>
             {allPlayers.map((p) => (
               <SelectItem key={p.id} value={p.id}>
-                {p.name}
+                {p.name}{p.has_left ? " (Left)" : ""}
               </SelectItem>
             ))}
           </SelectContent>
@@ -1063,7 +1066,7 @@ function PairForm({
               .filter((p) => p.id !== player1)
               .map((p) => (
                 <SelectItem key={p.id} value={p.id}>
-                  {p.name}
+                  {p.name}{p.has_left ? " (Left)" : ""}
                 </SelectItem>
               ))}
           </SelectContent>

@@ -4,6 +4,8 @@ export const playerSchema = z.object({
   name: z.string().min(1, "Name is required").max(50, "Name too long"),
   nickname: z.string().max(30, "Nickname too long").nullable().optional(),
   is_temporary: z.boolean().default(false).optional(),
+  has_left: z.boolean().default(false).optional(),
+  left_at: z.string().nullable().optional(),
 });
 
 export const sessionSchema = z.object({

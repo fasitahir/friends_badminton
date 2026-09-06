@@ -30,6 +30,7 @@ import { EloTrend } from "@/components/dashboard/elo-trend";
 import { Sparkline } from "@/components/dashboard/sparkline";
 import { cn } from "@/lib/utils";
 import { getEloTier } from "@/lib/elo";
+import { PlayerLeftIcon } from "@/components/players/player-left-icon";
 
 interface EnrichedPlayer extends Player {
   winStreak: number;
@@ -49,9 +50,11 @@ function PlayerForm({
 }: {
   player?: Player;
   onClose: () => void;
-}) {
+  }) {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [hasLeft, setHasLeft] = useState(player?.has_left ?? false);
+  const todayStr = new Date().toISOString().slice(0, 10);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -106,6 +109,38 @@ function PlayerForm({
           Temporary / Guest Player (Hide from Leaderboard)
         </Label>
       </div>
+
+      <div className="flex flex-col gap-2 pt-2 border-t border-border/50">
+        <div className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            id="has_left"
+            name="has_left"
+            checked={hasLeft}
+            onChange={(e) => setHasLeft(e.target.checked)}
+            className="rounded-none border-border bg-transparent text-foreground focus:ring-0 size-4"
+          />
+          <Label htmlFor="has_left" className="font-mono text-xs uppercase text-muted-foreground cursor-pointer flex items-center gap-1.5">
+            Player has left / departed group
+          </Label>
+        </div>
+        {hasLeft && (
+          <div className="flex flex-col gap-1.5 pl-6 mt-1">
+            <Label htmlFor="left_at" className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+              Departure Date (Removed from this month & future leaderboards)
+            </Label>
+            <Input
+              type="date"
+              id="left_at"
+              name="left_at"
+              defaultValue={player?.left_at || todayStr}
+              required={hasLeft}
+              className="bg-transparent border border-border rounded-none focus:border-foreground focus:ring-0 text-sm font-mono uppercase h-9 px-3 max-w-xs"
+            />
+          </div>
+        )}
+      </div>
+
       {error && (
         <p className="text-xs font-mono text-red-500 bg-red-950/20 border border-red-900/30 px-3 py-2 rounded-none uppercase">{error}</p>
       )}
@@ -200,7 +235,7 @@ export function PlayerDirectory({ players, isAdmin }: { players: EnrichedPlayer[
             <div
               key={player.id}
               className={cn(
-                "flex flex-col justify-between border border-border p-4 bg-muted/5 hover:bg-muted/10 hover:border-foreground/30 transition-all gap-4 relative",
+                "flex flex-col justify-between border border-border p-4 bg-muted/5 hover:bg-muted/10 hover:border-foreground/30 transition-colors duration-180 gap-4 relative",
                 isElite ? "border-l-2 border-l-aviation-red" : "",
                 isOnFire ? "shadow-[0_0_10px_rgba(224,86,36,0.1)] animate-glow-fire" : "",
                 isCold ? "border-l-2 border-l-sky-400 shadow-[0_0_10px_rgba(14,165,233,0.15)] animate-glow-cold" : ""
@@ -226,6 +261,9 @@ export function PlayerDirectory({ players, isAdmin }: { players: EnrichedPlayer[
                         >
                           {player.name}
                         </NextLink>
+                        {player.has_left && (
+                          <PlayerLeftIcon showText leftAt={player.left_at} size="sm" />
+                        )}
                         {isOnFire && (
                           <span className="inline-flex items-center gap-0.5 text-aviation-red font-bold text-xs shrink-0">
                             <Flame className="size-3.5 fill-aviation-red animate-pulse" />
@@ -261,6 +299,11 @@ export function PlayerDirectory({ players, isAdmin }: { players: EnrichedPlayer[
                   <span className={cn("text-[9px] font-mono tracking-wider border px-1.5 py-0.5 rounded-none uppercase", tier.color, tier.bg)}>
                     {tier.emoji} {tier.label}
                   </span>
+                  {player.has_left && (
+                    <span className="text-[9px] font-mono text-destructive uppercase tracking-wider border border-destructive/40 bg-destructive/10 px-1.5 py-0.5 flex items-center gap-1">
+                      LEFT{player.left_at ? ` (${player.left_at})` : ""}
+                    </span>
+                  )}
                   {(player as any).is_temporary && (
                     <span className="text-[9px] font-mono text-orange-400 uppercase tracking-wider border border-orange-400/30 bg-orange-500/5 px-1.5 py-0.5">
                       GUEST

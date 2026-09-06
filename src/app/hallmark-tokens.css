@@ -49,6 +49,16 @@
   --color-cold-glow:        oklch(62% 0.17 220 / 0.15);
   --color-cold-glow-strong: oklch(62% 0.17 220 / 0.35);
 
+  /* ─── Avatar hue tokens (8 perceptual OKLCH steps) ───────────── */
+  --color-avatar-a: oklch(50% 0.20 25);
+  --color-avatar-b: oklch(52% 0.18 65);
+  --color-avatar-c: oklch(50% 0.16 120);
+  --color-avatar-d: oklch(50% 0.18 150);
+  --color-avatar-e: oklch(50% 0.16 195);
+  --color-avatar-f: oklch(50% 0.18 245);
+  --color-avatar-g: oklch(50% 0.18 285);
+  --color-avatar-h: oklch(50% 0.20 330);
+
   /* ─── Typography ──────────────────────────────────────────────── */
   --font-display: "Space Grotesk", system-ui, sans-serif;
   --font-body:    "Geist", "GeistSans", system-ui, sans-serif;

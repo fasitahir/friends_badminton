@@ -9,6 +9,7 @@ import {
 import Link from "next/link";
 import { Flame, Minus, Snowflake } from "lucide-react";
 import { getEloTier } from "@/lib/elo";
+import { PlayerLeftIcon } from "@/components/players/player-left-icon";
 
 interface MonthlyEntry {
   player_id: string;
@@ -16,7 +17,14 @@ interface MonthlyEntry {
   sets_won: number;
   sets_lost: number;
   win_rate: number;
-  player: { id: string; name: string; nickname: string | null; elo_rating?: number | null };
+  player: {
+    id: string;
+    name: string;
+    nickname: string | null;
+    elo_rating?: number | null;
+    has_left?: boolean | null;
+    left_at?: string | null;
+  };
 }
 
 interface AllTimeEntry {
@@ -149,6 +157,9 @@ export function MonthlyLeaderboard({
                   <p className={`text-base truncate ${isRankOne ? 'font-bold font-heading text-xl tracking-tight text-foreground' : isElite ? 'font-bold font-heading text-lg tracking-tight' : 'font-medium'}`}>
                     {entry.player?.name ?? entry.player_id}
                   </p>
+                  {entry.player?.has_left && (
+                    <PlayerLeftIcon leftAt={entry.player.left_at} size="sm" />
+                  )}
                   <span className={`text-[9px] font-mono tracking-wider border border-current/30 px-1.5 py-0.5 rounded-none uppercase ${tier.color}`}>
                     {tier.label}
                   </span>

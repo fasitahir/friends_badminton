@@ -56,10 +56,18 @@ export async function createPlayer(formData: FormData) {
 
   const supabase = await createClient();
 
+  const hasLeft = formData.get("has_left") === "on";
+  const leftAtRaw = formData.get("left_at");
+  const leftAt = hasLeft
+    ? (typeof leftAtRaw === "string" && leftAtRaw.trim() ? leftAtRaw.trim() : new Date().toISOString().slice(0, 10))
+    : null;
+
   const parsed = playerSchema.safeParse({
     name: formData.get("name"),
     nickname: formData.get("nickname") || null,
     is_temporary: formData.get("is_temporary") === "on",
+    has_left: hasLeft,
+    left_at: leftAt,
   });
 
   if (!parsed.success) {
@@ -82,10 +90,18 @@ export async function updatePlayer(id: string, formData: FormData) {
 
   const supabase = await createClient();
 
+  const hasLeft = formData.get("has_left") === "on";
+  const leftAtRaw = formData.get("left_at");
+  const leftAt = hasLeft
+    ? (typeof leftAtRaw === "string" && leftAtRaw.trim() ? leftAtRaw.trim() : new Date().toISOString().slice(0, 10))
+    : null;
+
   const parsed = playerSchema.safeParse({
     name: formData.get("name"),
     nickname: formData.get("nickname") || null,
     is_temporary: formData.get("is_temporary") === "on",
+    has_left: hasLeft,
+    left_at: leftAt,
   });
 
   if (!parsed.success) {
@@ -104,6 +120,7 @@ export async function updatePlayer(id: string, formData: FormData) {
   revalidatePath("/players");
   revalidatePath(`/players/${id}`);
   revalidatePath("/analytics");
+  revalidatePath("/");
   return { success: true };
 }
 

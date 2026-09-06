@@ -26,7 +26,7 @@ function getRankStyle(idx: number) {
 
 export function LiveLeaderboard({ players }: { players: any[] }) {
   const sortedPlayers = [...players]
-    .filter(p => p.elo_rating)
+    .filter(p => p.elo_rating && !p.has_left)
     .sort((a, b) => b.elo_rating - a.elo_rating)
     .slice(0, 10);
 

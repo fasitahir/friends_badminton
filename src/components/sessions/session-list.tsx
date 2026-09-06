@@ -111,12 +111,12 @@ export function SessionList({ sessions, isAdmin }: { sessions: SessionWithCount[
       )}
 
       <div className="flex flex-col gap-3">
-        {sessions.map((session, i) => (
+        {sessions.map((session) => (
           <Link key={session.id} href={`/sessions/${session.id}`}>
-            <Card className={`hover:border-primary/30 border-border/50 transition-all duration-200 cursor-pointer group hover:scale-[1.01] hover:shadow-md hover:shadow-primary/5 slide-up stagger-${Math.min(i + 1, 6)}`}>
+            <Card className="hover:border-accent border-border/50 transition-colors duration-180 cursor-pointer group rounded-[var(--radius)]">
               <CardContent className="flex items-center justify-between py-3 sm:py-4 gap-3">
                 <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
-                  <div className="size-10 sm:size-12 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center shrink-0 group-hover:from-primary/30 transition-all">
+                  <div className="size-10 sm:size-12 rounded-[var(--radius)] bg-muted flex items-center justify-center shrink-0 group-hover:bg-muted/80 transition-colors duration-180">
                     <span className="text-xl sm:text-2xl">🎯</span>
                   </div>
                   <div className="min-w-0 flex-1">
@@ -194,7 +194,7 @@ export function SessionList({ sessions, isAdmin }: { sessions: SessionWithCount[
                       </AlertDialogContent>
                     </AlertDialog>
                   )}
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-4 text-muted-foreground/40 group-hover:text-primary group-hover:translate-x-0.5 transition-all hidden sm:block">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-4 text-muted-foreground/40 group-hover:text-primary group-hover:translate-x-0.5 transition-transform duration-180 hidden sm:block">
                     <path d="m9 18 6-6-6-6" />
                   </svg>
                 </div>

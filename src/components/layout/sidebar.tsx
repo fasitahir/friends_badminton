@@ -13,6 +13,7 @@ import {
   LogOut,
 } from "lucide-react";
 import { ThemeToggle } from "./theme-toggle";
+import { PaletteSwitcher } from "./palette-switcher";
 
 const navItems = [
   {
@@ -47,7 +48,7 @@ export function Sidebar({ isAdmin }: { isAdmin?: boolean }) {
   return (
     <aside className="hidden md:flex md:flex-col md:w-56 border-r border-sidebar-border bg-sidebar min-h-screen relative">
       {/* Wordmark — M6 fix: was h1, causing double-h1 across every page */}
-      <div className="flex items-center justify-between px-5 py-5 border-b border-sidebar-border">
+      <div className="flex items-center px-5 py-5 border-b border-sidebar-border">
         <div className="flex flex-col gap-0.5">
           <span className="font-heading font-semibold text-sm tracking-tight text-sidebar-foreground leading-none">
             Shuttle Stats
@@ -56,7 +57,6 @@ export function Sidebar({ isAdmin }: { isAdmin?: boolean }) {
             Badminton Analytics
           </p>
         </div>
-        <ThemeToggle />
       </div>
 
       {/* Navigation */}
@@ -100,6 +100,10 @@ export function Sidebar({ isAdmin }: { isAdmin?: boolean }) {
 
       {/* Footer */}
       <div className="px-3 py-4 border-t border-sidebar-border flex flex-col gap-1">
+        {/* Palette switcher — 3 themes + light/dark toggle */}
+        <div className="px-1 pb-2">
+          <PaletteSwitcher />
+        </div>
         {isAdmin ? (
           <form action={logout}>
             <button
@@ -179,13 +183,11 @@ export function MobileNav({ isAdmin }: { isAdmin?: boolean }) {
           );
         })}
 
-        {/* M2 fix: ThemeToggle stays but gets a proper labelled slot */}
+        {/* Theme slot — palette + mode combined */}
         <li className="flex-1">
-          <div className="flex flex-col items-center gap-0.5 px-1 py-2.5 min-h-[52px] justify-center">
-            <ThemeToggle />
-            <span className="text-[9px] leading-none tracking-wide text-muted-foreground mt-0.5">
-              Theme
-            </span>
+          <div className="flex flex-col items-center gap-0.5 px-1 py-2 min-h-[52px] justify-center">
+            <PaletteSwitcher compact />
+            <span className="text-[9px] leading-none tracking-wide text-muted-foreground mt-0.5">Theme</span>
           </div>
         </li>
 

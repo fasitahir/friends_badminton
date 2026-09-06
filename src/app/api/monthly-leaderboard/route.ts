@@ -22,6 +22,12 @@ export async function GET(req: NextRequest) {
     const matches = (matchesData || []) as any[];
 
     const liveEntries = (players ?? [])
+      .filter((player: any) => !player.is_temporary)
+      .filter((player: any) => {
+        if (!player.has_left) return true;
+        const leftMonth = player.left_at ? String(player.left_at).slice(0, 7) : currentMonthStr;
+        return month < leftMonth;
+      })
       .map((player) => {
         let played = 0;
         let won = 0;
@@ -68,6 +74,8 @@ export async function GET(req: NextRequest) {
             name: player.name,
             nickname: player.nickname || null,
             elo_rating: player.elo_rating,
+            has_left: player.has_left,
+            left_at: player.left_at,
           },
         };
       })

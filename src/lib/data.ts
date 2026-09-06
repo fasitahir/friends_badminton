@@ -292,7 +292,17 @@ async function _fetchMonthlyLeaderboard(yearMonth: string) {
       .select("*, player:players(*)")
       .eq("month", monthDate)
       .order("win_rate", { ascending: false });
-    return (data ?? []) as any[];
+
+    // Exclude players who left in or before this month
+    const filtered = (data ?? []).filter((row: any) => {
+      const p = row.player;
+      if (!p?.has_left) return true;
+      const leftMonth = p.left_at ? String(p.left_at).slice(0, 7) : null;
+      if (!leftMonth) return false;
+      return yearMonth < leftMonth;
+    });
+
+    return filtered;
   } catch (err) {
     console.error("Failed to fetch monthly leaderboard:", err);
     return [] as any[];

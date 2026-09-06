@@ -4,6 +4,8 @@ export type Player = {
   nickname: string | null;
   elo_rating: number;
   is_temporary: boolean;
+  has_left?: boolean | null;
+  left_at?: string | null;
   created_at: string;
 };
 

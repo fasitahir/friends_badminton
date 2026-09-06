@@ -17,7 +17,7 @@ export function Sparkline({ data }: SparklineProps) {
   const padding = (max - min) * 0.1 || 10;
 
   return (
-    <div className="w-16 h-8 opacity-60 grayscale hover:grayscale-0 hover:opacity-100 transition-all shrink-0 flex items-center justify-center">
+    <div className="w-16 h-8 opacity-60 grayscale hover:grayscale-0 hover:opacity-100 transition-[opacity,filter] duration-180 shrink-0 flex items-center justify-center">
       <LineChart
         width={64}
         height={32}

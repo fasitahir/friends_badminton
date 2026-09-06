@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { PlayerLeftIcon } from "@/components/players/player-left-icon";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -46,10 +47,11 @@ function PlayerToggle({
     <button
       onClick={onToggle}
       className={cn(
-        "relative flex items-center gap-2 px-3 py-2 rounded-xl border-2 text-left transition-all duration-150 w-full",
+        "relative flex items-center gap-2 px-3 py-2 rounded-[var(--radius)] border-2 text-left transition-colors duration-150 w-full",
         selected
           ? "border-primary bg-primary/10"
-          : "border-border bg-card hover:border-primary/40 hover:bg-muted/40"
+          : "border-border bg-card hover:border-primary/40 hover:bg-muted/40",
+        player.has_left && "opacity-60"
       )}
     >
       {selected && (
@@ -58,9 +60,12 @@ function PlayerToggle({
         </span>
       )}
       <span className="text-sm">{tier.emoji}</span>
-      <div className="flex flex-col gap-0.5 min-w-0">
+      <div className="flex flex-col gap-0.5 min-w-0 flex-1">
         {/* Always show name (not nickname) */}
-        <span className="text-xs font-semibold truncate">{player.name}</span>
+        <div className="flex items-center gap-1">
+          <span className="text-xs font-semibold truncate">{player.name}</span>
+          {player.has_left && <PlayerLeftIcon leftAt={player.left_at} size="sm" />}
+        </div>
         <EloBadge elo={player.elo_rating ?? 600} />
       </div>
     </button>
