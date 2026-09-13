@@ -61,15 +61,20 @@ export function AnalyticsDashboard({ players, matches }: AnalyticsDashboardProps
   const filteredMatches = useMemo(() => {
     if (showTemp) return matches;
     const permIds = new Set(players.filter((p) => !(p as any).is_temporary).map((p) => p.id));
-    return matches.filter((m) => {
-      const allPlayerIds = m.games.flatMap((g) => [
-        g.pair1?.player1_id,
-        g.pair1?.player2_id,
-        g.pair2?.player1_id,
-        g.pair2?.player2_id,
-      ]);
-      return allPlayerIds.every((id) => !id || permIds.has(id));
-    });
+    return matches
+      .map((m) => ({
+        ...m,
+        games: m.games.filter((g) => {
+          const gamePlayerIds = [
+            g.pair1?.player1_id,
+            g.pair1?.player2_id,
+            g.pair2?.player1_id,
+            g.pair2?.player2_id,
+          ];
+          return gamePlayerIds.every((id) => !id || permIds.has(id));
+        }),
+      }))
+      .filter((m) => m.games.length > 0);
   }, [matches, players, showTemp]);
 
   const allPlayerStats = useMemo(

@@ -236,8 +236,8 @@ export function computePairVsPair(
       else pair2Wins += weight;
     } else if (p2In1 && p1In2) {
       const weight = getMatchWeight(set);
-      if (set.winning_pair_id === set.pair2.id) pair2Wins += weight;
-      else pair1Wins += weight;
+      if (set.winning_pair_id === set.pair2.id) pair1Wins += weight;
+      else pair2Wins += weight;
     }
   }
 
