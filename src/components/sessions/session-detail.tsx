@@ -12,6 +12,7 @@ import {
   updateMatch,
   deleteSessionSchedule,
   saveSessionSchedule,
+  updateSession,
 } from "@/app/actions";
 import { getEloTier } from "@/lib/elo";
 import { extendSchedule } from "@/lib/scheduler";
@@ -63,6 +64,54 @@ interface SessionDetailProps {
   schedule?: any[];
 }
 
+function EditSessionForm({ session, onClose }: { session: any, onClose: () => void }) {
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+
+    const formData = new FormData(e.currentTarget);
+    const result = await updateSession(session.id, formData);
+
+    if (result.error) {
+      setError(result.error);
+      setLoading(false);
+    } else {
+      onClose();
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="name">Session Name</Label>
+        <Input
+          id="name"
+          name="name"
+          defaultValue={session.name}
+          placeholder="e.g. Saturday Night Session"
+          required
+        />
+      </div>
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="date">Date</Label>
+        <Input id="date" name="date" type="date" defaultValue={session.date} required />
+      </div>
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="notes">Notes (optional)</Label>
+        <Input id="notes" name="notes" defaultValue={session.notes || ""} placeholder="Any notes about this session" />
+      </div>
+      {error && <p className="text-sm text-destructive">{error}</p>}
+      <Button type="submit" disabled={loading}>
+        {loading ? "Saving..." : "Save Changes"}
+      </Button>
+    </form>
+  );
+}
+
 export function SessionDetail({
   session,
   teams,
@@ -90,9 +139,32 @@ export function SessionDetail({
     <div className="flex flex-col gap-4 sm:gap-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl sm:text-3xl font-heading font-bold tracking-tight">
-          {session.name}
-        </h1>
+        <div className="flex items-center gap-3">
+          <h1 className="text-2xl sm:text-3xl font-heading font-bold tracking-tight">
+            {session.name}
+          </h1>
+          {isAdmin && (
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-4"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Edit Session</DialogTitle>
+                </DialogHeader>
+                <EditSessionForm session={session} onClose={() => {
+                  // A small hack: Dialog component without open/onOpenChange manages its own state. 
+                  // To close it programmatically without controlling it, we can simulate an escape press or find the close button, 
+                  // but it's better to just use controlled state if we really need to close it.
+                  // Since we are not controlling it, let's just trigger an Escape event on the document to close the dialog.
+                  document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+                }} />
+              </DialogContent>
+            </Dialog>
+          )}
+        </div>
         <div className="flex items-center gap-3 mt-1">
           <p className="text-sm sm:text-base text-muted-foreground">
             {new Date(session.date).toLocaleDateString("en-US", {
