@@ -102,6 +102,7 @@ export default async function SessionDetailPage({
     games: (matchGames || []).filter((g) => g.match_id === match.id),
   }));
 
+  return (
     <SessionDetail
       session={session}
       teams={teamsWithMembers}

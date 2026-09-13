@@ -147,11 +147,11 @@ export function SessionDetail({
           </h1>
           {isAdmin && (
             <Dialog>
-              <DialogTrigger asChild>
+              <DialogTrigger render={
                 <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-4"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
                 </Button>
-              </DialogTrigger>
+              } />
               <DialogContent>
                 <DialogHeader>
                   <DialogTitle>Edit Session</DialogTitle>
@@ -479,12 +479,12 @@ function MatchesTab({
               setCreateOpen(o);
               if (!o) onPrefilledConsumed?.();
             }}>
-              <DialogTrigger asChild>
+              <DialogTrigger render={
                 <Button size="sm" className="h-9 touch-target">
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-4 mr-1.5"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
                   Record Match
                 </Button>
-              </DialogTrigger>
+              } />
               <DialogContent className="max-w-lg sm:max-w-lg max-h-[95vh] sm:max-h-[85vh] overflow-hidden flex flex-col p-0 sm:p-6 gap-0">
               <DialogHeader className="px-4 pt-4 sm:px-0 sm:pt-0 pb-2">
                 <DialogTitle>Record Match</DialogTitle>
