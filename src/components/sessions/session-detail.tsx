@@ -60,6 +60,7 @@ interface SessionDetailProps {
   matches: any[];
   allPlayers: Player[];
   isAdmin?: boolean;
+  isSuperAdmin?: boolean;
   /** Planned match schedule rows from session_schedule table */
   schedule?: any[];
 }
@@ -119,6 +120,7 @@ export function SessionDetail({
   matches,
   allPlayers,
   isAdmin,
+  isSuperAdmin,
   schedule = [],
 }: SessionDetailProps) {
   // Controlled tab + cross-tab prefill for "Play" from schedule
@@ -214,6 +216,7 @@ export function SessionDetail({
             pairs={pairs}
             allPlayers={allPlayers}
             isAdmin={isAdmin}
+            isSuperAdmin={isSuperAdmin}
             prefilledPair1Id={prefilledPair1Id}
             prefilledPair2Id={prefilledPair2Id}
             onPrefilledConsumed={() => {
@@ -254,12 +257,14 @@ function MatchCard({
   pairs,
   allPlayers,
   isAdmin,
+  showTracking,
 }: {
   match: any;
   sessionId: string;
   pairs: any[];
   allPlayers: Player[];
   isAdmin?: boolean;
+  showTracking?: boolean;
 }) {
   const [editOpen, setEditOpen] = useState(false);
 
@@ -399,6 +404,19 @@ function MatchCard({
             <p className="text-sm text-muted-foreground text-center py-2">No sets recorded.</p>
           )}
         </div>
+
+        {showTracking && (match.created_by_admin || match.updated_by_admin) && (
+          <div className="mt-3 flex flex-col gap-1 text-[10px] sm:text-xs text-muted-foreground bg-muted/30 p-2 sm:p-3 rounded-md border border-dashed border-border/50">
+            {match.created_by_admin && (
+              <div><span className="font-medium text-foreground">Added by:</span> {match.created_by_admin.username}</div>
+            )}
+            {match.updated_by_admin && match.updated_at && (
+              <div>
+                <span className="font-medium text-foreground">Edited by:</span> {match.updated_by_admin.username} at {new Date(match.updated_at).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "numeric" })}
+              </div>
+            )}
+          </div>
+        )}
       </CardContent>
     </Card>
   );
@@ -410,6 +428,7 @@ function MatchesTab({
   pairs,
   allPlayers,
   isAdmin,
+  isSuperAdmin,
   prefilledPair1Id,
   prefilledPair2Id,
   onPrefilledConsumed,
@@ -419,12 +438,14 @@ function MatchesTab({
   pairs: any[];
   allPlayers: Player[];
   isAdmin?: boolean;
+  isSuperAdmin?: boolean;
   /** When set, auto-opens the Record Match dialog with these pairs pre-selected */
   prefilledPair1Id?: string | null;
   prefilledPair2Id?: string | null;
   onPrefilledConsumed?: () => void;
 }) {
   const [createOpen, setCreateOpen] = useState(false);
+  const [showTracking, setShowTracking] = useState(false);
 
   // Auto-open match dialog when navigated here via Play button from schedule
   const [consumedPrefill, setConsumedPrefill] = useState(false);
@@ -441,16 +462,30 @@ function MatchesTab({
     <div className="flex flex-col gap-3 sm:gap-4">
       <div className="flex justify-between items-center">
         <h2 className="text-base sm:text-lg font-semibold">Match History</h2>
-        {isAdmin && (
-          <Dialog open={createOpen} onOpenChange={(o) => {
-            setCreateOpen(o);
-            if (!o) onPrefilledConsumed?.();
-          }}>
-            <DialogTrigger render={<Button size="sm" className="h-9 touch-target" />}>
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-4 mr-1.5"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
-              Record Match
-            </DialogTrigger>
-            <DialogContent className="max-w-lg sm:max-w-lg max-h-[95vh] sm:max-h-[85vh] overflow-hidden flex flex-col p-0 sm:p-6 gap-0">
+        <div className="flex items-center gap-2">
+          {isSuperAdmin && (
+            <Button
+              variant={showTracking ? "secondary" : "outline"}
+              size="sm"
+              className="h-9 text-xs touch-target"
+              onClick={() => setShowTracking(!showTracking)}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-3.5 mr-1.5"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+              {showTracking ? "Hide Track" : "Show Track"}
+            </Button>
+          )}
+          {isAdmin && (
+            <Dialog open={createOpen} onOpenChange={(o) => {
+              setCreateOpen(o);
+              if (!o) onPrefilledConsumed?.();
+            }}>
+              <DialogTrigger asChild>
+                <Button size="sm" className="h-9 touch-target">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-4 mr-1.5"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+                  Record Match
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-lg sm:max-w-lg max-h-[95vh] sm:max-h-[85vh] overflow-hidden flex flex-col p-0 sm:p-6 gap-0">
               <DialogHeader className="px-4 pt-4 sm:px-0 sm:pt-0 pb-2">
                 <DialogTitle>Record Match</DialogTitle>
               </DialogHeader>
@@ -468,6 +503,7 @@ function MatchesTab({
             </DialogContent>
           </Dialog>
         )}
+        </div>
       </div>
 
       <div className="flex flex-col gap-3 sm:gap-4">
@@ -479,6 +515,7 @@ function MatchesTab({
             pairs={pairs}
             allPlayers={allPlayers}
             isAdmin={isAdmin}
+            showTracking={showTracking}
           />
         ))}
       </div>

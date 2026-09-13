@@ -17,7 +17,7 @@ export async function login(formData: FormData) {
   
   const { data: admin, error } = await supabase
     .from("admins")
-    .select("id")
+    .select("id, username, role")
     .eq("username", username)
     .eq("password", password)
     .single();
@@ -27,7 +27,7 @@ export async function login(formData: FormData) {
   }
 
   const cookieStore = await cookies();
-  cookieStore.set("admin_auth", "true", {
+  cookieStore.set("admin_auth", JSON.stringify({ id: admin.id, username: admin.username, role: admin.role }), {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
@@ -390,6 +390,12 @@ export async function createMatch(data: {
     return { error: matchError.message };
   }
 
+  const { getAdmin } = await import("@/lib/auth");
+  const admin = await getAdmin();
+  if (admin && admin.id && admin.id !== "legacy-admin") {
+    await supabase.from("matches").update({ created_by: admin.id }).eq("id", matchId);
+  }
+
   revalidatePath(`/sessions/${data.session_id}`);
   revalidatePath("/analytics");
   revalidatePath("/players");
@@ -461,6 +467,15 @@ export async function updateMatch(
 
   if (matchError) {
     return { error: matchError.message };
+  }
+
+  const { getAdmin } = await import("@/lib/auth");
+  const admin = await getAdmin();
+  if (admin && admin.id && admin.id !== "legacy-admin") {
+    await supabase.from("matches").update({ 
+      updated_by: admin.id,
+      updated_at: new Date().toISOString()
+    }).eq("id", matchId);
   }
 
   revalidatePath(`/sessions/${data.session_id}`);

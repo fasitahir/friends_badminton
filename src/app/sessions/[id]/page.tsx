@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import { SessionDetail } from "@/components/sessions/session-detail";
-import { getIsAdmin } from "@/lib/auth";
+import { getIsAdmin, getIsSuperAdmin } from "@/lib/auth";
 import { getSessionSchedule } from "@/lib/data";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
@@ -25,6 +25,7 @@ export default async function SessionDetailPage({
   const { id } = await params;
   const supabase = await createClient();
   const isAdmin = await getIsAdmin();
+  const isSuperAdmin = await getIsSuperAdmin();
 
   const { data: session } = await supabase
     .from("sessions")
@@ -46,7 +47,7 @@ export default async function SessionDetailPage({
   const { data: matches } = await supabase
     .from("matches")
     .select(
-      "*, team1:teams!matches_team1_id_fkey(*), team2:teams!matches_team2_id_fkey(*), winning_team:teams!matches_winning_team_id_fkey(*)"
+      "*, team1:teams!matches_team1_id_fkey(*), team2:teams!matches_team2_id_fkey(*), winning_team:teams!matches_winning_team_id_fkey(*), created_by_admin:admins!matches_created_by_fkey(id, username), updated_by_admin:admins!matches_updated_by_fkey(id, username)"
     )
     .eq("session_id", id)
     .order("created_at", { ascending: false });
@@ -101,7 +102,6 @@ export default async function SessionDetailPage({
     games: (matchGames || []).filter((g) => g.match_id === match.id),
   }));
 
-  return (
     <SessionDetail
       session={session}
       teams={teamsWithMembers}
@@ -109,6 +109,7 @@ export default async function SessionDetailPage({
       matches={matchesWithGames}
       allPlayers={allPlayers || []}
       isAdmin={isAdmin}
+      isSuperAdmin={isSuperAdmin}
       schedule={schedule}
     />
   );

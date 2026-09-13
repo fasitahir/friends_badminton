@@ -17,6 +17,13 @@ export type Session = {
   created_at: string;
 };
 
+export type Admin = {
+  id: string;
+  username: string;
+  role: 'admin' | 'superadmin';
+  created_at: string;
+};
+
 export type Team = {
   id: string;
   session_id: string;
@@ -44,6 +51,9 @@ export type Match = {
   best_of: number;
   winning_team_id: string | null;
   created_at: string;
+  created_by?: string | null;
+  updated_by?: string | null;
+  updated_at?: string | null;
 };
 
 export type MatchGame = {
@@ -84,6 +94,8 @@ export type MatchWithDetails = Match & {
   team2: Team | null;
   winning_team: Team | null;
   games: MatchGameWithPairs[];
+  created_by_admin?: Admin | null;
+  updated_by_admin?: Admin | null;
 };
 
 export type SessionWithDetails = Session & {
