@@ -7,10 +7,11 @@ import {
   computePlayerStats,
   computeBestPartners,
   computeToughestOpponents,
+  computePlayerStreaks,
 } from "@/lib/analytics";
 import { getEloTier, getNextTierProgress } from "@/lib/elo";
 import Link from "next/link";
-import { TrendingUp, TrendingDown, Minus, Trophy, Target, Zap, Shield, LogOut } from "lucide-react";
+import { TrendingUp, TrendingDown, Minus, Trophy, Target, Zap, Shield, LogOut, Flame, Snowflake } from "lucide-react";
 import { PlayerLeftIcon } from "@/components/players/player-left-icon";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
@@ -100,13 +101,7 @@ export default async function PlayerProfilePage({
 
   const avatarColor = getAvatarColor(player.name);
   const tier = getEloTier(player.elo_rating ?? 600);
-  const winStreak = recentSets.reduce((streak, set, i) => {
-    if (i > 0) return streak; // only check most recent
-    const won = set.winning_pair_id === set.pair1_id
-      ? (set.pair1?.player1_id === id || set.pair1?.player2_id === id)
-      : (set.pair2?.player1_id === id || set.pair2?.player2_id === id);
-    return won ? streak + 1 : streak;
-  }, 0);
+  const streaks = computePlayerStreaks(id, matches);
 
   const currentElo = player.elo_rating ?? 600;
   let peakElo = currentElo;
@@ -199,6 +194,20 @@ export default async function PlayerProfilePage({
                   ) : (
                     <Minus className="size-3.5 text-muted-foreground/40" />
                   )}
+                </div>
+              )}
+              {streaks.longestWinStreak > 0 && (
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-[var(--radius)] bg-muted/40 border border-border/50">
+                  <Flame className="size-3.5 text-aviation-red fill-aviation-red" />
+                  <span className="text-sm font-mono font-bold tabular-nums">{streaks.longestWinStreak}</span>
+                  <span className="text-xs text-muted-foreground">best win streak</span>
+                </div>
+              )}
+              {streaks.longestLossStreak > 0 && (
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-[var(--radius)] bg-muted/40 border border-border/50">
+                  <Snowflake className="size-3.5" style={{ color: "var(--cold-stripe)" }} />
+                  <span className="text-sm font-mono font-bold tabular-nums">{streaks.longestLossStreak}</span>
+                  <span className="text-xs text-muted-foreground">worst loss streak</span>
                 </div>
               )}
             </div>

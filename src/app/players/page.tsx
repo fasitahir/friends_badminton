@@ -1,6 +1,8 @@
 import { getPlayers, getMatchesWithDetails } from "@/lib/data";
 import { PlayerDirectory } from "@/components/players/player-directory";
 import { getIsAdmin } from "@/lib/auth";
+import { computePlayerStreaks } from "@/lib/analytics";
+import type { MatchWithDetails } from "@/lib/supabase/types";
 
 export const metadata = {
   title: "Players — Shuttle Stats",
@@ -17,13 +19,11 @@ export default async function PlayersPage() {
     getMatchesWithDetails(),
   ]);
 
-  const matches = (matchesData || []) as any[];
+  const matches = (matchesData || []) as MatchWithDetails[];
 
   // Compute streaks, sparkline (last 10 Elo), and set stats for each player
   const enrichedPlayers = (players ?? []).map((player) => {
-    let wStreak = 0;
-    let lStreak = 0;
-    let streakActive = true;
+    const streaks = computePlayerStreaks(player.id, matches);
     let sparkline = [player.elo_rating];
     let currentElo = player.elo_rating;
     let totalSets = 0;
@@ -39,16 +39,6 @@ export default async function PlayersPage() {
           const wonSet = g.winning_pair_id === (inP1 ? g.pair1_id : g.pair2_id);
           if (wonSet) setsWon++;
           else setsLost++;
-
-          if (streakActive) {
-            if (wonSet) {
-              if (lStreak > 0) streakActive = false;
-              else wStreak++;
-            } else {
-              if (wStreak > 0) streakActive = false;
-              else lStreak++;
-            }
-          }
 
           if (sparkline.length < 10) {
             const eloChange = inP1 ? g.pair1_elo_change : g.pair2_elo_change;
@@ -66,8 +56,10 @@ export default async function PlayersPage() {
 
     return {
       ...player,
-      winStreak: wStreak,
-      lossStreak: lStreak,
+      winStreak: streaks.currentWinStreak,
+      lossStreak: streaks.currentLossStreak,
+      longestWinStreak: streaks.longestWinStreak,
+      longestLossStreak: streaks.longestLossStreak,
       totalSets,
       setsWon,
       setsLost,

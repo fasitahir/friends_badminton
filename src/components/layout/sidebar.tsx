@@ -5,22 +5,22 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { logout } from "@/app/actions";
 import {
-  LayoutDashboard,
   Users,
   CalendarDays,
   BarChart2,
   LogIn,
   LogOut,
+  Award,
 } from "lucide-react";
 import { ThemeToggle } from "./theme-toggle";
 import { PaletteSwitcher } from "./palette-switcher";
 
 const navItems = [
   {
-    label: "Dashboard",
-    href: "/",
-    Icon: LayoutDashboard,
-    shortLabel: "Home",
+    label: "Records",
+    href: "/records",
+    Icon: Award,
+    shortLabel: "Records",
   },
   {
     label: "Players",
