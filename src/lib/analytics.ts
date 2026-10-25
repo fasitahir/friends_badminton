@@ -8,6 +8,8 @@ import type {
   PartnerStats,
   OpponentStats,
   MatchGameWithPairs,
+  RecordEntry,
+  Records,
 } from "@/lib/supabase/types";
 
 
@@ -345,4 +347,274 @@ export function computeToughestOpponents(
     })
     .filter((s) => s.opponent)
     .sort((a, b) => a.winRate - b.winRate); // lowest win rate first = toughest
+}
+
+// ─── Records ────────────────────────────────────────────────────────────────
+
+function pairLabel(pair: PairWithPlayers): string {
+  const n1 = pair.player1?.nickname || pair.player1?.name || "?";
+  const n2 = pair.player2?.nickname || pair.player2?.name || "?";
+  return `${n1} & ${n2}`;
+}
+
+function playerLabel(p: Player): string {
+  return p.nickname || p.name;
+}
+
+/**
+ * Compute all-time records from raw match data.
+ * Only real (non-temporary) players are included.
+ */
+export function computeRecords(
+  players: Player[],
+  matches: MatchWithDetails[]
+): Records {
+  const realPlayerIds = new Set(
+    players.filter((p) => !p.is_temporary).map((p) => p.id)
+  );
+
+  // Track per-player aggregates
+  const playerSetsWon = new Map<string, number>();
+  const playerSetsPlayed = new Map<string, number>();
+  const playerWinStreaks = new Map<string, number>();   // longest ever
+  const playerLossStreaks = new Map<string, number>();  // longest ever
+  const playerCurWin = new Map<string, number>();       // running current streak
+  const playerCurLoss = new Map<string, number>();
+  const playerElo = new Map<string, number>();
+
+  for (const p of players) {
+    if (realPlayerIds.has(p.id)) {
+      playerSetsWon.set(p.id, 0);
+      playerSetsPlayed.set(p.id, 0);
+      playerWinStreaks.set(p.id, 0);
+      playerLossStreaks.set(p.id, 0);
+      playerCurWin.set(p.id, 0);
+      playerCurLoss.set(p.id, 0);
+      playerElo.set(p.id, p.elo_rating);
+    }
+  }
+
+  // Track per-duo aggregates
+  const duoWins = new Map<string, { label: string; wins: number; played: number }>();
+
+  // Track margin records
+  let biggestMargin = -1;
+  let biggestMarginEntry: RecordEntry | null = null;
+
+  // Sort matches chronologically for streak computation
+  const sortedMatches = [...matches].sort(
+    (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+  );
+
+  for (const match of sortedMatches) {
+    for (const game of match.games || []) {
+      if (!game.winning_pair_id || !game.pair1 || !game.pair2) continue;
+
+      const p1 = game.pair1;
+      const p2 = game.pair2;
+      const allIds = [
+        p1.player1_id, p1.player2_id,
+        p2.player1_id, p2.player2_id,
+      ].filter(Boolean) as string[];
+
+      const allReal = allIds.every((id) => realPlayerIds.has(id));
+
+      // Per-player stats (include if at least one real player in each side)
+      const p1HasReal = realPlayerIds.has(p1.player1_id) || realPlayerIds.has(p1.player2_id);
+      const p2HasReal = realPlayerIds.has(p2.player1_id) || realPlayerIds.has(p2.player2_id);
+
+      if (p1HasReal && p2HasReal) {
+        const pair1Won = game.winning_pair_id === p1.id;
+
+        for (const [pair, pairWon] of [[p1, pair1Won], [p2, !pair1Won]] as [PairWithPlayers, boolean][]) {
+          for (const pid of [pair.player1_id, pair.player2_id]) {
+            if (!realPlayerIds.has(pid)) continue;
+            playerSetsPlayed.set(pid, (playerSetsPlayed.get(pid) ?? 0) + 1);
+            if (pairWon) {
+              playerSetsWon.set(pid, (playerSetsWon.get(pid) ?? 0) + 1);
+              const cw = (playerCurWin.get(pid) ?? 0) + 1;
+              playerCurWin.set(pid, cw);
+              playerCurLoss.set(pid, 0);
+              if (cw > (playerWinStreaks.get(pid) ?? 0)) playerWinStreaks.set(pid, cw);
+            } else {
+              const cl = (playerCurLoss.get(pid) ?? 0) + 1;
+              playerCurLoss.set(pid, cl);
+              playerCurWin.set(pid, 0);
+              if (cl > (playerLossStreaks.get(pid) ?? 0)) playerLossStreaks.set(pid, cl);
+            }
+          }
+        }
+
+        // Biggest margin win (all-real games only)
+        if (
+          allReal &&
+          typeof game.pair1_score === "number" &&
+          typeof game.pair2_score === "number"
+        ) {
+          const winnerPair = pair1Won ? p1 : p2;
+          const loserPair = pair1Won ? p2 : p1;
+          const winnerScore = pair1Won ? game.pair1_score : game.pair2_score;
+          const loserScore = pair1Won ? game.pair2_score : game.pair1_score;
+          const margin = winnerScore - loserScore;
+          if (margin > biggestMargin) {
+            biggestMargin = margin;
+            biggestMarginEntry = {
+              id: game.id,
+              label: pairLabel(winnerPair),
+              detail: `beat ${pairLabel(loserPair)} · ${winnerScore}–${loserScore}`,
+              value: margin,
+            };
+          }
+        }
+
+        // Duo win rates (all-real only, doubles only)
+        if (allReal && p1.player2_id && p2.player2_id) {
+          for (const [pair, pairWon] of [[p1, pair1Won], [p2, !pair1Won]] as [PairWithPlayers, boolean][]) {
+            const key = [pair.player1_id, pair.player2_id].sort().join(":");
+            if (!duoWins.has(key)) {
+              duoWins.set(key, { label: pairLabel(pair), wins: 0, played: 0 });
+            }
+            const d = duoWins.get(key)!;
+            d.played++;
+            if (pairWon) d.wins++;
+          }
+        }
+      }
+    }
+  }
+
+  const playerMap = new Map(players.map((p) => [p.id, p]));
+
+  function topN<T>(arr: T[], n = 5): T[] {
+    return arr.slice(0, n);
+  }
+
+  // Most sets won
+  const mostSetsWon: RecordEntry[] = topN(
+    [...playerSetsWon.entries()]
+      .filter(([, v]) => v > 0)
+      .sort(([, a], [, b]) => b - a)
+      .map(([id, v]) => {
+        const p = playerMap.get(id)!;
+        return {
+          id,
+          label: playerLabel(p),
+          detail: `${playerSetsPlayed.get(id) ?? 0} sets played`,
+          value: v,
+          href: `/players/${id}`,
+        };
+      })
+  );
+
+  // Most sets played
+  const mostSetsPlayed: RecordEntry[] = topN(
+    [...playerSetsPlayed.entries()]
+      .filter(([, v]) => v > 0)
+      .sort(([, a], [, b]) => b - a)
+      .map(([id, v]) => {
+        const p = playerMap.get(id)!;
+        return {
+          id,
+          label: playerLabel(p),
+          detail: `${playerSetsWon.get(id) ?? 0} wins`,
+          value: v,
+          href: `/players/${id}`,
+        };
+      })
+  );
+
+  // Best win rate (min 10 sets)
+  const bestWinRate: RecordEntry[] = topN(
+    [...playerSetsPlayed.entries()]
+      .filter(([, played]) => played >= 10)
+      .map(([id, played]) => {
+        const won = playerSetsWon.get(id) ?? 0;
+        const p = playerMap.get(id)!;
+        return {
+          id,
+          label: playerLabel(p),
+          detail: `${won}W / ${played - won}L`,
+          value: Math.round((won / played) * 100),
+          href: `/players/${id}`,
+        };
+      })
+      .sort((a, b) => b.value - a.value)
+  );
+
+  // Longest win streak
+  const longestWinStreak: RecordEntry[] = topN(
+    [...playerWinStreaks.entries()]
+      .filter(([, v]) => v > 0)
+      .sort(([, a], [, b]) => b - a)
+      .map(([id, v]) => {
+        const p = playerMap.get(id)!;
+        return {
+          id,
+          label: playerLabel(p),
+          detail: "consecutive sets won",
+          value: v,
+          href: `/players/${id}`,
+        };
+      })
+  );
+
+  // Longest loss streak
+  const longestLossStreak: RecordEntry[] = topN(
+    [...playerLossStreaks.entries()]
+      .filter(([, v]) => v > 0)
+      .sort(([, a], [, b]) => b - a)
+      .map(([id, v]) => {
+        const p = playerMap.get(id)!;
+        return {
+          id,
+          label: playerLabel(p),
+          detail: "consecutive sets lost",
+          value: v,
+          href: `/players/${id}`,
+        };
+      })
+  );
+
+  // Highest ELO
+  const highestElo: RecordEntry[] = topN(
+    [...playerElo.entries()]
+      .sort(([, a], [, b]) => b - a)
+      .map(([id, elo]) => {
+        const p = playerMap.get(id)!;
+        return {
+          id,
+          label: playerLabel(p),
+          detail: `${playerSetsWon.get(id) ?? 0}W · ${playerSetsPlayed.get(id) ?? 0} played`,
+          value: Math.round(elo),
+          href: `/players/${id}`,
+        };
+      })
+  );
+
+  // Biggest margin win
+  const biggestMarginWin: RecordEntry[] = biggestMarginEntry ? [biggestMarginEntry] : [];
+
+  // Best duo (min 5 sets)
+  const bestDuo: RecordEntry[] = topN(
+    [...duoWins.values()]
+      .filter((d) => d.played >= 5)
+      .sort((a, b) => b.wins / b.played - a.wins / a.played)
+      .map((d) => ({
+        id: d.label,
+        label: d.label,
+        detail: `${d.wins}W / ${d.played - d.wins}L · ${Math.round((d.wins / d.played) * 100)}% win rate`,
+        value: Math.round((d.wins / d.played) * 100),
+      }))
+  );
+
+  return {
+    mostSetsWon,
+    mostSetsPlayed,
+    bestWinRate,
+    longestWinStreak,
+    highestElo,
+    biggestMarginWin,
+    bestDuo,
+    longestLossStreak,
+  };
 }

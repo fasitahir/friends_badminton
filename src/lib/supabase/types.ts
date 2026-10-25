@@ -165,3 +165,23 @@ export type MonthlySnapshot = {
 export type MonthlyPlayerEntry = MonthlySnapshot & {
   player: Player;
 };
+
+// Records types
+export type RecordEntry = {
+  id: string;
+  label: string;       // Player or pair name
+  detail: string;      // Sub-label e.g. "vs Fasi · Session 12"
+  value: number;       // Numeric record value
+  href?: string;       // Optional link
+};
+
+export type Records = {
+  mostSetsWon: RecordEntry[];
+  mostSetsPlayed: RecordEntry[];
+  bestWinRate: RecordEntry[];
+  longestWinStreak: RecordEntry[];
+  highestElo: RecordEntry[];
+  biggestMarginWin: RecordEntry[];
+  bestDuo: RecordEntry[];
+  longestLossStreak: RecordEntry[];
+};

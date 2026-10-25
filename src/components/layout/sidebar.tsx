@@ -9,6 +9,7 @@ import {
   Users,
   CalendarDays,
   BarChart2,
+  Trophy,
   LogIn,
   LogOut,
 } from "lucide-react";
@@ -39,6 +40,12 @@ const navItems = [
     href: "/analytics",
     Icon: BarChart2,
     shortLabel: "Stats",
+  },
+  {
+    label: "Records",
+    href: "/records",
+    Icon: Trophy,
+    shortLabel: "Records",
   },
 ];
 
