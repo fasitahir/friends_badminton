@@ -8,8 +8,6 @@ import {
 } from "@/lib/data";
 import Link from "next/link";
 import { LeaderboardTabs } from "@/components/dashboard/leaderboard-tabs";
-import { computePlayerStreaks } from "@/lib/analytics";
-import type { MatchWithDetails, Player } from "@/lib/supabase/types";
 
 // ISR: serve from cache, revalidate in background every 60 s
 export const revalidate = 60;
@@ -29,11 +27,13 @@ export default async function DashboardPage() {
     getSavedMonths(),
   ]);
 
-  const matches = (matchesData || []) as MatchWithDetails[];
-  const typedPlayers = (players ?? []) as Player[];
+  const matches = (matchesData || []) as any[];
+
   // Compute streaks and historical Elo (sparkline) for each player
-  const enrichedPlayers = typedPlayers.map((player) => {
-    const streaks = computePlayerStreaks(player.id, matches);
+  const enrichedPlayers = (players ?? []).map((player) => {
+    let wStreak = 0;
+    let lStreak = 0;
+    let streakActive = true;
     let sparkline = [player.elo_rating];
     let currentElo = player.elo_rating;
     let totalSets = 0;
@@ -45,6 +45,16 @@ export default async function DashboardPage() {
         if (inP1 || inP2) {
           totalSets++;
           const wonSet = g.winning_pair_id === (inP1 ? g.pair1_id : g.pair2_id);
+
+          if (streakActive) {
+            if (wonSet) {
+              if (lStreak > 0) streakActive = false;
+              else wStreak++;
+            } else {
+              if (wStreak > 0) streakActive = false;
+              else lStreak++;
+            }
+          }
 
           if (sparkline.length < 10) {
             const eloChange = inP1 ? g.pair1_elo_change : g.pair2_elo_change;
@@ -62,10 +72,8 @@ export default async function DashboardPage() {
 
     return {
       ...player,
-      winStreak: streaks.currentWinStreak,
-      lossStreak: streaks.currentLossStreak,
-      longestWinStreak: streaks.longestWinStreak,
-      longestLossStreak: streaks.longestLossStreak,
+      winStreak: wStreak,
+      lossStreak: lStreak,
       totalSets,
       sparkline,
     };
@@ -328,7 +336,6 @@ export default async function DashboardPage() {
               </div>
             )}
           </div>
-
         </div>
       </div>
     </div>

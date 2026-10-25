@@ -113,35 +113,6 @@ export type PlayerStats = {
   winRate: number;
 };
 
-export type PlayerStreaks = {
-  currentWinStreak: number;
-  currentLossStreak: number;
-  longestWinStreak: number;
-  longestLossStreak: number;
-};
-
-export type StreakRecord = {
-  player: Player;
-  streak: number;
-};
-
-export type RecordEntry = {
-  id: string;
-  value: number;
-  label: string;
-  detail: string;
-  href: string | null;
-};
-
-export type Records = {
-  longestWinStreak: RecordEntry[];
-  longestLossStreak: RecordEntry[];
-  lowestPointWin: RecordEntry[];
-  highestPointWin: RecordEntry[];
-  closestWin: RecordEntry[];
-  biggestWin: RecordEntry[];
-};
-
 export type HeadToHeadResult = {
   playerA: Player;
   playerB: Player;

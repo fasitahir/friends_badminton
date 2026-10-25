@@ -10,7 +10,6 @@ import {
   computePairVsPair,
   computeBestPartners,
   computeToughestOpponents,
-  computeLongestStreakLeaders,
 } from "@/lib/analytics";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,9 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ChevronRight, Eye, EyeOff, Flame, Snowflake } from "lucide-react";
-import Link from "next/link";
-import type { StreakRecord } from "@/lib/supabase/types";
+import { ChevronRight, Eye, EyeOff } from "lucide-react";
 import { PlayerLeftIcon } from "@/components/players/player-left-icon";
 
 // Lazy-load win rate chart (~200KB recharts) — only loaded when analytics page is visited
@@ -88,11 +85,6 @@ export function AnalyticsDashboard({ players, matches }: AnalyticsDashboardProps
   const allPairStats = useMemo(
     () => computeAllPairStats(filteredPlayers, filteredMatches),
     [filteredPlayers, filteredMatches]
-  );
-
-  const streakLeaders = useMemo(
-    () => computeLongestStreakLeaders(filteredPlayers, matches, 10),
-    [filteredPlayers, matches]
   );
 
   // A helper to get the total number of sets played across all matches
@@ -164,11 +156,7 @@ export function AnalyticsDashboard({ players, matches }: AnalyticsDashboardProps
 
       {/* ==================== OVERVIEW ==================== */}
       <TabsContent value="overview" className="mt-6">
-        <OverviewTab
-          stats={allPlayerStats}
-          totalSets={totalSetsPlayed}
-          streakLeaders={streakLeaders}
-        />
+        <OverviewTab stats={allPlayerStats} totalSets={totalSetsPlayed} />
       </TabsContent>
 
       {/* ==================== HEAD-TO-HEAD ==================== */}
@@ -200,72 +188,13 @@ export function AnalyticsDashboard({ players, matches }: AnalyticsDashboardProps
   );
 }
 
-function StreakLeaderCard({
-  title,
-  records,
-  kind,
-}: {
-  title: string;
-  records: StreakRecord[];
-  kind: "win" | "loss";
-}) {
-  const isWin = kind === "win";
-
-  return (
-    <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base font-heading flex items-center gap-2">
-          {isWin ? (
-            <Flame className="size-4 text-aviation-red fill-aviation-red" />
-          ) : (
-            <Snowflake className="size-4" style={{ color: "var(--cold-stripe)" }} />
-          )}
-          {title}
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        {records.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No streak data yet</p>
-        ) : (
-          <ol className="flex flex-col gap-1.5">
-            {records.map((record, idx) => (
-              <li
-                key={`${kind}-${record.player.id}`}
-                className="flex items-center gap-3 py-1.5 border-b border-border last:border-b-0"
-              >
-                <span className="w-6 text-right font-mono text-xs text-muted-foreground tabular-nums">
-                  {idx + 1}.
-                </span>
-                <Link
-                  href={`/players/${record.player.id}`}
-                  className="flex-1 min-w-0 text-sm font-medium truncate hover:text-primary transition-colors"
-                >
-                  {record.player.name}
-                </Link>
-                <span
-                  className="font-mono text-sm tabular-nums font-bold"
-                  style={isWin ? undefined : { color: "var(--cold-stripe)" }}
-                >
-                  <span className={isWin ? "text-win" : undefined}>{record.streak}</span>
-                </span>
-              </li>
-            ))}
-          </ol>
-        )}
-      </CardContent>
-    </Card>
-  );
-}
-
 // ==================== OVERVIEW TAB ====================
 function OverviewTab({
   stats,
   totalSets,
-  streakLeaders,
 }: {
   stats: ReturnType<typeof computeAllPlayerStats>;
   totalSets: number;
-  streakLeaders: ReturnType<typeof computeLongestStreakLeaders>;
 }) {
   const chartData = stats
     .filter((s) => s.setsPlayed > 0)
@@ -317,21 +246,6 @@ function OverviewTab({
           </CardContent>
         </Card>
       </div>
-
-      {(streakLeaders.wins.length > 0 || streakLeaders.losses.length > 0) && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <StreakLeaderCard
-            title="Longest win streaks"
-            records={streakLeaders.wins}
-            kind="win"
-          />
-          <StreakLeaderCard
-            title="Longest loss streaks"
-            records={streakLeaders.losses}
-            kind="loss"
-          />
-        </div>
-      )}
 
       {/* Chart */}
       {chartData.length > 0 && (
